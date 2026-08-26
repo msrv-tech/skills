@@ -1,0 +1,35 @@
+{
+  "$schema": "../../../../codex-test-bridge/ui-scenario.schema.json",
+  "name": "Заполнение приходной накладной без записи",
+  "steps": [
+    {"action": "assertConnected", "name": "Проверить соединение"},
+    {"action": "handleDialog", "name": "Закрыть предупреждение безопасности", "dialogTitle": "Предупреждение безопасности", "dialogButton": "ОК", "optional": true, "timeout": 10},
+    {
+      "action": "openNavigationLink",
+      "name": "Открыть список поступлений",
+      "link": "e1cib/list/Документ.ПоступлениеТоваровУслуг",
+      "attempts": 3,
+      "targetForm": {"formName": "Документ.ПоступлениеТоваровУслуг.Форма.ФормаСписка", "timeout": 90, "saveAs": "receipts"}
+    },
+    {"action": "click", "name": "Создать поступление товаров", "form": "receipts", "button": {"objectName": "СоздатьПоступлениеТовары", "timeout": 30}},
+    {"action": "waitForm", "name": "Дождаться новой приходной накладной", "formName": "Документ.ПоступлениеТоваровУслуг.Форма.ФормаДокументаТовары", "timeout": 90, "saveAs": "receipt"},
+    {"action": "waitElement", "name": "Дождаться доступности номера накладной", "form": "receipt", "element": {"objectName": "НомерВходящегоДокумента", "timeout": 30}, "exists": true, "visible": true, "enabled": true, "readOnly": false},
+    {"action": "inputText", "name": "Ввести номер накладной поставщика", "form": "receipt", "field": {"objectName": "НомерВходящегоДокумента", "timeout": 30}, "value": "AI-TEST-2608"},
+    {
+      "action": "selectReference",
+      "name": "Выбрать поставщика из базы",
+      "form": "receipt",
+      "field": {"objectName": "Контрагент", "timeout": 30},
+      "strategy": "choiceForm",
+      "choiceForm": {"title": "Контрагенты", "timeout": 30},
+      "table": {"objectName": "Список", "timeout": 30},
+      "row": {"Наименование в программе": "Банк"},
+      "direction": "both",
+      "attempts": 5,
+      "timeout": 30
+    },
+    {"action": "assertField", "name": "Проверить номер поставщика", "form": "receipt", "field": {"objectName": "НомерВходящегоДокумента"}, "expected": "AI-TEST-2608"},
+    {"action": "assertField", "name": "Проверить поставщика", "form": "receipt", "field": {"objectName": "Контрагент"}, "expected": "Банк"},
+    {"action": "closeForm", "name": "Закрыть документ без записи", "form": "receipt", "onPrompt": "discard", "promptTimeout": 10, "waitClosed": true, "timeout": 30}
+  ]
+}

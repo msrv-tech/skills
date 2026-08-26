@@ -1,0 +1,16 @@
+{
+  "title": "UI-тесты 1С для ИИ-агентов: TestClient через HTTP bridge",
+  "shortTitle": "UI-тесты 1С для ИИ-агентов",
+  "previewText": "Новый UI-контур CodexTestBridge запускает штатные TestClient/TestManager и даёт ИИ-агенту семантические действия вместо координат. Результаты возвращаются по шагам, долгие операции сопровождаются heartbeat. На реальной БП 3.0 открываем и заполняем приходную накладную без записи.",
+  "keywords": "1С, тестирование, UI-тесты, TestClient, TestManager, ИИ-агенты, Codex, автоматизация тестирования, Vanessa Automation, HTTP, управляемые формы",
+  "categoryId": 37345,
+  "configurationId": 6760,
+  "platformId": 1960,
+  "objectViewId": 22582,
+  "fileType": "Нет файла",
+  "status": "infostart-draft",
+  "publicationId": 2773121,
+  "publicationUrl": "https://infostart.ru/1c/articles/2773121/",
+  "coverUrl": "https://infostart.ru/upload/iblock/77b/77b49ceeac769793e7a4eea41c218ff9.png",
+  "resultImageUrl": "https://infostart.ru/upload/iblock/f30/f30141350497bdc8c0dcc6f280c0761e.png"
+}

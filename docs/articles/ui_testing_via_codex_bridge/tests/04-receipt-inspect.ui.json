@@ -1,0 +1,64 @@
+{
+  "$schema": "../../../../codex-test-bridge/ui-scenario.schema.json",
+  "name": "Инспекция списка поступлений",
+  "steps": [
+    {"action": "assertConnected", "name": "Проверить соединение"},
+    {
+      "action": "handleDialog",
+      "name": "Закрыть предупреждение безопасности",
+      "dialogTitle": "Предупреждение безопасности",
+      "dialogButton": "ОК",
+      "optional": true,
+      "timeout": 10
+    },
+    {
+      "action": "waitForm",
+      "name": "Найти предложение обновления",
+      "formName": "ОбщаяФорма.НерекомендуемаяВерсияКонфигурации",
+      "saveAs": "updateReminder",
+      "timeout": 10
+    },
+    {
+      "action": "click",
+      "name": "Нажать «Напомнить позже»",
+      "form": "updateReminder",
+      "button": {"objectName": "КнопкаДополнительная"}
+    },
+    {
+      "action": "waitFormClosed",
+      "name": "Дождаться закрытия предложения обновления",
+      "form": "updateReminder",
+      "timeout": 10
+    },
+    {
+      "action": "waitForm",
+      "name": "Найти стартовую информацию",
+      "formName": "Обработка.ИнформацияПриЗапуске.Форма.Форма",
+      "saveAs": "startupInfo",
+      "timeout": 10
+    },
+    {"action": "closeForm", "name": "Закрыть стартовую информацию", "form": "startupInfo", "timeout": 10},
+    {
+      "action": "waitForm",
+      "name": "Найти путеводитель демобазы",
+      "formName": "Обработка.ДемоПроф_ПутеводительПоДемоБазе.Форма.Форма",
+      "saveAs": "demoGuide",
+      "timeout": 10
+    },
+    {"action": "closeForm", "name": "Закрыть путеводитель", "form": "demoGuide", "timeout": 10},
+    {
+      "action": "openNavigationLink",
+      "name": "Открыть список поступлений",
+      "link": "e1cib/list/Документ.ПоступлениеТоваровУслуг",
+      "attempts": 3,
+      "targetForm": {"title": "Поступление (акты, накладные, УПД)", "timeout": 90, "saveAs": "receipts"}
+    },
+    {
+      "action": "waitElement",
+      "name": "Дождаться готовности списка поступлений",
+      "form": "receipts",
+      "element": {"objectName": "ФормаСоздать", "timeout": 30}
+    },
+    {"action": "inspectUi", "name": "Получить дерево списка поступлений", "form": "receipts", "depth": 6}
+  ]
+}

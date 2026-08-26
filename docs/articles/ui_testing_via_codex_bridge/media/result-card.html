@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; width: 1200px; height: 720px; overflow: hidden; background: #0b1220; color: #e8eef8; font-family: "Segoe UI", Arial, sans-serif; }
+  main { padding: 58px 68px; height: 100%; background: radial-gradient(circle at 85% 10%, #16375b 0, transparent 36%), linear-gradient(135deg, #0b1220, #101a2d); }
+  .top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 38px; }
+  h1 { font-size: 38px; margin: 0; letter-spacing: -.5px; }
+  .badge { color: #082313; background: #42d785; border-radius: 999px; padding: 12px 22px; font-size: 24px; font-weight: 700; }
+  .meta { color: #9fb0c8; font-size: 20px; margin-top: 10px; }
+  .grid { display: grid; grid-template-columns: 1fr 300px; gap: 28px; }
+  .steps, .stats { background: rgba(20, 31, 51, .88); border: 1px solid #2d4262; border-radius: 18px; padding: 26px 30px; box-shadow: 0 20px 60px rgba(0,0,0,.25); }
+  .step { display: grid; grid-template-columns: 44px 1fr 110px; gap: 16px; align-items: center; min-height: 78px; border-bottom: 1px solid #293a54; font-size: 21px; }
+  .step:last-child { border-bottom: 0; }
+  .num { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 10px; background: #172b49; color: #7db6ff; font-weight: 700; }
+  .ok { color: #55df91; text-align: right; font-weight: 700; }
+  .stat { margin-bottom: 30px; }
+  .value { font-size: 42px; font-weight: 750; color: #fff; }
+  .label { color: #9fb0c8; font-size: 18px; margin-top: 3px; }
+  footer { margin-top: 26px; color: #8296b2; font-family: Consolas, monospace; font-size: 17px; }
+</style>
+</head>
+<body>
+<main>
+  <div class="top">
+    <div><h1>Нативный UI-тест через CodexTestBridge</h1><div class="meta">Бухгалтерия предприятия 3.0 · TestClient/TestManager</div></div>
+    <div class="badge">PASSED</div>
+  </div>
+  <div class="grid">
+    <section class="steps">
+      <div class="step"><span class="num">1</span><span>Соединение с TestClient</span><span class="ok">✓ passed</span></div>
+      <div class="step"><span class="num">2</span><span>Безопасный стартовый диалог</span><span class="ok">✓ passed</span></div>
+      <div class="step"><span class="num">3</span><span>Поиск формы по formName</span><span class="ok">✓ passed</span></div>
+      <div class="step"><span class="num">4</span><span>Семантическое дерево формы</span><span class="ok">✓ passed</span></div>
+    </section>
+    <aside class="stats">
+      <div class="stat"><div class="value">36,8 c</div><div class="label">полный запуск</div></div>
+      <div class="stat"><div class="value">0</div><div class="label">остаточных процессов</div></div>
+      <div class="stat"><div class="value">0</div><div class="label">временных пользователей</div></div>
+    </aside>
+  </div>
+  <footer>backend=windowsDesktop · resultTransport=bridgeJob · exitCode=0</footer>
+</main>
+</body>
+</html>

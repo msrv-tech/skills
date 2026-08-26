@@ -1,0 +1,42 @@
+{
+  "$schema": "../../../../codex-test-bridge/ui-scenario.schema.json",
+  "name": "Открытие и инспекция списка контрагентов",
+  "steps": [
+    {
+      "name": "Проверить соединение",
+      "action": "assertConnected"
+    },
+    {
+      "name": "Закрыть безопасное предупреждение при первом запуске",
+      "action": "handleDialog",
+      "dialogTitle": "Предупреждение безопасности",
+      "dialogButton": "ОК",
+      "optional": true,
+      "timeout": 10
+    },
+    {
+      "name": "Отложить предложение обновления демобазы",
+      "action": "handleDialog",
+      "dialogTitle": "Рекомендуется обновить версию конфигурации",
+      "dialogButton": "Напомнить позже",
+      "optional": true,
+      "timeout": 10
+    },
+    {
+      "name": "Открыть список контрагентов напрямую",
+      "action": "openNavigationLink",
+      "link": "e1cib/list/Справочник.Контрагенты",
+      "attempts": 3,
+      "targetForm": {
+        "title": "Контрагенты",
+        "timeout": 90,
+        "saveAs": "counterparties"
+      }
+    },
+    {
+      "name": "Получить семантическое дерево формы",
+      "action": "inspectUi",
+      "form": "counterparties"
+    }
+  ]
+}

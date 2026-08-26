@@ -1,0 +1,10 @@
+{
+  "$schema": "../../../../codex-test-bridge/ui-scenario.schema.json",
+  "name": "Подключение TestManager к TestClient",
+  "steps": [
+    {
+      "name": "Проверить штатное соединение с тестовым клиентом",
+      "action": "assertConnected"
+    }
+  ]
+}
