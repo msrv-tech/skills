@@ -1,0 +1,6 @@
+interface:
+  display_name: "ERF"
+  short_description: "Используй этот скилл для всех операций с внешними отчётами 1С (ERF): создание (init), сбо..."
+  default_prompt: "Use $erf for this task."
+policy:
+  allow_implicit_invocation: true

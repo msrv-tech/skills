@@ -1,0 +1,6 @@
+interface:
+  display_name: "CFE Patch Method"
+  short_description: "Генерация перехватчика метода в расширении 1С (CFE). Используй когда нужно перехватить ме..."
+  default_prompt: "Use $cfe-patch-method for this task."
+policy:
+  allow_implicit_invocation: true

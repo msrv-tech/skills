@@ -1,0 +1,6 @@
+interface:
+  display_name: "CF Edit"
+  short_description: "Точечное редактирование конфигурации 1С. Используй когда нужно изменить свойства конфигур..."
+  default_prompt: "Use $cf-edit for this task."
+policy:
+  allow_implicit_invocation: true

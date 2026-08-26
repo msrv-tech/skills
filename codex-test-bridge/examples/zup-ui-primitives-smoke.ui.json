@@ -1,0 +1,68 @@
+{
+  "$schema": "../ui-scenario.schema.json",
+  "name": "zup-ui-primitives-smoke",
+  "steps": [
+    {
+      "action": "openNavigationLink",
+      "name": "open-hire-list",
+      "link": "e1cib/list/Документ.ПриемНаРаботу",
+      "attempts": 3,
+      "targetForm": {
+        "title": "Приемы на работу",
+        "timeout": 20,
+        "saveAs": "hireList"
+      }
+    },
+    {
+      "action": "waitElement",
+      "name": "wait-create-button",
+      "form": "hireList",
+      "elementType": "button",
+      "element": {"objectName": "ФормаСоздать"},
+      "exists": true,
+      "visible": true,
+      "enabled": true,
+      "timeout": 20
+    },
+    {
+      "action": "click",
+      "name": "create-hire-document",
+      "form": "hireList",
+      "button": {"objectName": "ФормаСоздать", "timeout": 30}
+    },
+    {
+      "action": "waitForm",
+      "name": "wait-hire-document",
+      "title": "Прием на работу (создание)",
+      "timeout": 60,
+      "saveAs": "hireDocument"
+    },
+    {
+      "action": "assertElement",
+      "name": "comment-is-editable",
+      "form": "hireDocument",
+      "elementType": "field",
+      "element": {"objectName": "Комментарий"},
+      "exists": true,
+      "visible": true,
+      "enabled": true,
+      "readOnly": false
+    },
+    {
+      "action": "inputText",
+      "name": "make-form-dirty",
+      "form": "hireDocument",
+      "field": {"objectName": "Комментарий"},
+      "value": "Codex UI primitive smoke — do not save"
+    },
+    {
+      "action": "closeForm",
+      "name": "discard-unsaved-form",
+      "form": "hireDocument",
+      "onPrompt": "discard",
+      "promptTimeout": 5,
+      "waitClosed": true,
+      "timeout": 30
+    }
+  ]
+}

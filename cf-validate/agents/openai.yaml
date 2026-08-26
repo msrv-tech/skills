@@ -1,0 +1,6 @@
+interface:
+  display_name: "CF Validate"
+  short_description: "Валидация конфигурации 1С. Используй после создания или модификации конфигурации для пров..."
+  default_prompt: "Use $cf-validate for this task."
+policy:
+  allow_implicit_invocation: true

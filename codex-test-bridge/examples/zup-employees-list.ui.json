@@ -1,0 +1,24 @@
+{
+  "$schema": "../ui-scenario.schema.json",
+  "name": "zup-employees-list",
+  "steps": [
+    {
+      "action": "openNavigationLink",
+      "name": "navigate-to-employees",
+      "link": "e1cib/list/Справочник.Сотрудники",
+      "attempts": 3,
+      "targetForm": {
+        "title": "Сотрудники",
+        "timeout": 20,
+        "saveAs": "employees"
+      }
+    },
+    {
+      "action": "inspectUi",
+      "name": "inspect-employees-list",
+      "form": "employees",
+      "depth": 6,
+      "timeout": 60
+    }
+  ]
+}

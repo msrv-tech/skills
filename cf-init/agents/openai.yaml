@@ -1,0 +1,6 @@
+interface:
+  display_name: "CF Init"
+  short_description: "Создать пустую конфигурацию 1С (scaffold XML-исходников). Используй когда нужно начать но..."
+  default_prompt: "Use $cf-init for this task."
+policy:
+  allow_implicit_invocation: true

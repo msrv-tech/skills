@@ -1,0 +1,6 @@
+interface:
+  display_name: "Ibcmd 1C Builds"
+  short_description: "Work with 1C:Enterprise configuration and extension build/update workflows through ibcmd...."
+  default_prompt: "Use $ibcmd-1c-builds for this task."
+policy:
+  allow_implicit_invocation: true

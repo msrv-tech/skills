@@ -1,0 +1,22 @@
+{
+  "$schema": "../ui-scenario.schema.json",
+  "name": "zup-employees-navigation",
+  "steps": [
+    {
+      "action": "clickCommandInterface",
+      "name": "open-hr-section",
+      "button": {"title": "Кадры", "timeout": 60}
+    },
+    {
+      "action": "clickCommandInterface",
+      "name": "open-employees-list",
+      "button": {"title": "Сотрудники", "timeout": 60}
+    },
+    {
+      "action": "waitForm",
+      "name": "wait-employees-form",
+      "saveAs": "employees",
+      "timeout": 60
+    }
+  ]
+}

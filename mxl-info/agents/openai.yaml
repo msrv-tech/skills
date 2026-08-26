@@ -1,0 +1,6 @@
+interface:
+  display_name: "MXL Info"
+  short_description: "Анализ структуры макета табличного документа (MXL) — области, параметры, наборы колонок...."
+  default_prompt: "Use $mxl-info for this task."
+policy:
+  allow_implicit_invocation: true

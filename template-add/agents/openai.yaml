@@ -1,0 +1,6 @@
+interface:
+  display_name: "Template ADD"
+  short_description: "Добавить макет к объекту 1С (обработка, отчёт, справочник, документ и др.)"
+  default_prompt: "Use $template-add for this task."
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,34 @@
+{
+  "$schema": "../scenario.schema.json",
+  "name": "Создание и чтение тестового контрагента",
+  "cleanup": true,
+  "steps": [
+    {
+      "name": "Создать контрагента",
+      "saveAs": "counterparty",
+      "request": {
+        "command": "WriteObject",
+        "kind": "catalog",
+        "name": "Контрагенты",
+        "fields": {"Наименование": "Agent test ${run.id}"}
+      },
+      "assert": [
+        {"path": "ok", "operator": "eq", "expected": true},
+        {"path": "ref.uuid", "operator": "notEmpty"}
+      ]
+    },
+    {
+      "name": "Прочитать созданный объект",
+      "request": {
+        "command": "GetObject",
+        "kind": "catalog",
+        "name": "Контрагенты",
+        "uuid": "${counterparty.ref.uuid}"
+      },
+      "assert": [
+        {"path": "ref.uuid", "operator": "eq", "expected": "${counterparty.ref.uuid}"},
+        {"path": "fields.Наименование.presentation", "operator": "contains", "expected": "Agent test"}
+      ]
+    }
+  ]
+}

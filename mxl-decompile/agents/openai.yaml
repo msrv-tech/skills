@@ -1,0 +1,6 @@
+interface:
+  display_name: "MXL Decompile"
+  short_description: "Декомпиляция табличного документа (MXL) в JSON-определение. Используй когда нужно получит..."
+  default_prompt: "Use $mxl-decompile for this task."
+policy:
+  allow_implicit_invocation: true

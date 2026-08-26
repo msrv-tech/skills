@@ -1,0 +1,7 @@
+interface:
+  display_name: "Codex Test Bridge"
+  short_description: "HTTP bridge extension for 1C test/demo infobases; install CFE and call JSON API instead of COM."
+  default_prompt: "Use $codex-test-bridge for this task."
+policy:
+  allow_implicit_invocation: true
+

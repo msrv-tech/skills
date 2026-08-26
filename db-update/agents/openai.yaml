@@ -1,0 +1,6 @@
+interface:
+  display_name: "DB Update"
+  short_description: "Обновление конфигурации базы данных 1С. Используй когда пользователь просит обновить БД,..."
+  default_prompt: "Use $db-update for this task."
+policy:
+  allow_implicit_invocation: true

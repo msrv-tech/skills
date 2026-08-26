@@ -1,0 +1,6 @@
+interface:
+  display_name: "DB Load CF"
+  short_description: "Загрузка конфигурации 1С из CF-файла. Используй когда пользователь просит загрузить конфи..."
+  default_prompt: "Use $db-load-cf for this task."
+policy:
+  allow_implicit_invocation: true

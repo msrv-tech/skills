@@ -1,0 +1,6 @@
+interface:
+  display_name: "MXL Compile"
+  short_description: "Компиляция табличного документа (MXL) из JSON-определения. Используй когда нужно создать..."
+  default_prompt: "Use $mxl-compile for this task."
+policy:
+  allow_implicit_invocation: true

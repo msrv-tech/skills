@@ -1,0 +1,6 @@
+interface:
+  display_name: "Form Edit"
+  short_description: "Добавление элементов, реквизитов и команд в существующую управляемую форму 1С. Используй..."
+  default_prompt: "Use $form-edit for this task."
+policy:
+  allow_implicit_invocation: true

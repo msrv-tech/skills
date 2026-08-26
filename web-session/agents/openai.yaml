@@ -1,0 +1,6 @@
+interface:
+  display_name: "WEB Session"
+  short_description: "Используй этот скилл для управления 1С:Предприятие в веб-клиенте через Playwright MCP: за..."
+  default_prompt: "Use $web-session for this task."
+policy:
+  allow_implicit_invocation: true

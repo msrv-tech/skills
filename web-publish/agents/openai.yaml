@@ -1,0 +1,6 @@
+interface:
+  display_name: "WEB Publish"
+  short_description: "Публикация информационной базы 1С через Apache. Используй когда пользователь просит опубл..."
+  default_prompt: "Use $web-publish for this task."
+policy:
+  allow_implicit_invocation: true

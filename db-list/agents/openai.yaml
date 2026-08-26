@@ -1,0 +1,6 @@
+interface:
+  display_name: "DB List"
+  short_description: "Управление реестром баз данных 1С (.v8-project.json). Используй когда пользователь говори..."
+  default_prompt: "Use $db-list for this task."
+policy:
+  allow_implicit_invocation: true

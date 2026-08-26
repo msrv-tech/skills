@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MetaDataObject xmlns="http://v8.1c.ru/8.3/MDClasses" xmlns:app="http://v8.1c.ru/8.2/managed-application/core" xmlns:cfg="http://v8.1c.ru/8.1/data/enterprise/current-config" xmlns:cmi="http://v8.1c.ru/8.2/managed-application/cmi" xmlns:ent="http://v8.1c.ru/8.1/data/enterprise" xmlns:lf="http://v8.1c.ru/8.2/managed-application/logform" xmlns:style="http://v8.1c.ru/8.1/data/ui/style" xmlns:sys="http://v8.1c.ru/8.1/data/ui/fonts/system" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:v8ui="http://v8.1c.ru/8.1/data/ui" xmlns:web="http://v8.1c.ru/8.1/data/ui/colors/web" xmlns:xen="http://v8.1c.ru/8.3/xcf/enums" xmlns:xpr="http://v8.1c.ru/8.3/xcf/predef" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.20">
+	<HTTPService uuid="6ff42312-f058-4c0f-a403-b0b713197316">
+		<Properties>
+			<Name>CodexTestBridge</Name>
+			<Synonym/>
+			<Comment/>
+			<RootURL>codex-test</RootURL>
+			<ReuseSessions>DontUse</ReuseSessions>
+			<SessionMaxAge>20</SessionMaxAge>
+		</Properties>
+		<ChildObjects>
+			<URLTemplate uuid="8b1d0f07-b5ab-4f57-8788-9c69c47f27ed">
+				<Properties>
+					<Name>Health</Name>
+					<Synonym/>
+					<Comment/>
+					<Template>health</Template>
+				</Properties>
+				<ChildObjects>
+					<Method uuid="9404cd3e-2d20-4e1f-91d9-4920e8eaf8d1">
+						<Properties>
+							<Name>GET</Name>
+							<Synonym/>
+							<Comment/>
+							<HTTPMethod>GET</HTTPMethod>
+							<Handler>HealthGET</Handler>
+						</Properties>
+					</Method>
+				</ChildObjects>
+			</URLTemplate>
+			<URLTemplate uuid="c6ef33f7-29ee-4897-a902-46df6175d8dd">
+				<Properties>
+					<Name>Command</Name>
+					<Synonym/>
+					<Comment/>
+					<Template>command</Template>
+				</Properties>
+				<ChildObjects>
+					<Method uuid="55ab6101-84d9-482a-acd9-c24bf9fe8465">
+						<Properties>
+							<Name>POST</Name>
+							<Synonym/>
+							<Comment/>
+							<HTTPMethod>POST</HTTPMethod>
+							<Handler>CommandPOST</Handler>
+						</Properties>
+					</Method>
+				</ChildObjects>
+			</URLTemplate>
+		</ChildObjects>
+	</HTTPService>
+</MetaDataObject>
+
+

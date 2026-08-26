@@ -1,0 +1,6 @@
+interface:
+  display_name: "Query Optimization"
+  short_description: "Compose correct and optimized 1C:Enterprise query language queries. Covers ВЫБРАТЬ/ИЗ/ГДЕ..."
+  default_prompt: "Use $query-optimization for this task."
+policy:
+  allow_implicit_invocation: true

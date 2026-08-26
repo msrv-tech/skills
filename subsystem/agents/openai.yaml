@@ -1,0 +1,6 @@
+interface:
+  display_name: "Subsystem"
+  short_description: "Используй этот скилл для всех операций с подсистемами и командным интерфейсом 1С: создани..."
+  default_prompt: "Use $subsystem for this task."
+policy:
+  allow_implicit_invocation: true

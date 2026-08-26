@@ -1,0 +1,55 @@
+{
+  "$schema": "../ui-scenario.schema.json",
+  "name": "zup-hire-reference-choice-inspect",
+  "steps": [
+    {
+      "action": "openNavigationLink",
+      "link": "e1cib/list/Документ.ПриемНаРаботу",
+      "attempts": 3,
+      "targetForm": {
+        "title": "Приемы на работу",
+        "timeout": 20,
+        "saveAs": "hireList"
+      }
+    },
+    {
+      "action": "click",
+      "form": "hireList",
+      "button": {"objectName": "ФормаСоздать", "timeout": 30}
+    },
+    {
+      "action": "waitForm",
+      "title": "Прием на работу (создание)",
+      "timeout": 60,
+      "saveAs": "hireDocument"
+    },
+    {
+      "action": "openChoice",
+      "form": "hireDocument",
+      "field": {"objectName": "Сотрудник", "timeout": 30},
+      "choiceForm": {"title": "Сотрудники", "timeout": 30},
+      "saveAs": "employees"
+    },
+    {
+      "action": "inspectTable",
+      "name": "inspect-first-employee-row",
+      "form": "employees",
+      "table": {"objectName": "Список", "timeout": 30},
+      "timeout": 30
+    },
+    {
+      "action": "assertTableRow",
+      "name": "assert-known-employee-row",
+      "form": "employees",
+      "table": {"objectName": "Список", "timeout": 30},
+      "row": {
+        "Имя": "ТЕСТОВ Тест Тестович",
+        "Таб. номер": "TEST000001"
+      },
+      "exists": true,
+      "direction": "both",
+      "attempts": 5,
+      "timeout": 30
+    }
+  ]
+}

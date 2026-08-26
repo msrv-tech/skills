@@ -1,0 +1,6 @@
+interface:
+  display_name: "Meta Remove"
+  short_description: "Удалить объект метаданных из конфигурации 1С. Используй когда пользователь просит удалить..."
+  default_prompt: "Use $meta-remove for this task."
+policy:
+  allow_implicit_invocation: true

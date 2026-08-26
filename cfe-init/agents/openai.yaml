@@ -1,0 +1,6 @@
+interface:
+  display_name: "CFE Init"
+  short_description: "Создать расширение конфигурации 1С (CFE) — scaffold XML-исходников. Используй когда нужно..."
+  default_prompt: "Use $cfe-init for this task."
+policy:
+  allow_implicit_invocation: true

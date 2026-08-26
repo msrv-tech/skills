@@ -1,0 +1,6 @@
+interface:
+  display_name: "Interface Edit"
+  short_description: "Настройка командного интерфейса подсистемы 1С. Используй когда нужно скрыть или показать..."
+  default_prompt: "Use $interface-edit for this task."
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,6 @@
+interface:
+  display_name: "WEB Info"
+  short_description: "Статус Apache и веб-публикаций 1С — запущен ли сервер, какие базы опубликованы, ошибки. И..."
+  default_prompt: "Use $web-info for this task."
+policy:
+  allow_implicit_invocation: true

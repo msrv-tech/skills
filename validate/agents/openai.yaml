@@ -1,0 +1,6 @@
+interface:
+  display_name: "Validate"
+  short_description: "Используй этот скилл для явной валидации любого объекта 1С по запросу пользователя: конфи..."
+  default_prompt: "Use $validate for this task."
+policy:
+  allow_implicit_invocation: true

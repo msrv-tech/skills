@@ -1,0 +1,6 @@
+interface:
+  display_name: "Subsystem Compile"
+  short_description: "Создать подсистему 1С — XML-исходники из JSON-определения. Используй когда пользователь п..."
+  default_prompt: "Use $subsystem-compile for this task."
+policy:
+  allow_implicit_invocation: true

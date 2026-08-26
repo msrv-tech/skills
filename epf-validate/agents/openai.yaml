@@ -1,0 +1,6 @@
+interface:
+  display_name: "EPF Validate"
+  short_description: "Валидация внешней обработки 1С (EPF). Используй после создания или модификации обработки..."
+  default_prompt: "Use $epf-validate for this task."
+policy:
+  allow_implicit_invocation: true

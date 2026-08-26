@@ -1,0 +1,6 @@
+interface:
+  display_name: "EPF BSP ADD Command"
+  short_description: "Добавить команду в дополнительную обработку БСП"
+  default_prompt: "Use $epf-bsp-add-command for this task."
+policy:
+  allow_implicit_invocation: true

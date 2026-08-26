@@ -1,0 +1,6 @@
+interface:
+  display_name: "DB Load XML"
+  short_description: "Загрузка конфигурации 1С из XML-файлов. Используй когда пользователь просит загрузить кон..."
+  default_prompt: "Use $db-load-xml for this task."
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,206 @@
+<h1>1C Skills для ИИ-агентов: инструменты для разработки, проверки и тестирования 1С</h1>
+
+<p><img alt="1C Skills для ИИ-агентов: схема skills, агента, HTTP bridge и тестовой базы" src="https://infostart.ru/upload/iblock/40f/40f76a2a1a7cd5dde0467640341bd61f.png" style="width: 1200px; max-width: 100%; height: auto;" /></p>
+
+<p>ИИ-агенты уже умеют писать код, но в 1С-разработке одной генерации текста мало. Агенту нужен понятный контекст: как устроены XML-исходники конфигурации, как собрать EPF/ERF, как проверить форму, как применить изменения в базу, как открыть веб-клиент и как убедиться, что результат реально работает.</p>
+
+<p>Я собрал набор локальных skills для ИИ-агентов под 1С:Предприятие:</p>
+
+<p><a href="https://github.com/msrv-tech/skills">https://github.com/msrv-tech/skills</a></p>
+
+<p>Это не один большой промпт, а каталог из 82 специализированных навыков. Каждый skill лежит в отдельной папке, содержит <code>SKILL.md</code>, а для практических сценариев еще и скрипты, reference-файлы, evals и примеры. Такой формат можно использовать в Codex, Claude Code и других агентных средах, где есть локальные инструкции и инструменты.</p>
+
+<h2>Что внутри</h2>
+
+<p>Репозиторий закрывает основные рабочие сценарии 1С-разработчика:</p>
+
+<ul>
+	<li>конфигурации: <code>cf-init</code>, <code>cf-info</code>, <code>cf-edit</code>, <code>cf-validate</code>, <code>cf-new-project</code>, <code>cf-add-object</code>;</li>
+	<li>расширения: <code>cfe-init</code>, <code>cfe-borrow</code>, <code>cfe-patch-method</code>, <code>cfe-diff</code>, <code>cfe-validate</code>;</li>
+	<li>метаданные: <code>meta-compile</code>, <code>meta-edit</code>, <code>meta-info</code>, <code>meta-remove</code>, <code>meta-validate</code>;</li>
+	<li>управляемые формы, макеты, роли, подсистемы, СКД и MXL;</li>
+	<li>внешние обработки и отчеты: <code>epf-*</code>, <code>erf-*</code>;</li>
+	<li>информационные базы: создание, загрузка XML/CF, выгрузка XML/CF, обновление, запуск;</li>
+	<li>веб-публикация через Apache и браузерные smoke-тесты через Playwright;</li>
+	<li>отдельное расширение <code>codex-test-bridge</code>, которое дает HTTP API для тестовых баз 1С.</li>
+</ul>
+
+<p>Полный список навыков:</p>
+
+<ul>
+	<li><a href="https://github.com/msrv-tech/skills/blob/main/SKILLS_TABLE.md">SKILLS_TABLE.md</a></li>
+	<li><a href="https://github.com/msrv-tech/skills/blob/main/skills-index.csv">skills-index.csv</a></li>
+</ul>
+
+<h2>Почему skills, а не один большой промпт</h2>
+
+<p>В 1С много локальных правил, которые трудно держать в голове агента все время: формат XML-выгрузки, имена коллекций метаданных и вложенных объектов, права ролей, структура управляемых форм, особенности MXL и СКД, команды Конфигуратора и <code>ibcmd</code>, различия между CF, CFE, EPF и ERF.</p>
+
+<p>Если все это положить в один системный промпт, он станет тяжелым и неуправляемым. Skills решают задачу иначе: агент подтягивает конкретный навык тогда, когда он нужен. Например, для создания справочника используется <code>meta-compile</code>, для проверки формы - <code>form-validate</code>, для публикации базы - <code>web-publish</code>.</p>
+
+<h2>Главная фишка: Test Bridge для 1С</h2>
+
+<p>Самая важная часть набора - <a href="https://github.com/msrv-tech/skills/tree/main/codex-test-bridge">codex-test-bridge</a>. В репозитории он пока называется именно так, но по смыслу это универсальный test bridge для любого ИИ-агента.</p>
+
+<p>Это служебное расширение 1С для демо- и тестовых баз. Оно публикует HTTP-сервис <code>codex-test</code> и дает внешнему агенту JSON API поверх базы.</p>
+
+<p>Внутри папки:</p>
+
+<ul>
+	<li><a href="https://github.com/msrv-tech/skills/tree/main/codex-test-bridge/src">src/</a> - XML-исходники расширения;</li>
+	<li><a href="https://github.com/msrv-tech/skills/blob/main/codex-test-bridge/codex-test-bridge.cfe">codex-test-bridge.cfe</a> - готовое собранное расширение;</li>
+	<li><a href="https://github.com/msrv-tech/skills/blob/main/codex-test-bridge/client.py">client.py</a> - Python-клиент для вызова HTTP API;</li>
+	<li><a href="https://github.com/msrv-tech/skills/blob/main/codex-test-bridge/BRIDGE.md">BRIDGE.md</a> - спецификация endpoints и команд;</li>
+	<li><a href="https://github.com/msrv-tech/skills/tree/main/codex-test-bridge/scripts">scripts/</a> - сборка CFE и включение HTTP-сервиса в <code>default.vrd</code>.</li>
+</ul>
+
+<h3>Какую проблему он решает</h3>
+
+<p>Обычный ИИ-агент может изменить XML-файлы, но дальше ему нужно проверить результат. В 1С это не всегда просто:</p>
+
+<ul>
+	<li>COM-подключение доступно не везде;</li>
+	<li>Linux-агент не может напрямую использовать Windows COM;</li>
+	<li>UI-тесты медленные и хрупкие;</li>
+	<li>многие проверки требуют живой базы, а не только файлов;</li>
+	<li>внешнюю печатную форму или отчет нужно не только собрать, но и реально сформировать.</li>
+</ul>
+
+<p>Bridge закрывает этот разрыв. Агент получает HTTP API и может работать с тестовой базой как с проверяемым runtime-контуром.</p>
+
+<h3>Что умеет bridge</h3>
+
+<p>Через HTTP можно:</p>
+
+<ul>
+	<li>проверить доступность базы командой <code>Health</code>;</li>
+	<li>получить список метаданных через <code>Metadata</code>;</li>
+	<li>описать объект метаданных через <code>Describe</code>;</li>
+	<li>выполнить запрос 1С через <code>Query</code>;</li>
+	<li>выполнить серверный BSL-код через <code>ExecuteBSL</code>;</li>
+	<li>вызвать экспортный метод общего модуля через <code>CallCommonModule</code>;</li>
+	<li>создать или обновить элемент справочника либо документ через <code>WriteObject</code>;</li>
+	<li>прочитать объект по UUID через <code>GetObject</code>;</li>
+	<li>поставить или снять пометку удаления через <code>DeleteObject</code>;</li>
+	<li>проверить внешнюю печатную форму через <code>RenderExternalPrintForm</code>;</li>
+	<li>проверить внешний отчет через <code>RenderExternalReport</code>.</li>
+</ul>
+
+<p>Спецификация API: <a href="https://github.com/msrv-tech/skills/blob/main/codex-test-bridge/BRIDGE.md">BRIDGE.md</a>.</p>
+
+<h3>Почему это важно для агентной разработки</h3>
+
+<p>Без bridge агент часто останавливается на фразе &laquo;код изменен, проверьте в 1С&raquo;. С bridge можно построить другой цикл:</p>
+
+<ol>
+	<li>Агент создает или меняет объект в XML.</li>
+	<li>Загружает изменения в тестовую базу.</li>
+	<li>Устанавливает расширение <code>CodexTestBridge</code>.</li>
+	<li>Публикует базу в веб-клиенте.</li>
+	<li>Вызывает HTTP API.</li>
+	<li>Создает тестовые данные.</li>
+	<li>Выполняет запросы и серверные проверки.</li>
+	<li>Формирует внешнюю печатную форму или отчет.</li>
+	<li>Сохраняет результат в <code>mxl</code>, <code>html</code>, <code>txt</code>.</li>
+	<li>Проверяет текст, таблицы, итоги и ошибки.</li>
+</ol>
+
+<p>Это уже не &laquo;ИИ написал код&raquo;. Это ближе к полноценной автоматизированной разработке, где агент может сам подтвердить, что артефакт работает.</p>
+
+<h2>Пример: проверка доступности bridge</h2>
+
+<p>После установки CFE и публикации базы HTTP-сервис доступен по адресам:</p>
+
+<pre><code>http://&lt;host&gt;/&lt;publication&gt;/hs/codex-test/health
+http://&lt;host&gt;/&lt;publication&gt;/hs/codex-test/command</code></pre>
+
+<p>Python-клиент:</p>
+
+<pre><code class="language-powershell">python %CODEX_HOME%\skills\codex-test-bridge\client.py `
+  --base-url http://127.0.0.1:9091/demo1c/hs/codex-test health</code></pre>
+
+<p>Метаданные:</p>
+
+<pre><code class="language-powershell">python %CODEX_HOME%\skills\codex-test-bridge\client.py `
+  --base-url http://127.0.0.1:9091/demo1c/hs/codex-test `
+  metadata --sections catalogs,documents</code></pre>
+
+<p>Запрос:</p>
+
+<pre><code class="language-powershell">python %CODEX_HOME%\skills\codex-test-bridge\client.py `
+  --base-url http://127.0.0.1:9091/demo1c/hs/codex-test `
+  query "ВЫБРАТЬ ПЕРВЫЕ 10 Ссылка, Наименование ИЗ Справочник.Контрагенты" --limit 10</code></pre>
+
+<h2>Пример: проверка внешней печатной формы без UI</h2>
+
+<p>Особенно интересны команды <code>RenderExternalPrintForm</code> и <code>RenderExternalReport</code>.</p>
+
+<p>Для внешней печатной формы bridge создает внешнюю обработку из EPF, берет документ по UUID или первый документ нужного вида, вызывает экспортную процедуру/функцию <code>СформироватьПечатнуюФормуДляТеста(МассивОбъектов)</code> и сохраняет результат.</p>
+
+<pre><code class="language-powershell">python %CODEX_HOME%\skills\codex-test-bridge\client.py `
+  --base-url http://127.0.0.1:9091/demo1c/hs/codex-test `
+  render-print-form D:\temp\customer-order-print.epf `
+  --output-dir D:\temp\print-render `
+  --assignment Документ.ЗаказПокупателя `
+  --document-name ЗаказПокупателя</code></pre>
+
+<p>На выходе можно получить <code>mxl</code>, <code>html</code>, <code>txt</code>. Это дает агенту возможность проверять не только факт сборки EPF, но и содержимое печатной формы: заголовки, строки, итоги, дубли, пустые области.</p>
+
+<p>Для внешнего отчета аналогично:</p>
+
+<pre><code class="language-powershell">python %CODEX_HOME%\skills\codex-test-bridge\client.py `
+  --base-url http://127.0.0.1:9091/demo1c/hs/codex-test `
+  render-report D:\temp\sales-report.erf `
+  --output-dir D:\temp\report-render</code></pre>
+
+<p>В отчете должна быть экспортная функция <code>СформироватьОтчетДляТеста(Параметры)</code>, которая возвращает <code>ТабличныйДокумент</code>.</p>
+
+<h2>Безопасность</h2>
+
+<p>Bridge предназначен только для локальных демо- и тестовых баз.</p>
+
+<p>Его нельзя подключать к боевым базам и нельзя публиковать наружу. API выполняет серверные операции в базе, включая выполнение BSL-кода и запись объектов. Это сознательно сделано для тестового контура, где агенту нужно быстро проверить результат разработки.</p>
+
+<p>Обычный <code>web-publish</code> в наборе skills публикует базу безопаснее, без HTTP-сервисов расширений. Для bridge HTTP-сервис включается отдельным helper-скриптом: <a href="https://github.com/msrv-tech/skills/blob/main/codex-test-bridge/scripts/enable_vrd_windows.ps1">enable_vrd_windows.ps1</a>.</p>
+
+<h2>Как установить</h2>
+
+<p>Самый простой способ - не устанавливать все руками, а поручить это своему ИИ-агенту.</p>
+
+<p>Откройте Codex, Claude Code или другой агентный инструмент и напишите примерно так:</p>
+
+<pre><code>Добавь в мой локальный набор skills навыки из репозитория:
+https://github.com/msrv-tech/skills
+
+Разбери README, SKILLS_TABLE.md и структуру папок.
+Установи skills так, чтобы ты мог использовать их в дальнейшей работе с 1С.</code></pre>
+
+<p>Дальше агент сам разберется: клонирует репозиторий или скачает нужные папки, найдет <code>SKILL.md</code>, проверит зависимости, подскажет, что нужно установить локально, и подключит навыки в формате своей среды.</p>
+
+<p>Если нужен именно bridge для тестовой базы, можно дать агенту отдельную задачу:</p>
+
+<pre><code>Установи codex-test-bridge из этого репозитория в мою тестовую базу 1С.
+Используй BRIDGE.md и scripts/ как инструкцию, боевую базу не трогай.</code></pre>
+
+<p>То есть ссылка на репозиторий - это входная точка. Остальное лучше делать через агента: он уже умеет читать файлы, сверять инструкции, запускать команды и адаптировать установку под конкретную машину.</p>
+
+<h2>Что получается в итоге</h2>
+
+<p>Такие skills превращают ИИ-агента из &laquo;редактора с автодополнением&raquo; в инженерного помощника, который понимает конкретные операции 1С:</p>
+
+<ul>
+	<li>создать объект метаданных;</li>
+	<li>добавить форму;</li>
+	<li>собрать внешнюю обработку;</li>
+	<li>загрузить конфигурацию в базу;</li>
+	<li>опубликовать веб-клиент;</li>
+	<li>вызвать HTTP API тестовой базы;</li>
+	<li>сформировать печатную форму или отчет;</li>
+	<li>проверить результат автоматически.</li>
+</ul>
+
+<p>Главное здесь - не магия нейросети, а правильная упаковка контекста и инструментов. Агент становится полезнее тогда, когда рядом с ним лежат маленькие, точные, проверяемые навыки.</p>
+
+<p><strong>Репозиторий:</strong> <a href="https://github.com/msrv-tech/skills">https://github.com/msrv-tech/skills</a></p>
+
+<p><strong>Bridge:</strong> <a href="https://github.com/msrv-tech/skills/tree/main/codex-test-bridge">https://github.com/msrv-tech/skills/tree/main/codex-test-bridge</a></p>

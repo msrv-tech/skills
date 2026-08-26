@@ -1,0 +1,6 @@
+interface:
+  display_name: "CF Info"
+  short_description: "Анализ структуры конфигурации 1С — свойства, состав, счётчики объектов. Используй для обз..."
+  default_prompt: "Use $cf-info for this task."
+policy:
+  allow_implicit_invocation: true

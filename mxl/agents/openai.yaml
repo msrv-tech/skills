@@ -1,0 +1,6 @@
+interface:
+  display_name: "MXL"
+  short_description: "Используй этот скилл для всех операций с MXL-макетами и шаблонами объектов 1С: создание M..."
+  default_prompt: "Use $mxl for this task."
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,6 @@
+interface:
+  display_name: "EPF BSP Init"
+  short_description: "Добавить функцию регистрации БСП (СведенияОВнешнейОбработке) в модуль объекта обработки"
+  default_prompt: "Use $epf-bsp-init for this task."
+policy:
+  allow_implicit_invocation: true

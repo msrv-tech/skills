@@ -1,0 +1,6 @@
+interface:
+  display_name: "DB Create"
+  short_description: "Создание информационной базы 1С. Используй когда пользователь просит создать базу, новую..."
+  default_prompt: "Use $db-create for this task."
+policy:
+  allow_implicit_invocation: true

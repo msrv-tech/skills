@@ -1,0 +1,6 @@
+interface:
+  display_name: "SKD Edit"
+  short_description: "Точечное редактирование схемы компоновки данных 1С (СКД). Используй когда нужно модифицир..."
+  default_prompt: "Use $skd-edit for this task."
+policy:
+  allow_implicit_invocation: true

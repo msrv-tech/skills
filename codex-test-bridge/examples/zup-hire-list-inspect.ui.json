@@ -1,0 +1,24 @@
+{
+  "$schema": "../ui-scenario.schema.json",
+  "name": "zup-hire-list-inspect",
+  "steps": [
+    {
+      "action": "openNavigationLink",
+      "name": "open-hire-list",
+      "link": "e1cib/list/Документ.ПриемНаРаботу",
+      "attempts": 3,
+      "targetForm": {
+        "title": "Приемы на работу",
+        "timeout": 20,
+        "saveAs": "hireList"
+      }
+    },
+    {
+      "action": "inspectUi",
+      "name": "inspect-hire-list",
+      "form": "hireList",
+      "depth": 5,
+      "timeout": 30
+    }
+  ]
+}

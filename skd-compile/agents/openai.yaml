@@ -1,0 +1,6 @@
+interface:
+  display_name: "SKD Compile"
+  short_description: "Компиляция схемы компоновки данных 1С (СКД) из компактного JSON-определения. Используй ко..."
+  default_prompt: "Use $skd-compile for this task."
+policy:
+  allow_implicit_invocation: true

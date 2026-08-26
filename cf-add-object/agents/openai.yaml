@@ -1,0 +1,6 @@
+interface:
+  display_name: "CF ADD Object"
+  short_description: "Добавить объект метаданных в конфигурацию 1С с формой, подсистемой и валидацией. Workflow..."
+  default_prompt: "Use $cf-add-object for this task."
+policy:
+  allow_implicit_invocation: true

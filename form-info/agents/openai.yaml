@@ -1,0 +1,6 @@
+interface:
+  display_name: "Form Info"
+  short_description: "Анализ структуры управляемой формы 1С (Form.xml) — элементы, реквизиты, команды, события...."
+  default_prompt: "Use $form-info for this task."
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,6 @@
+interface:
+  display_name: "1C Test Databases"
+  short_description: "Безопасный выбор тестовой базы 1С из реестра"
+  default_prompt: "Use $test-databases to resolve and select an approved 1C test database."
+policy:
+  allow_implicit_invocation: true

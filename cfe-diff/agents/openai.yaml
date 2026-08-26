@@ -1,0 +1,6 @@
+interface:
+  display_name: "CFE Diff"
+  short_description: "Анализ расширения конфигурации 1С (CFE) — состав, заимствованные объекты, перехватчики, п..."
+  default_prompt: "Use $cfe-diff for this task."
+policy:
+  allow_implicit_invocation: true

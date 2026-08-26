@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.codex/1c-test-scenario.schema.json",
+  "title": "CodexTestBridge headless scenario",
+  "type": "object",
+  "required": ["steps"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {"type": "string"},
+    "name": {"type": "string"},
+    "cleanup": {"type": "boolean", "default": true},
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/step"}
+    },
+    "finally": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/finallyCommand"}
+    }
+  },
+  "$defs": {
+    "request": {
+      "type": "object",
+      "required": ["command"],
+      "properties": {"command": {"type": "string", "minLength": 1}},
+      "additionalProperties": true
+    },
+    "assertion": {
+      "type": "object",
+      "required": ["path"],
+      "additionalProperties": false,
+      "properties": {
+        "path": {"type": "string"},
+        "operator": {
+          "enum": ["eq", "ne", "gt", "gte", "lt", "lte", "contains", "matches", "exists", "empty", "notEmpty"]
+        },
+        "expected": true
+      }
+    },
+    "step": {
+      "type": "object",
+      "required": ["request"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {"type": "string"},
+        "saveAs": {"type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_-]*$"},
+        "request": {"$ref": "#/$defs/request"},
+        "assert": {"type": "array", "items": {"$ref": "#/$defs/assertion"}},
+        "retry": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "attempts": {"type": "integer", "minimum": 1},
+            "delaySeconds": {"type": "number", "minimum": 0}
+          }
+        },
+        "redactRequest": {"type": "array", "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "finallyCommand": {
+      "oneOf": [
+        {"$ref": "#/$defs/request"},
+        {
+          "type": "object",
+          "required": ["request"],
+          "additionalProperties": false,
+          "properties": {
+            "request": {"$ref": "#/$defs/request"},
+            "redactRequest": {"type": "array", "items": {"type": "string", "minLength": 1}}
+          }
+        }
+      ]
+    }
+  }
+}

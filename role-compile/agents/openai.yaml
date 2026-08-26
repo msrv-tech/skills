@@ -1,0 +1,6 @@
+interface:
+  display_name: "Role Compile"
+  short_description: "Создание роли 1С из описания прав. Используй когда нужно создать новую роль с набором пра..."
+  default_prompt: "Use $role-compile for this task."
+policy:
+  allow_implicit_invocation: true

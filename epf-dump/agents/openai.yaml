@@ -1,0 +1,6 @@
+interface:
+  display_name: "EPF Dump"
+  short_description: "Разобрать EPF-файл обработки 1С (EPF/ERF) в XML-исходники. Используй когда пользователь п..."
+  default_prompt: "Use $epf-dump for this task."
+policy:
+  allow_implicit_invocation: true

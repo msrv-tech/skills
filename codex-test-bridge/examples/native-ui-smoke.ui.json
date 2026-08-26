@@ -1,0 +1,10 @@
+{
+  "$schema": "../ui-scenario.schema.json",
+  "name": "Native test client connection",
+  "steps": [
+    {
+      "name": "Connect through the platform testing protocol",
+      "action": "assertConnected"
+    }
+  ]
+}

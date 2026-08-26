@@ -1,0 +1,6 @@
+interface:
+  display_name: "DB RUN"
+  short_description: "Запуск 1С:Предприятие. Используй когда пользователь просит запустить 1С, открыть базу, за..."
+  default_prompt: "Use $db-run for this task."
+policy:
+  allow_implicit_invocation: true

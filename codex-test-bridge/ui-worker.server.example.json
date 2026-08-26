@@ -1,0 +1,38 @@
+{
+  "backend": "windowsDesktop",
+  "testHost": "127.0.0.1",
+  "testPort": 1538,
+  "probeTestPort": false,
+  "startupDelaySeconds": 20,
+  "startupTimeoutSeconds": 60,
+  "timeoutSeconds": 900,
+  "resultTransport": "bridgeJob",
+  "captureOnFinish": true,
+  "postManagerDelaySeconds": 0,
+  "bridgeBaseUrl": "{bridgeBaseUrl}",
+  "bridgeUsername": "{username}",
+  "bridgePassword": "{password}",
+  "environmentPlaceholders": {
+    "platformExecutable": "CODEX_1C_EXECUTABLE",
+    "serverConnection": "CODEX_1C_SERVER_CONNECTION",
+    "bridgeBaseUrl": "CODEX_1C_BRIDGE_URL",
+    "username": "CODEX_1C_USERNAME",
+    "password": "CODEX_1C_PASSWORD"
+  },
+  "clientCommand": [
+    "{platformExecutable}", "ENTERPRISE",
+    "/S", "{serverConnection}",
+    "/N", "{username}",
+    "/P", "{password}",
+    "/DisableStartupDialogs", "/DisableStartupMessages", "/DisableSplash", "/TestClient",
+    "/C", "CodexUITestClient;Job={jobId}"
+  ],
+  "managerCommand": [
+    "{platformExecutable}", "ENTERPRISE",
+    "/S", "{serverConnection}",
+    "/N", "{username}",
+    "/P", "{password}",
+    "/DisableStartupDialogs", "/DisableStartupMessages", "/DisableSplash", "/TestManager",
+    "/C", "CodexUITest;Job={jobId};Host=127.0.0.1;Port={testPort}"
+  ]
+}

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MetaDataObject xmlns="http://v8.1c.ru/8.3/MDClasses" xmlns:v8="http://v8.1c.ru/8.1/data/core" version="2.20">
+	<CommonCommand uuid="6150c505-e90b-41e3-a8f7-7272cdcb62c2">
+		<Properties>
+			<Name>CodexNavigate</Name>
+			<Synonym>
+				<v8:item><v8:lang>ru</v8:lang><v8:content>Codex navigate</v8:content></v8:item>
+			</Synonym>
+			<Comment>Служебная навигация тестируемого клиента по ссылке из UI-сценария.</Comment>
+			<Group>NavigationPanelOrdinary</Group>
+			<Representation>Auto</Representation>
+			<ToolTip/>
+			<Picture/>
+			<Shortcut/>
+			<IncludeHelpInContents>false</IncludeHelpInContents>
+			<CommandParameterType/>
+			<ParameterUseMode>Single</ParameterUseMode>
+			<ModifiesData>false</ModifiesData>
+			<OnMainServerUnavalableBehavior>Auto</OnMainServerUnavalableBehavior>
+		</Properties>
+	</CommonCommand>
+</MetaDataObject>

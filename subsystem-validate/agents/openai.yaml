@@ -1,0 +1,6 @@
+interface:
+  display_name: "Subsystem Validate"
+  short_description: "Валидация подсистемы 1С. Используй после создания или модификации подсистемы для проверки..."
+  default_prompt: "Use $subsystem-validate for this task."
+policy:
+  allow_implicit_invocation: true

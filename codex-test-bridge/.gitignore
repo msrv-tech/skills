@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+.env
+.env.*
+!.env.example
+*.local.json
+artifacts/
+**/artifacts/
+*.log
+fixture*.json
+*.bmp
+*.png
+

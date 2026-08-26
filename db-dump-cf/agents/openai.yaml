@@ -1,0 +1,6 @@
+interface:
+  display_name: "DB Dump CF"
+  short_description: "Выгрузка конфигурации 1С в CF-файл. Используй когда пользователь просит выгрузить конфигу..."
+  default_prompt: "Use $db-dump-cf for this task."
+policy:
+  allow_implicit_invocation: true

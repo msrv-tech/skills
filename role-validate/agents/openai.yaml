@@ -1,0 +1,6 @@
+interface:
+  display_name: "Role Validate"
+  short_description: "Валидация роли 1С. Используй после создания или модификации роли для проверки корректности"
+  default_prompt: "Use $role-validate for this task."
+policy:
+  allow_implicit_invocation: true

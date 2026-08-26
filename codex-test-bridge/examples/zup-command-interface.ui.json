@@ -1,0 +1,12 @@
+{
+  "$schema": "../ui-scenario.schema.json",
+  "name": "zup-command-interface",
+  "steps": [
+    {
+      "action": "inspectCommandInterface",
+      "name": "inspect-main-command-interface",
+      "depth": 8,
+      "timeout": 60
+    }
+  ]
+}

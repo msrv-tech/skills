@@ -1,0 +1,6 @@
+interface:
+  display_name: "Playwright Test"
+  short_description: "Используй этот скилл когда пользователь говорит \"напиши UI-тест\", \"создай playwright тест..."
+  default_prompt: "Use $playwright-test for this task."
+policy:
+  allow_implicit_invocation: true

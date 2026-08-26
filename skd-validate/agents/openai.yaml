@@ -1,0 +1,6 @@
+interface:
+  display_name: "SKD Validate"
+  short_description: "Валидация схемы компоновки данных 1С (СКД). Используй после создания или модификации СКД..."
+  default_prompt: "Use $skd-validate for this task."
+policy:
+  allow_implicit_invocation: true

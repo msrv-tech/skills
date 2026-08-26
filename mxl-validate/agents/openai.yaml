@@ -1,0 +1,6 @@
+interface:
+  display_name: "MXL Validate"
+  short_description: "Валидация макета табличного документа (MXL). Используй после создания или модификации мак..."
+  default_prompt: "Use $mxl-validate for this task."
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,6 @@
+interface:
+  display_name: "WEB Test"
+  short_description: "Тестирование 1С через веб-клиент — автоматизация действий в браузере. Используй когда пол..."
+  default_prompt: "Use $web-test for this task."
+policy:
+  allow_implicit_invocation: true

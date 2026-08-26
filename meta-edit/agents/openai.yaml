@@ -1,0 +1,6 @@
+interface:
+  display_name: "Meta Edit"
+  short_description: "Точечное редактирование объекта метаданных 1С. Используй когда нужно добавить, удалить ил..."
+  default_prompt: "Use $meta-edit for this task."
+policy:
+  allow_implicit_invocation: true

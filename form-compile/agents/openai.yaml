@@ -1,0 +1,6 @@
+interface:
+  display_name: "Form Compile"
+  short_description: "Компиляция управляемой формы 1С из JSON-определения или из метаданных объекта. Используй..."
+  default_prompt: "Use $form-compile for this task."
+policy:
+  allow_implicit_invocation: true

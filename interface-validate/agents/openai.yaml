@@ -1,0 +1,6 @@
+interface:
+  display_name: "Interface Validate"
+  short_description: "Валидация командного интерфейса 1С. Используй после настройки командного интерфейса подси..."
+  default_prompt: "Use $interface-validate for this task."
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,15 @@
+{
+  "$schema": "../ui-scenario.schema.json",
+  "name": "Startup window diagnostics",
+  "steps": [
+    {
+      "name": "Connect to native test client",
+      "action": "assertConnected"
+    },
+    {
+      "name": "Inspect active startup window",
+      "action": "inspectUI",
+      "depth": 5
+    }
+  ]
+}

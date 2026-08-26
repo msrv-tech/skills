@@ -1,0 +1,6 @@
+interface:
+  display_name: "DB Load GIT"
+  short_description: "Загрузка изменений из Git в базу 1С. Используй когда пользователь просит загрузить измене..."
+  default_prompt: "Use $db-load-git for this task."
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,6 @@
+interface:
+  display_name: "Form ADD"
+  short_description: "Добавить управляемую форму к объекту конфигурации 1С"
+  default_prompt: "Use $form-add for this task."
+policy:
+  allow_implicit_invocation: true

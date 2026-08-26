@@ -1,0 +1,6 @@
+interface:
+  display_name: "Inspect"
+  short_description: "Используй этот скилл для анализа и инспекции любого объекта 1С из XML-выгрузки: конфигура..."
+  default_prompt: "Use $inspect for this task."
+policy:
+  allow_implicit_invocation: true

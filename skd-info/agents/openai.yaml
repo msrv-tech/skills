@@ -1,0 +1,6 @@
+interface:
+  display_name: "SKD Info"
+  short_description: "Анализ структуры схемы компоновки данных 1С (СКД) — наборы, поля, параметры, варианты. Ис..."
+  default_prompt: "Use $skd-info for this task."
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,6 @@
+interface:
+  display_name: "SKD Decompile"
+  short_description: "Декомпиляция схемы компоновки данных 1С (СКД) в JSON-черновик в формате skd-compile. Испо..."
+  default_prompt: "Use $skd-decompile for this task."
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,6 @@
+interface:
+  display_name: "Role Info"
+  short_description: "Компактная сводка прав роли 1С из Rights.xml — объекты, права, RLS, шаблоны ограничений...."
+  default_prompt: "Use $role-info for this task."
+policy:
+  allow_implicit_invocation: true

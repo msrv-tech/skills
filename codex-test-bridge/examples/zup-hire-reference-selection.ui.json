@@ -1,0 +1,49 @@
+{
+  "$schema": "../ui-scenario.schema.json",
+  "name": "zup-hire-reference-selection",
+  "steps": [
+    {
+      "action": "openNavigationLink",
+      "link": "e1cib/list/Документ.ПриемНаРаботу",
+      "attempts": 3,
+      "targetForm": {
+        "title": "Приемы на работу",
+        "timeout": 20,
+        "saveAs": "hireList"
+      }
+    },
+    {
+      "action": "click",
+      "form": "hireList",
+      "button": {"objectName": "ФормаСоздать", "timeout": 30}
+    },
+    {
+      "action": "waitForm",
+      "title": "Прием на работу (создание)",
+      "timeout": 60,
+      "saveAs": "hireDocument"
+    },
+    {
+      "action": "selectReference",
+      "name": "select-existing-employee",
+      "form": "hireDocument",
+      "field": {"objectName": "Сотрудник", "timeout": 30},
+      "strategy": "choiceForm",
+      "choiceForm": {"title": "Сотрудники", "timeout": 30},
+      "table": {"objectName": "Список", "timeout": 30},
+      "row": {
+        "Имя": "ТЕСТОВ Тест Тестович",
+        "Таб. номер": "TEST000001"
+      },
+      "direction": "both",
+      "attempts": 5,
+      "timeout": 30
+    },
+    {
+      "action": "assertField",
+      "form": "hireDocument",
+      "field": {"objectName": "Сотрудник", "timeout": 30},
+      "expected": "ТЕСТОВ Тест Тестович (дог.)"
+    }
+  ]
+}

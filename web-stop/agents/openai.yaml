@@ -1,0 +1,6 @@
+interface:
+  display_name: "WEB Stop"
+  short_description: "Остановка Apache HTTP Server. Используй когда пользователь просит остановить веб-сервер,..."
+  default_prompt: "Use $web-stop for this task."
+policy:
+  allow_implicit_invocation: true

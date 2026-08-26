@@ -1,0 +1,6 @@
+interface:
+  display_name: "Subsystem Info"
+  short_description: "Анализ структуры подсистемы 1С из XML-выгрузки — состав, дочерние подсистемы, командный и..."
+  default_prompt: "Use $subsystem-info for this task."
+policy:
+  allow_implicit_invocation: true

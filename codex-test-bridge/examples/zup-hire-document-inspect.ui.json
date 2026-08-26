@@ -1,0 +1,46 @@
+{
+  "$schema": "../ui-scenario.schema.json",
+  "name": "zup-hire-document-inspect",
+  "steps": [
+    {
+      "action": "openNavigationLink",
+      "name": "open-hire-list",
+      "link": "e1cib/list/Документ.ПриемНаРаботу",
+      "attempts": 3,
+      "targetForm": {
+        "title": "Приемы на работу",
+        "timeout": 20,
+        "saveAs": "hireList"
+      }
+    },
+    {
+      "action": "click",
+      "name": "create-hire-document",
+      "form": "hireList",
+      "button": {
+        "objectName": "ФормаСоздать",
+        "timeout": 30
+      }
+    },
+    {
+      "action": "waitForm",
+      "name": "wait-hire-document",
+      "title": "Прием на работу (создание)",
+      "timeout": 60,
+      "saveAs": "hireDocument"
+    },
+    {
+      "action": "inspectUi",
+      "name": "inspect-hire-document",
+      "form": "hireDocument",
+      "depth": 7,
+      "timeout": 30
+    },
+    {
+      "action": "closeForm",
+      "name": "close-without-saving",
+      "form": "hireDocument",
+      "timeout": 30
+    }
+  ]
+}

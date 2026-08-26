@@ -1,0 +1,24 @@
+{
+  "$schema": "../ui-scenario.schema.json",
+  "name": "do-internal-documents-list",
+  "steps": [
+    {
+      "action": "openNavigationLink",
+      "name": "open-internal-documents",
+      "link": "e1cib/list/Справочник.ВнутренниеДокументы",
+      "attempts": 1,
+      "targetForm": {
+        "title": "Внутренние документы",
+        "timeout": 30,
+        "saveAs": "documents"
+      }
+    },
+    {
+      "action": "inspectUi",
+      "name": "inspect-internal-documents",
+      "form": "documents",
+      "depth": 4,
+      "timeout": 60
+    }
+  ]
+}

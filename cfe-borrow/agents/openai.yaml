@@ -1,0 +1,6 @@
+interface:
+  display_name: "CFE Borrow"
+  short_description: "Заимствование объектов из конфигурации 1С в расширение (CFE). Используй когда нужно перех..."
+  default_prompt: "Use $cfe-borrow for this task."
+policy:
+  allow_implicit_invocation: true

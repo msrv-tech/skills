@@ -1,0 +1,6 @@
+interface:
+  display_name: "CF NEW Project"
+  short_description: "Создать новую конфигурацию 1С с нуля — scaffold + объекты + подсистемы + роли + формы. Wo..."
+  default_prompt: "Use $cf-new-project for this task."
+policy:
+  allow_implicit_invocation: true
