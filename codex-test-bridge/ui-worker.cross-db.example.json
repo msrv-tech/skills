@@ -21,7 +21,7 @@
     "{platformExecutable}", "ENTERPRISE",
     "/S", "{clientServerConnection}",
     "/N", "{clientUsername}",
-    "/DisableStartupDialogs", "/DisableStartupMessages", "/DisableSplash", "/TestClient",
+    "/DisableStartupDialogs", "/DisableStartupMessages", "/DisableSplash", "/TestClient", "-TPort", "{testPort}",
     "/C", "CodexUITestClient;Job={jobId}"
   ],
   "managerCommand": [

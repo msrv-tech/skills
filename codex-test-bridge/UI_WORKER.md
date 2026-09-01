@@ -318,6 +318,65 @@ Worker печатает стадии `starting`, `startup`, `connect`, `running`
 Рабочий тест на реальной ЗУП —
 `examples/zup-hire-reference-selection.ui.json`.
 
+Ссылочная ячейка табличной части выбирается тем же действием, но с раздельными
+селекторами целевой таблицы и таблицы формы выбора:
+
+```json
+{
+  "action": "selectReference",
+  "form": "document",
+  "table": {"objectName": "Товары"},
+  "row": {"НомерСтроки": "1"},
+  "field": {"objectName": "ТоварыНоменклатура"},
+  "strategy": "choiceForm",
+  "choiceForm": {"formName": "Справочник.Номенклатура.Форма.ФормаВыбора"},
+  "choiceTable": {"objectName": "Список"},
+  "choiceRow": {"Наименование": "Тестовый товар"},
+  "finishRow": true,
+  "onChangeWait": 1
+}
+```
+
+Bridge сам активирует `Товары` (это одновременно визуально переключает
+страницу), находит строку, активирует ячейку, вызывает `ИзменитьСтроку()`,
+выполняет выбор, вызывает `ЗакончитьРедактированиеСтроки(Ложь)` и ждёт
+обработку `OnChange`. Для табличного `strategy: choiceForm` поля
+`choiceTable`/`choiceRow` обязательны: старые `table`/`row` описывают цель.
+Для обычного реквизита прежний контракт не изменился — `table`/`row` по-прежнему
+описывают форму выбора.
+
+Текстовую ячейку меняй через `inputTableCell`, а проверяй через табличный
+вариант `assertField`:
+
+```json
+{
+  "action": "inputTableCell",
+  "form": "document",
+  "table": {"objectName": "Товары"},
+  "row": {"НомерСтроки": "1"},
+  "field": {"objectName": "ТоварыКоличество"},
+  "value": "2",
+  "replace": true,
+  "onChangeWait": 1
+}
+```
+
+```json
+{
+  "action": "assertField",
+  "form": "document",
+  "table": {"objectName": "Товары"},
+  "row": {"НомерСтроки": "1"},
+  "field": {"objectName": "ТоварыКоличество"},
+  "expected": "2"
+}
+```
+
+Табличный `openChoice` полезен для разведки: он входит в редактирование и
+оставляет строку открытой, чтобы следующие `inspectTable`/`selectTableRow`
+отработали отдельно. Для рабочего атомарного сценария используй
+`selectReference`.
+
 Пример безопасного закрытия изменённой формы:
 
 ```json
@@ -334,8 +393,15 @@ Worker печатает стадии `starting`, `startup`, `connect`, `running`
 
 Если рабочая форма 1С не публикует дерево `ТестируемаяФорма`, сценарий может
 содержать `uiaSteps`. Worker выполняет их после штатных шагов `/TestManager` на
-том же скрытом Windows desktop. Поддерживаются `inspect`, `wait`, `invoke`,
-`click`, `setValue`, `typeText`, `pressKey`, `toggle` и `sleep`.
+том же скрытом Windows desktop. Для редких стартовых диалогов допускается
+`uiaBeforeSteps`: эти шаги выполняются после запуска TestClient, но до запуска
+TestManager. Используй `uiaBeforeSteps` только для безопасного bootstrap
+окружения; в конфигурациях БСП вмешательство до подключения TestManager может
+нарушить рукопожатие `/TestClient`.
+
+Поддерживаются `inspect`, `wait`, `invoke`, `click`, `clickWindow`, `setValue`,
+`typeText`, `typeTextWindow`, `pasteTextWindow`, `pressKey`, `pressKeyWindow`,
+`toggle` и `sleep`.
 
 Селектор задаётся полями `name` (допускает `*` и `?`), `controlType` и
 `occurrence`. Для составного контрола `click` принимает `relativeX` и

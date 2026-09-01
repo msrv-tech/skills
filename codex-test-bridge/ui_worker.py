@@ -28,7 +28,7 @@ if hasattr(sys.stdout, "reconfigure"):
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from hidden_desktop_capture import capture_window
-from uia_runner import run_uia_steps
+from uia_runner import run_uia_bridge_request, run_uia_steps
 
 
 class UiWorkerError(RuntimeError):
@@ -40,7 +40,7 @@ DEFAULT_SECRET_FLAGS = ["/P", "/N", "/S", "/F", "--password", "--token", "--user
 DEFAULT_1C_STARTUP_FLAGS = ["/DisableStartupDialogs", "/DisableStartupMessages", "/DisableSplash"]
 NATIVE_UI_ACTIONS: set[str] = {
     "assertConnected", "openNavigationLink", "executeCommand", "nextWindow", "activateWindow",
-    "waitForm", "waitFormClosed", "waitElement", "assertElement", "inspectUi", "inspectTable",
+    "waitForm", "waitFormClosed", "waitElement", "assertElement", "inspectUi", "inspectUI", "inspectTable",
     "inspectCommandInterface", "clickCommandInterface", "activateForm", "activateElement",
     "inputText", "selectReference", "selectFromDropdown", "setCheckbox", "openChoice",
     "selectTableRow", "assertTableRow", "inputTableCell", "click", "assertField",
@@ -48,16 +48,17 @@ NATIVE_UI_ACTIONS: set[str] = {
 }
 NATIVE_UI_ROOT_FIELDS = {
     "$schema", "name", "navigationLink", "dismissStartupDialogs", "startupDialogAttempts",
-    "startupDialogButtons", "startupSettleSeconds", "uiaSteps", "steps",
+    "startupDialogButtons", "startupSettleSeconds", "uiaBeforeSteps", "uiaSteps", "steps",
 }
 NATIVE_UI_STEP_FIELDS = {
     "action", "name", "command", "link", "uuid", "kind", "metadataName", "form", "saveAs",
     "title", "objectName", "formName", "timeout", "attempts", "strategy", "match", "direction",
     "depth", "value", "expected", "exists", "visible", "enabled", "readOnly", "checked", "strict",
-    "finishRow", "waitClosed", "optional", "elementType", "onPrompt", "dialogTitle", "promptTimeout",
-    "row", "element", "field", "button", "dialogButton", "table", "targetForm", "choiceForm",
+    "finishRow", "onChangeWait", "replace", "waitClosed", "optional", "elementType", "onPrompt",
+    "dialogTitle", "promptTimeout", "row", "choiceRow", "element", "field", "button",
+    "dialogButton", "table", "choiceTable", "targetForm", "choiceForm",
 }
-NATIVE_UI_SELECTOR_FIELDS = {"title", "objectName", "formName", "saveAs", "timeout", "pollingInterval"}
+NATIVE_UI_SELECTOR_FIELDS = {"title", "objectName", "formName", "metadataFullName", "saveAs", "timeout", "pollingInterval"}
 
 
 def utc_now() -> datetime:
@@ -167,8 +168,12 @@ def validate_worker_config(config: Any) -> None:
         command = config.get(name)
         if not isinstance(command, list) or not command or any(not isinstance(item, str) or not item for item in command):
             raise UiWorkerError(f"{name} must be a non-empty array of strings")
+    test_port_value = config.get("testPort", 1538)
+    if test_port_value not in (None, "", 0, "0", "auto"):
+        if isinstance(test_port_value, bool) or not isinstance(test_port_value, (int, float)) or test_port_value <= 0:
+            raise UiWorkerError("testPort must be greater than zero or auto")
     for name, default in (
-        ("testPort", 1538), ("startupTimeoutSeconds", 60), ("timeoutSeconds", 900),
+        ("startupTimeoutSeconds", 60), ("timeoutSeconds", 900),
         ("heartbeatIntervalSeconds", 10), ("progressPollSeconds", 1),
     ):
         value = config.get(name, default)
@@ -515,6 +520,15 @@ def bridge_command(config: dict[str, Any], payload: dict[str, Any]) -> dict[str,
     return result
 
 
+def is_scenario_result(value: Any) -> bool:
+    if not isinstance(value, dict):
+        return False
+    status = value.get("status")
+    if status in {"running", "uia-request", "uia-response"}:
+        return False
+    return "ok" in value or isinstance(value.get("steps"), list)
+
+
 def create_backend(config: dict[str, Any], run_id: str) -> ProcessBackend | WindowsHiddenDesktopBackend | XvfbBackend:
     backend = config.get("backend", "auto")
     if backend == "auto":
@@ -567,7 +581,11 @@ def run_ui_worker(config: dict[str, Any], scenario_path: str | Path, artifact_di
         scenario_text = json.dumps(scenario_data, ensure_ascii=True, separators=(",", ":"))
     client_log = artifacts / f"client-{run_id}.log"
     manager_log = artifacts / f"manager-{run_id}.log"
-    test_port = int(config["testPort"]) if "testPort" in config else choose_free_port(str(config.get("testHost", "127.0.0.1")))
+    configured_test_port = config.get("testPort")
+    if configured_test_port in (None, "", 0, "0", "auto"):
+        test_port = choose_free_port(str(config.get("testHost", "127.0.0.1")))
+    else:
+        test_port = int(configured_test_port)
     variables = {
         "runId": run_id,
         "jobId": run_id,
@@ -604,7 +622,9 @@ def run_ui_worker(config: dict[str, Any], scenario_path: str | Path, artifact_di
     manager_exit_code = None
     screenshot_file = None
     screenshot_error = None
+    uia_before_results = None
     uia_results = None
+    uia_bridge_results: list[dict[str, Any]] = []
     runtime_config = copy.deepcopy(config)
 
     try:
@@ -627,6 +647,16 @@ def run_ui_worker(config: dict[str, Any], scenario_path: str | Path, artifact_di
         else:
             wait_for_startup(client, float(config.get("startupDelaySeconds", 10)))
         progress("connect", "TestClient startup completed", clientPid=client.pid)
+        if (
+            isinstance(scenario_data, dict)
+            and scenario_data.get("uiaBeforeSteps")
+            and isinstance(backend, WindowsHiddenDesktopBackend)
+            and client is not None
+        ):
+            progress("uia", "Running pre-native UI Automation steps")
+            uia_before_results = run_uia_steps(backend.desktop_name, client.pid, scenario_data["uiaBeforeSteps"])
+            if any(step.get("status") != "passed" for step in uia_before_results):
+                raise UiWorkerError("A pre-native UI Automation step failed")
         progress("startup", "Starting TestManager")
         manager = backend.start(manager_command)
         progress("running", "TestManager started", managerPid=manager.pid)
@@ -636,6 +666,7 @@ def run_ui_worker(config: dict[str, Any], scenario_path: str | Path, artifact_di
         next_job_poll = 0.0
         last_progress_signature: tuple[Any, ...] | None = None
         last_partial_result: dict[str, Any] | None = None
+        handled_uia_requests: set[str] = set()
         current_step_started = time.monotonic()
         while time.monotonic() < manager_deadline:
             exit_code = manager.poll()
@@ -650,6 +681,28 @@ def run_ui_worker(config: dict[str, Any], scenario_path: str | Path, artifact_di
                     progress_text = progress_job.get("result", "")
                     if progress_text:
                         partial = json.loads(progress_text)
+                        if isinstance(partial, dict) and partial.get("status") == "uia-request":
+                            request_id = str(partial.get("requestId", ""))
+                            if request_id and request_id not in handled_uia_requests:
+                                handled_uia_requests.add(request_id)
+                                progress("uia", f"Running UIA bridge request: {partial.get('action')}", requestId=request_id)
+                                if isinstance(backend, WindowsHiddenDesktopBackend) and client is not None:
+                                    response = run_uia_bridge_request(backend.desktop_name, client.pid, partial)
+                                else:
+                                    response = {
+                                        "ok": False,
+                                        "requestId": request_id,
+                                        "status": "uia-response",
+                                        "error": "UIA bridge requests require windowsDesktop backend",
+                                    }
+                                uia_bridge_results.append(response)
+                                bridge_command(runtime_config, {
+                                    "command": "uiJobSet",
+                                    "jobId": run_id,
+                                    "status": "uia-response",
+                                    "result": json.dumps(response, ensure_ascii=True, separators=(",", ":")),
+                                })
+                            continue
                         if isinstance(partial, dict) and partial.get("status") == "running":
                             last_partial_result = partial
                             current = partial.get("step") or {}
@@ -691,7 +744,9 @@ def run_ui_worker(config: dict[str, Any], scenario_path: str | Path, artifact_di
             job = bridge_command(runtime_config, {"command": "uiJobGet", "jobId": run_id})
             result_text = job.get("result", "")
             if result_text:
-                manager_result = json.loads(result_text)
+                candidate_result = json.loads(result_text)
+                if is_scenario_result(candidate_result):
+                    manager_result = candidate_result
         elif transport == "inlineLog" and manager_log.exists():
             raw_log = manager_log.read_bytes()
             log_text = ""
@@ -795,6 +850,8 @@ def run_ui_worker(config: dict[str, Any], scenario_path: str | Path, artifact_di
         "managerLog": str(manager_log) if transport == "inlineLog" else None,
         "resultFile": str(result_file) if result_file is not None else None,
         "managerResult": manager_result,
+        "uiaBeforeResult": uia_before_results,
+        "uiaBridgeResult": uia_bridge_results or None,
         "uiaResult": uia_results,
         "progress": progress_events,
         "artifacts": {"screenshot": screenshot_file, "progress": str(progress_file), "diagnostics": str(diagnostics_file) if diagnostics_file else None},

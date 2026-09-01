@@ -80,6 +80,7 @@ class UiWorkerTests(unittest.TestCase):
         actions = step["properties"]["action"]["enum"]
 
         self.assertIn("selectReference", actions)
+        self.assertIn("inspectUI", actions)
         self.assertIn("openNavigationLink", actions)
         self.assertIn("inspectTable", actions)
         self.assertIn("selectFromDropdown", actions)
@@ -97,6 +98,21 @@ class UiWorkerTests(unittest.TestCase):
             ["auto", "dropdownExact", "typeAhead", "choiceForm"],
         )
         self.assertIn("formName", schema["$defs"]["selector"]["properties"])
+        self.assertIn("choiceTable", step["properties"])
+        self.assertIn("choiceRow", step["properties"])
+        self.assertIn("onChangeWait", step["properties"])
+        self.assertIn("replace", step["properties"])
+        self.assertIn("uiaBeforeSteps", schema["properties"])
+
+    def test_native_module_has_table_cell_editing_primitives(self):
+        module = (
+            Path(__file__).resolve().parents[1]
+            / "src" / "Ext" / "ManagedApplicationModule.bsl"
+        ).read_text(encoding="utf-8-sig")
+        self.assertIn("Функция CTB_ПолучитьКонтекстПоля", module)
+        self.assertIn("Таблица.ИзменитьСтроку()", module)
+        self.assertIn("Таблица.ЗакончитьРедактированиеСтроки(Ложь)", module)
+        self.assertIn("Таблица.ПолучитьТекстЯчейки", module)
 
     def test_expand_and_unknown_placeholder(self):
         self.assertEqual(expand(["-TPort{testPort}"], {"testPort": "1538"}), ["-TPort1538"])

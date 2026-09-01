@@ -1,0 +1,44 @@
+{
+  "$schema": "../ui-scenario.schema.json",
+  "name": "generic-table-cell-reference",
+  "steps": [
+    {
+      "action": "waitForm",
+      "formName": "Документ.ИмяДокумента.Форма.ФормаДокумента",
+      "saveAs": "document",
+      "timeout": 30
+    },
+    {
+      "action": "selectReference",
+      "form": "document",
+      "table": {"objectName": "Товары"},
+      "row": {"НомерСтроки": "1"},
+      "field": {"objectName": "ТоварыНоменклатура"},
+      "strategy": "choiceForm",
+      "choiceForm": {"formName": "Справочник.Номенклатура.Форма.ФормаВыбора"},
+      "choiceTable": {"objectName": "Список"},
+      "choiceRow": {"Наименование": "Тестовый товар"},
+      "finishRow": true,
+      "onChangeWait": 1
+    },
+    {
+      "action": "inputTableCell",
+      "form": "document",
+      "table": {"objectName": "Товары"},
+      "row": {"НомерСтроки": "1"},
+      "field": {"objectName": "ТоварыКоличество"},
+      "value": "2",
+      "replace": true,
+      "finishRow": true,
+      "onChangeWait": 1
+    },
+    {
+      "action": "assertField",
+      "form": "document",
+      "table": {"objectName": "Товары"},
+      "row": {"НомерСтроки": "1"},
+      "field": {"objectName": "ТоварыКоличество"},
+      "expected": "2"
+    }
+  ]
+}

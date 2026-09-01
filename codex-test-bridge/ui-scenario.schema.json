@@ -13,6 +13,7 @@
     "startupDialogAttempts": {"type": "integer", "minimum": 1, "maximum": 20, "default": 5},
     "startupDialogButtons": {"type": "array", "items": {"type": "string", "minLength": 1}},
     "startupSettleSeconds": {"type": "integer", "minimum": 0, "maximum": 60, "default": 3},
+    "uiaBeforeSteps": {"type": "array", "items": {"type": "object"}},
     "uiaSteps": {"type": "array", "items": {"type": "object"}},
     "steps": {
       "type": "array",
@@ -27,6 +28,7 @@
         "title": {"type": "string"},
         "objectName": {"type": "string"},
         "formName": {"type": "string"},
+        "metadataFullName": {"type": "string"},
         "saveAs": {"type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_-]*$"},
         "timeout": {"type": "number", "exclusiveMinimum": 0}
       }
@@ -35,7 +37,7 @@
       "type": "object",
       "required": ["action"],
       "properties": {
-        "action": {"enum": ["assertConnected", "openNavigationLink", "executeCommand", "nextWindow", "activateWindow", "waitForm", "waitFormClosed", "waitElement", "assertElement", "inspectUi", "inspectTable", "inspectCommandInterface", "clickCommandInterface", "activateForm", "activateElement", "inputText", "selectReference", "selectFromDropdown", "setCheckbox", "openChoice", "selectTableRow", "assertTableRow", "inputTableCell", "click", "assertField", "handleDialog", "closeForm"]},
+        "action": {"enum": ["assertConnected", "openNavigationLink", "executeCommand", "nextWindow", "activateWindow", "waitForm", "waitFormClosed", "waitElement", "assertElement", "inspectUi", "inspectUI", "inspectTable", "inspectCommandInterface", "clickCommandInterface", "activateForm", "activateElement", "inputText", "selectReference", "selectFromDropdown", "setCheckbox", "openChoice", "selectTableRow", "assertTableRow", "inputTableCell", "click", "assertField", "handleDialog", "closeForm"]},
         "name": {"type": "string"},
         "command": {"type": "string"},
         "link": {"type": "string", "minLength": 1},
@@ -63,6 +65,8 @@
         "checked": {"type": "boolean"},
         "strict": {"type": "boolean"},
         "finishRow": {"type": "boolean"},
+        "onChangeWait": {"type": "integer", "minimum": 0, "maximum": 30, "default": 1},
+        "replace": {"type": "boolean", "default": true},
         "waitClosed": {"type": "boolean"},
         "optional": {"type": "boolean"},
         "elementType": {"enum": ["field", "button", "table", "group", "decoration", "addition"]},
@@ -70,11 +74,13 @@
         "dialogTitle": {"type": "string"},
         "promptTimeout": {"type": "number", "exclusiveMinimum": 0},
         "row": {"type": "object", "minProperties": 1},
+        "choiceRow": {"type": "object", "minProperties": 1},
         "element": {"$ref": "#/$defs/selector"},
         "field": {"$ref": "#/$defs/selector"},
         "button": {"$ref": "#/$defs/selector"},
         "dialogButton": {"oneOf": [{"type": "string"}, {"$ref": "#/$defs/selector"}]},
         "table": {"$ref": "#/$defs/selector"},
+        "choiceTable": {"$ref": "#/$defs/selector"},
         "targetForm": {"$ref": "#/$defs/selector"},
         "choiceForm": {"$ref": "#/$defs/selector"}
       },

@@ -22,11 +22,16 @@ if (-not $OutFile) {
     $OutFile = Join-Path $root "codex-test-bridge.cfe"
 }
 
-$ibcmd = $PlatformPath
-if (Test-Path $ibcmd -PathType Container) {
-    $ibcmd = Join-Path $ibcmd "ibcmd.exe"
+$ibcmd = $null
+if (Test-Path $PlatformPath -PathType Container) {
+    $candidate = Join-Path $PlatformPath "ibcmd.exe"
+    if (Test-Path $candidate -PathType Leaf) {
+        $ibcmd = $candidate
+    }
+} elseif ((Split-Path -Leaf $PlatformPath) -ieq "ibcmd.exe" -and (Test-Path $PlatformPath -PathType Leaf)) {
+    $ibcmd = $PlatformPath
 }
-if (-not (Test-Path $ibcmd)) {
+if (-not $ibcmd) {
     $platformExe = $PlatformPath
     if (Test-Path $platformExe -PathType Container) {
         $platformExe = Join-Path $platformExe "1cv8.exe"
