@@ -12,6 +12,7 @@ from ui_worker import (
     UiWorkerError, expand, navigation_ref_from_uuid, prepare_native_ui_scenario, redact_command,
     run_ui_worker, suppress_1c_startup_ui, validate_worker_config,
 )
+from uia_runner import _locate_inner_button_by_pixels
 from client import compact_ui_result
 
 
@@ -111,8 +112,46 @@ class UiWorkerTests(unittest.TestCase):
         ).read_text(encoding="utf-8-sig")
         self.assertIn("Функция CTB_ПолучитьКонтекстПоля", module)
         self.assertIn("Таблица.ИзменитьСтроку()", module)
+        self.assertIn("Поле.НачатьРедактированиеТекущейОбласти()", module)
+        self.assertIn("КонтекстПоля.Поле.Выбрать()", module)
         self.assertIn("Таблица.ЗакончитьРедактированиеСтроки(Ложь)", module)
         self.assertIn("Таблица.ПолучитьТекстЯчейки", module)
+        self.assertNotIn("commitActiveField", module)
+
+    def test_uia_runner_has_visual_inner_button_fallback(self):
+        runner = (Path(__file__).resolve().parents[1] / "uia_runner.py").read_text(encoding="utf-8")
+        self.assertIn("def _capture_window_image", runner)
+        self.assertIn("def _locate_inner_button_by_pixels", runner)
+        self.assertIn("tableCellVisualInnerButton", runner)
+        self.assertIn("PrintWindow", runner)
+
+    def test_visual_inner_button_detector_prefers_right_field_button(self):
+        from PIL import Image, ImageDraw
+
+        class Rect:
+            left = 10
+            top = 20
+            right = 210
+            bottom = 50
+
+        class WindowRect:
+            left = 0
+            top = 0
+
+        image = Image.new("RGB", (240, 80), "white")
+        draw = ImageDraw.Draw(image)
+        draw.rectangle((10, 20, 210, 50), outline=(170, 170, 170), fill=(250, 250, 250))
+        draw.rectangle((182, 22, 207, 48), outline=(80, 80, 80), fill=(225, 225, 225))
+        draw.ellipse((192, 33, 194, 35), fill=(30, 30, 30))
+        draw.ellipse((197, 33, 199, 35), fill=(30, 30, 30))
+        draw.ellipse((202, 33, 204, 35), fill=(30, 30, 30))
+
+        match = _locate_inner_button_by_pixels(image, Rect(), WindowRect(), "choice")
+
+        self.assertIsNotNone(match)
+        assert match is not None
+        self.assertGreaterEqual(match["screenPoint"]["x"], 180)
+        self.assertLessEqual(match["screenPoint"]["x"], 210)
 
     def test_expand_and_unknown_placeholder(self):
         self.assertEqual(expand(["-TPort{testPort}"], {"testPort": "1538"}), ["-TPort1538"])

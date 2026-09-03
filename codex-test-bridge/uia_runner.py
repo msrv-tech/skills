@@ -7,6 +7,7 @@ import ctypes
 import fnmatch
 import json
 import time
+import traceback
 from ctypes import wintypes
 from typing import Any
 
@@ -105,6 +106,11 @@ def _automation(desktop_name: str, process_id: int):
 def _click_rectangle(user32, rectangle, relative_x: float = 0.5, relative_y: float = 0.5, fallback_hwnd: int | None = None, double: bool = False) -> int:
     point = wintypes.POINT(int(rectangle.left + (rectangle.right - rectangle.left) * relative_x),
                            int(rectangle.top + (rectangle.bottom - rectangle.top) * relative_y))
+    return _click_screen_point(user32, point.x, point.y, fallback_hwnd=fallback_hwnd, double=double)
+
+
+def _click_screen_point(user32, x: int, y: int, fallback_hwnd: int | None = None, double: bool = False) -> int:
+    point = wintypes.POINT(int(x), int(y))
     user32.WindowFromPoint.argtypes = [wintypes.POINT]
     user32.WindowFromPoint.restype = HWND
     user32.ScreenToClient.argtypes = [HWND, ctypes.POINTER(wintypes.POINT)]
@@ -123,18 +129,31 @@ def _click_rectangle(user32, rectangle, relative_x: float = 0.5, relative_y: flo
     user32.SetForegroundWindow.argtypes = [HWND]
     user32.SetActiveWindow.argtypes = [HWND]
     user32.SetFocus.argtypes = [HWND]
-    user32.SetForegroundWindow(root)
-    user32.SetActiveWindow(root)
-    user32.SetFocus(target)
-    user32.SendMessageW(root, 0x0006, 1, 0)
-    user32.SendMessageW(target, 0x0021, root, (0x0201 << 16) | 1)
-    user32.SendMessageW(target, 0x0020, target, (0x0201 << 16) | 1)
-    user32.SendMessageW(target, 0x0200, 0, lparam)
-    user32.SendMessageW(target, 0x0201, 0x0001, lparam)
-    user32.SendMessageW(target, 0x0202, 0, lparam)
-    if double:
-        user32.SendMessageW(target, 0x0203, 0x0001, lparam)
-        user32.SendMessageW(target, 0x0202, 0, lparam)
+    user32.GetWindowThreadProcessId.argtypes = [HWND, ctypes.POINTER(wintypes.DWORD)]
+    user32.GetWindowThreadProcessId.restype = wintypes.DWORD
+    user32.AttachThreadInput.argtypes = [wintypes.DWORD, wintypes.DWORD, wintypes.BOOL]
+    user32.AttachThreadInput.restype = wintypes.BOOL
+    kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    kernel32.GetCurrentThreadId.restype = wintypes.DWORD
+    target_thread = int(user32.GetWindowThreadProcessId(target, None))
+    current_thread = int(kernel32.GetCurrentThreadId())
+    attached = bool(target_thread and target_thread != current_thread and user32.AttachThreadInput(current_thread, target_thread, True))
+    try:
+        user32.SetForegroundWindow(root)
+        user32.SetActiveWindow(root)
+        user32.SetFocus(target)
+        _post_window_message(user32, root, 0x0006, 1, 0)
+        _post_window_message(user32, target, 0x0021, root, (0x0201 << 16) | 1)
+        _post_window_message(user32, target, 0x0020, target, (0x0201 << 16) | 1)
+        _post_window_message(user32, target, 0x0200, 0, lparam)
+        _post_window_message(user32, target, 0x0201, 0x0001, lparam)
+        _post_window_message(user32, target, 0x0202, 0, lparam)
+        if double:
+            _post_window_message(user32, target, 0x0203, 0x0001, lparam)
+            _post_window_message(user32, target, 0x0202, 0, lparam)
+    finally:
+        if attached:
+            user32.AttachThreadInput(current_thread, target_thread, False)
     return target
 
 
@@ -212,6 +231,147 @@ def _rect_width(rectangle) -> int:
 
 def _rect_height(rectangle) -> int:
     return max(0, int(rectangle.bottom - rectangle.top))
+
+
+def _capture_window_image(user32, hwnd: int):
+    try:
+        from PIL import Image
+    except Exception as exc:
+        raise UiaRunnerError(f"Pillow is required for visual UI fallback: {exc}") from exc
+
+    gdi32 = ctypes.WinDLL("gdi32", use_last_error=True)
+    handle = wintypes.HANDLE
+    user32.GetWindowRect.argtypes = [HWND, ctypes.POINTER(wintypes.RECT)]
+    user32.GetWindowDC.argtypes = [HWND]
+    user32.GetWindowDC.restype = handle
+    user32.PrintWindow.argtypes = [HWND, handle, wintypes.UINT]
+    gdi32.CreateCompatibleDC.argtypes = [handle]
+    gdi32.CreateCompatibleDC.restype = handle
+    gdi32.CreateCompatibleBitmap.argtypes = [handle, ctypes.c_int, ctypes.c_int]
+    gdi32.CreateCompatibleBitmap.restype = handle
+    gdi32.SelectObject.argtypes = [handle, handle]
+    gdi32.SelectObject.restype = handle
+    gdi32.DeleteObject.argtypes = [handle]
+    gdi32.DeleteDC.argtypes = [handle]
+    user32.ReleaseDC.argtypes = [HWND, handle]
+    gdi32.GetDIBits.argtypes = [handle, handle, wintypes.UINT, wintypes.UINT, ctypes.c_void_p, ctypes.c_void_p, wintypes.UINT]
+
+    rect = wintypes.RECT()
+    if not user32.GetWindowRect(hwnd, ctypes.byref(rect)):
+        raise ctypes.WinError(ctypes.get_last_error())
+    width, height = int(rect.right - rect.left), int(rect.bottom - rect.top)
+    if width <= 0 or height <= 0:
+        raise UiaRunnerError("Cannot capture an empty window rectangle")
+
+    window_dc = user32.GetWindowDC(hwnd)
+    memory_dc = gdi32.CreateCompatibleDC(window_dc)
+    bitmap = gdi32.CreateCompatibleBitmap(window_dc, width, height)
+    previous = gdi32.SelectObject(memory_dc, bitmap)
+
+    class BitmapInfo(ctypes.Structure):
+        _fields_ = [
+            ("size", wintypes.DWORD), ("width", wintypes.LONG), ("height", wintypes.LONG),
+            ("planes", wintypes.WORD), ("bits", wintypes.WORD), ("compression", wintypes.DWORD),
+            ("size_image", wintypes.DWORD), ("xppm", wintypes.LONG), ("yppm", wintypes.LONG),
+            ("used", wintypes.DWORD), ("important", wintypes.DWORD),
+        ]
+
+    try:
+        if not user32.PrintWindow(hwnd, memory_dc, 2):
+            raise ctypes.WinError(ctypes.get_last_error())
+        image_size = width * height * 4
+        info = BitmapInfo(ctypes.sizeof(BitmapInfo), width, -height, 1, 32, 0, image_size, 0, 0, 0, 0)
+        pixels = (ctypes.c_ubyte * image_size)()
+        if not gdi32.GetDIBits(memory_dc, bitmap, 0, height, pixels, ctypes.byref(info), 0):
+            raise ctypes.WinError(ctypes.get_last_error())
+        image = Image.frombuffer("RGBA", (width, height), bytes(pixels), "raw", "BGRA", 0, 1)
+        return image, rect
+    finally:
+        gdi32.SelectObject(memory_dc, previous)
+        gdi32.DeleteObject(bitmap)
+        gdi32.DeleteDC(memory_dc)
+        user32.ReleaseDC(hwnd, window_dc)
+
+
+def _clip_rect_to_window(rectangle, window_rect) -> tuple[int, int, int, int]:
+    left = max(0, int(rectangle.left) - int(window_rect.left))
+    top = max(0, int(rectangle.top) - int(window_rect.top))
+    right = max(left, int(rectangle.right) - int(window_rect.left))
+    bottom = max(top, int(rectangle.bottom) - int(window_rect.top))
+    return left, top, right, bottom
+
+
+def _locate_inner_button_by_pixels(image, rectangle, window_rect, button_kind: str) -> dict[str, Any] | None:
+    left, top, right, bottom = _clip_rect_to_window(rectangle, window_rect)
+    width, height = right - left, bottom - top
+    if width < 12 or height < 10:
+        return None
+
+    field = image.crop((left, top, right, bottom)).convert("L")
+    pixels = field.load()
+    search_left = max(0, width - max(48, min(96, int(height * 4))))
+    min_button = max(10, min(height - 2, int(height * 0.55)))
+    max_button = max(min_button, min(height + 12, 44))
+    best: tuple[float, tuple[int, int, int, int]] | None = None
+
+    def column_mean(x: int, y1: int, y2: int) -> float:
+        if y2 <= y1:
+            return 0.0
+        return sum(pixels[x, y] for y in range(y1, y2)) / (y2 - y1)
+
+    for size in range(min_button, max_button + 1, 2):
+        y1 = max(0, (height - size) // 2)
+        y2 = min(height, y1 + size)
+        x_start = max(search_left, width - max(96, size * 4))
+        x_end = max(x_start, width - max(8, size // 3))
+        for x1 in range(x_start, x_end):
+            x2 = min(width, x1 + size)
+            if x2 - x1 < min_button:
+                continue
+            left_edge = abs(column_mean(x1, y1, y2) - column_mean(min(width - 1, x1 + 1), y1, y2))
+            right_edge = abs(column_mean(max(0, x2 - 2), y1, y2) - column_mean(x2 - 1, y1, y2))
+            center_x = (x1 + x2) // 2
+            center_band = abs(column_mean(center_x, y1, y2) - column_mean(max(x1, center_x - 2), y1, y2))
+            right_bias = x1 / max(1, width)
+            score = left_edge * 1.2 + right_edge + center_band * 0.4 + right_bias * 35
+            if button_kind.lower() in {"choice", "open"}:
+                score += right_bias * 20
+            if best is None or score > best[0]:
+                best = (score, (x1, y1, x2, y2))
+
+    if best is None or best[0] < 18:
+        return None
+    x1, y1, x2, y2 = best[1]
+    return {
+        "score": round(float(best[0]), 3),
+        "rectangle": {
+            "left": left + x1,
+            "top": top + y1,
+            "right": left + x2,
+            "bottom": top + y2,
+        },
+        "screenPoint": {
+            "x": int(window_rect.left) + left + (x1 + x2) // 2,
+            "y": int(window_rect.top) + top + (y1 + y2) // 2,
+        },
+    }
+
+
+def _click_inner_button_by_visual(user32, hwnd: int, element, button_kind: str) -> dict[str, Any]:
+    image, window_rect = _capture_window_image(user32, hwnd)
+    match = _locate_inner_button_by_pixels(image, element.CurrentBoundingRectangle, window_rect, button_kind)
+    if match is None:
+        raise UiaRunnerError("Inner field button was not found visually")
+    point = match["screenPoint"]
+    target = _click_screen_point(user32, point["x"], point["y"], fallback_hwnd=hwnd)
+    time.sleep(0.2)
+    return {
+        "buttonKind": button_kind,
+        "targetHwnd": int(target),
+        "element": _safe_element_info(element),
+        "visualMatch": match,
+        "method": "visualInnerButton",
+    }
 
 
 def _vertical_overlap(a, b) -> int:
@@ -300,6 +460,7 @@ def _table_cell_candidates(uia, root, request: dict[str, Any] | None) -> list[An
     if not request:
         return []
     field_name = str(request.get("fieldName") or "")
+    field_title = str(request.get("fieldTitle") or "")
     table_name = str(request.get("tableName") or "")
     labels = []
     if field_name:
@@ -308,6 +469,8 @@ def _table_cell_candidates(uia, root, request: dict[str, Any] | None) -> list[An
             suffix = field_name[len(table_name):]
             if suffix:
                 labels.append(suffix.lower())
+    if field_title:
+        labels.append(field_title.lower())
     labels = [label for label in labels if label]
     if not labels:
         return []
@@ -396,7 +559,50 @@ def _click_active_field_button(user32, uia, root, button_kind: str = "choice", f
             user32.SendMessageW.argtypes = [HWND, wintypes.UINT, WPARAM, LPARAM]
             user32.GetAncestor.argtypes = [HWND, wintypes.UINT]
             user32.GetAncestor.restype = HWND
-            attempts = _invoke_table_cell_for_choice(user32, cell)
+            attempts: list[str] = []
+            if button_kind.lower() == "choiceform":
+                target = _click_element(user32, cell, 0.91, 0.5)
+                time.sleep(0.3)
+                _send_key(user32, target, 0x23)
+                time.sleep(0.15)
+                _send_key(user32, target, 0x0D)
+                time.sleep(0.3)
+                return {
+                    "buttonKind": button_kind,
+                    "targetHwnd": int(target),
+                    "focused": _safe_element_info(element),
+                    "cell": _safe_element_info(cell),
+                    "candidateCount": len(cell_candidates),
+                    "attempts": ["dropdownEndEnter:ok"],
+                    "request": {
+                        "fieldName": (request or {}).get("fieldName", ""),
+                        "fieldTitle": (request or {}).get("fieldTitle", ""),
+                        "tableName": (request or {}).get("tableName", ""),
+                        "tableTitle": (request or {}).get("tableTitle", ""),
+                    },
+                    "method": "tableCellDropdownEndEnter",
+                }
+            try:
+                if fallback_hwnd is None:
+                    raise UiaRunnerError("Main window handle is not available for visual table-cell fallback")
+                visual = _click_inner_button_by_visual(user32, fallback_hwnd, cell, button_kind)
+                visual.update({
+                    "focused": _safe_element_info(element),
+                    "cell": _safe_element_info(cell),
+                    "candidateCount": len(cell_candidates),
+                    "attempts": attempts,
+                    "request": {
+                    "fieldName": (request or {}).get("fieldName", ""),
+                    "fieldTitle": (request or {}).get("fieldTitle", ""),
+                    "tableName": (request or {}).get("tableName", ""),
+                    "tableTitle": (request or {}).get("tableTitle", ""),
+                },
+                "method": "tableCellVisualInnerButton",
+                })
+                return visual
+            except Exception as exc:
+                attempts.append(f"visualInnerButton:{type(exc).__name__}:{exc}")
+            attempts.extend(_invoke_table_cell_for_choice(user32, cell))
             target = fallback_hwnd or 0
             return {
                 "buttonKind": button_kind,
@@ -407,7 +613,9 @@ def _click_active_field_button(user32, uia, root, button_kind: str = "choice", f
                 "attempts": attempts,
                 "request": {
                     "fieldName": (request or {}).get("fieldName", ""),
+                    "fieldTitle": (request or {}).get("fieldTitle", ""),
                     "tableName": (request or {}).get("tableName", ""),
+                    "tableTitle": (request or {}).get("tableTitle", ""),
                 },
                 "method": "tableCellPatterns",
             }
@@ -431,7 +639,9 @@ def _click_active_field_button(user32, uia, root, button_kind: str = "choice", f
             "focused": _safe_element_info(element),
             "request": {
                 "fieldName": (request or {}).get("fieldName", ""),
+                "fieldTitle": (request or {}).get("fieldTitle", ""),
                 "tableName": (request or {}).get("tableName", ""),
+                "tableTitle": (request or {}).get("tableTitle", ""),
             },
             "visibleElements": _uia_visible_elements(uia, root),
             "method": "keyboardF4" if key == 0x73 else "keyboardAltDown",
@@ -448,39 +658,223 @@ def _click_active_field_button(user32, uia, root, button_kind: str = "choice", f
             "candidateCount": len(candidates),
             "method": "candidate",
         }
+    if fallback_hwnd is not None:
+        try:
+            return _click_inner_button_by_visual(user32, fallback_hwnd, element, button_kind)
+        except Exception as exc:
+            visual_error = f"{type(exc).__name__}: {exc}"
+    else:
+        visual_error = "fallback hwnd is not available"
     relative_x = {
         "choice": 0.965,
         "dropdown": 0.925,
         "open": 0.965,
     }.get(button_kind.lower(), 0.965)
-    target = _click_rectangle(user32, rectangle, relative_x, 0.5)
+    target = _click_rectangle(user32, rectangle, relative_x, 0.5, fallback_hwnd)
     return {
         "buttonKind": button_kind,
         "targetHwnd": int(target),
         "focused": _safe_element_info(element),
         "relativeX": relative_x,
+        "visualFallbackError": visual_error,
         "method": "relative",
     }
+
+
+def _type_active_field_text(user32, uia, root, hwnd: int, request: dict[str, Any]) -> dict[str, Any]:
+    element = _focused_element(uia, root)
+    rectangle = element.CurrentBoundingRectangle
+    width = _rect_width(rectangle)
+    height = _rect_height(rectangle)
+    attempts: list[str] = []
+    use_element_click = True
+    if width >= 1000 and height >= 600:
+        cell_candidates = _table_cell_candidates(uia, root, request)
+        if cell_candidates:
+            element = cell_candidates[0]
+            attempts.append("tableCellCandidate:ok")
+        else:
+            attempts.append("tableCellCandidate:notFound")
+            use_element_click = False
+    value = str(request.get("value", ""))
+    replace = bool(request.get("replace", True))
+    user32.SetForegroundWindow.argtypes = [HWND]
+    user32.SetActiveWindow.argtypes = [HWND]
+    user32.SetFocus.argtypes = [HWND]
+    user32.SetForegroundWindow(hwnd)
+    user32.SetActiveWindow(hwnd)
+    target = hwnd
+    if use_element_click:
+        target = _click_element(user32, element)
+    else:
+        user32.SetFocus(hwnd)
+    previous_clipboard: str | None = None
+    try:
+        try:
+            from comtypes.gen.UIAutomationClient import (
+                IUIAutomationLegacyIAccessiblePattern,
+                IUIAutomationValuePattern,
+            )
+            if replace:
+                pattern = element.GetCurrentPattern(10002).QueryInterface(IUIAutomationValuePattern)
+                pattern.SetValue(value)
+                attempts.append("valuePatternSetValue:ok")
+                time.sleep(0.2)
+            else:
+                attempts.append("valuePatternSetValue:skippedAppend")
+        except Exception as exc:
+            attempts.append(f"valuePatternSetValue:{type(exc).__name__}:{exc}")
+        try:
+            legacy = element.GetCurrentPattern(10018).QueryInterface(IUIAutomationLegacyIAccessiblePattern)
+            legacy.SetValue(value)
+            attempts.append("legacySetValue:ok")
+            time.sleep(0.2)
+        except Exception as exc:
+            attempts.append(f"legacySetValue:{type(exc).__name__}:{exc}")
+        if replace:
+            try:
+                _send_key(user32, target, ord("A"), control=True)
+                _send_key(user32, target, 0x08)
+                attempts.append("messageReplace:ok")
+            except Exception as exc:
+                attempts.append(f"messageReplace:{type(exc).__name__}:{exc}")
+        try:
+            previous_clipboard = _clipboard_text(user32)
+            _set_clipboard_text(user32, value)
+            _send_key(user32, target, ord("V"), control=True)
+            attempts.append("clipboardPaste:ok")
+            time.sleep(0.2)
+        except Exception as exc:
+            attempts.append(f"clipboardPaste:{type(exc).__name__}:{exc}")
+        try:
+            if replace:
+                _send_input_key(user32, ord("A"), control=True)
+                _send_input_key(user32, 0x08)
+            if previous_clipboard is not None:
+                _set_clipboard_text(user32, value)
+                _send_input_key(user32, ord("V"), control=True)
+                attempts.append("sendInputClipboardPaste:ok")
+                time.sleep(0.2)
+        except Exception as exc:
+            attempts.append(f"sendInputClipboardPaste:{type(exc).__name__}:{exc}")
+        try:
+            if replace:
+                _send_input_key(user32, ord("A"), control=True)
+                _send_input_key(user32, 0x08)
+            _send_input_text(user32, value)
+            attempts.append("sendInputUnicodeText:ok")
+        except Exception as exc:
+            attempts.append(f"sendInputUnicodeText:{type(exc).__name__}:{exc}")
+        try:
+            if replace:
+                _send_key(user32, target, ord("A"), control=True)
+                _send_key(user32, target, 0x08)
+            _send_text_messages(user32, target, value)
+            attempts.append("wmCharText:ok")
+        except Exception as exc:
+            attempts.append(f"wmCharText:{type(exc).__name__}:{exc}")
+    finally:
+        if previous_clipboard is not None:
+            try:
+                _set_clipboard_text(user32, previous_clipboard)
+            except Exception as exc:
+                attempts.append(f"clipboardRestore:{type(exc).__name__}:{exc}")
+    time.sleep(0.2)
+    return {
+        "targetHwnd": int(target),
+        "valueLength": len(value),
+        "replace": replace,
+        "focused": _safe_element_info(element),
+        "request": {
+            "fieldName": request.get("fieldName", ""),
+            "fieldTitle": request.get("fieldTitle", ""),
+            "tableName": request.get("tableName", ""),
+            "tableTitle": request.get("tableTitle", ""),
+        },
+        "attempts": attempts,
+        "method": "activeFieldClipboardText",
+    }
+
+
+def _send_text_messages(user32, target: int, value: str) -> None:
+    root = user32.GetAncestor(target, 2) if hasattr(user32, "GetAncestor") else target
+    destinations = [target] if not root or root == target else [target, root]
+    for destination in destinations:
+        for character in value:
+            _post_window_message(user32, destination, 0x0102, ord(character), 1)
+            time.sleep(0.02)
 
 
 def _send_key(user32, target: int, virtual_key: int, *, control: bool = False, shift: bool = False, alt: bool = False) -> None:
     root = user32.GetAncestor(target, 2) if hasattr(user32, "GetAncestor") else target
     destinations = [target] if not root or root == target else [target, root]
+    target_thread = int(user32.GetWindowThreadProcessId(target, None))
+    if target_thread:
+        if control:
+            _post_thread_virtual_key(user32, target_thread, 0x11, False)
+        if shift:
+            _post_thread_virtual_key(user32, target_thread, 0x10, False)
+        if alt:
+            _post_thread_virtual_key(user32, target_thread, 0x12, False, system=True)
+        _post_thread_virtual_key(user32, target_thread, virtual_key, False, system=alt)
+        _post_thread_virtual_key(user32, target_thread, virtual_key, True, system=alt)
+        if alt:
+            _post_thread_virtual_key(user32, target_thread, 0x12, True, system=True)
+        if shift:
+            _post_thread_virtual_key(user32, target_thread, 0x10, True)
+        if control:
+            _post_thread_virtual_key(user32, target_thread, 0x11, True)
     for destination in destinations:
         if control:
-            user32.SendMessageW(destination, 0x0100, 0x11, 0)
+            _post_virtual_key(user32, destination, 0x11, False)
         if shift:
-            user32.SendMessageW(destination, 0x0100, 0x10, 0)
+            _post_virtual_key(user32, destination, 0x10, False)
         if alt:
-            user32.SendMessageW(destination, 0x0100, 0x12, 0)
-        user32.SendMessageW(destination, 0x0100, virtual_key, 0)
-        user32.SendMessageW(destination, 0x0101, virtual_key, 0)
+            _post_virtual_key(user32, destination, 0x12, False, system=True)
+        _post_virtual_key(user32, destination, virtual_key, False, system=alt)
+        _post_virtual_key(user32, destination, virtual_key, True, system=alt)
         if alt:
-            user32.SendMessageW(destination, 0x0101, 0x12, 0)
+            _post_virtual_key(user32, destination, 0x12, True, system=True)
         if shift:
-            user32.SendMessageW(destination, 0x0101, 0x10, 0)
+            _post_virtual_key(user32, destination, 0x10, True)
         if control:
-            user32.SendMessageW(destination, 0x0101, 0x11, 0)
+            _post_virtual_key(user32, destination, 0x11, True)
+
+
+def _post_window_message(user32, target: int, message: int, wparam: int, lparam: int) -> None:
+    user32.PostMessageW.argtypes = [HWND, wintypes.UINT, WPARAM, LPARAM]
+    user32.PostMessageW.restype = wintypes.BOOL
+    if not user32.PostMessageW(target, message, wparam, lparam):
+        raise ctypes.WinError(ctypes.get_last_error())
+
+
+def _post_virtual_key(user32, target: int, virtual_key: int, key_up: bool, *, system: bool = False) -> None:
+    user32.MapVirtualKeyW.argtypes = [wintypes.UINT, wintypes.UINT]
+    user32.MapVirtualKeyW.restype = wintypes.UINT
+    scan_code = int(user32.MapVirtualKeyW(virtual_key, 0))
+    lparam = 1 | (scan_code << 16)
+    if system:
+        lparam |= 1 << 29
+    if key_up:
+        lparam |= (1 << 30) | (1 << 31)
+    message = 0x0105 if system and key_up else 0x0104 if system else 0x0101 if key_up else 0x0100
+    _post_window_message(user32, target, message, virtual_key, lparam)
+
+
+def _post_thread_virtual_key(user32, thread_id: int, virtual_key: int, key_up: bool, *, system: bool = False) -> None:
+    user32.PostThreadMessageW.argtypes = [wintypes.DWORD, wintypes.UINT, WPARAM, LPARAM]
+    user32.PostThreadMessageW.restype = wintypes.BOOL
+    user32.MapVirtualKeyW.argtypes = [wintypes.UINT, wintypes.UINT]
+    user32.MapVirtualKeyW.restype = wintypes.UINT
+    scan_code = int(user32.MapVirtualKeyW(virtual_key, 0))
+    lparam = 1 | (scan_code << 16)
+    if system:
+        lparam |= 1 << 29
+    if key_up:
+        lparam |= (1 << 30) | (1 << 31)
+    message = 0x0105 if system and key_up else 0x0104 if system else 0x0101 if key_up else 0x0100
+    if not user32.PostThreadMessageW(thread_id, message, virtual_key, lparam):
+        raise ctypes.WinError(ctypes.get_last_error())
 
 
 def _send_input_key(user32, virtual_key: int, *, control: bool = False, shift: bool = False, alt: bool = False) -> None:
@@ -659,7 +1053,7 @@ def run_uia_steps(desktop_name: str, process_id: int, steps: list[dict[str, Any]
                 elif action == "clickwindow":
                     last_target = _click_window(user32, hwnd, float(step.get("relativeX", 0.5)), float(step.get("relativeY", 0.5)))
                 elif action == "clickactivefieldbutton":
-                    actual = _click_active_field_button(user32, uia, root, str(step.get("buttonKind", "choice")))
+                    actual = _click_active_field_button(user32, uia, root, str(step.get("buttonKind", "choice")), hwnd)
                     last_target = int(actual["targetHwnd"])
                     result["actual"] = actual
                 elif action == "legacyinvoke":
@@ -769,6 +1163,14 @@ def run_uia_bridge_request(desktop_name: str, process_id: int, request: dict[str
                 "actual": actual,
                 **({"error": "UIA table cell fallback was tentative; native bridge should continue fallback chain"} if tentative else {}),
             }
+        if action == "typeactivefieldtext":
+            actual = _type_active_field_text(user32, uia, root, hwnd, request)
+            return {
+                "ok": True,
+                "requestId": request.get("requestId"),
+                "status": "uia-response",
+                "actual": actual,
+            }
         raise UiaRunnerError(f"Unsupported UIA bridge action: {request.get('action')}")
     except Exception as exc:
         return {
@@ -776,6 +1178,7 @@ def run_uia_bridge_request(desktop_name: str, process_id: int, request: dict[str
             "requestId": request.get("requestId"),
             "status": "uia-response",
             "error": f"{type(exc).__name__}: {exc}",
+            "traceback": traceback.format_exc(limit=6),
         }
     finally:
         user32.CloseDesktop(desktop)

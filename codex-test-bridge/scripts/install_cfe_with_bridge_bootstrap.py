@@ -91,7 +91,14 @@ def main() -> int:
             "--log", args.log,
             "--timeout", str(args.timeout),
         ]
-        install = subprocess.run(command, cwd=ROOT, capture_output=True, text=True)
+        install = subprocess.run(
+            command,
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+        )
         if install.returncode != 0:
             raise RuntimeError("Hidden Designer installation failed; inspect the configured Designer log")
     finally:

@@ -741,12 +741,16 @@ def run_ui_worker(config: dict[str, Any], scenario_path: str | Path, artifact_di
             raise UiWorkerError(f"Test manager timed out after {float(config.get('timeoutSeconds', 900)):g} seconds")
         progress("running", f"TestManager finished with exit code {manager_exit_code}")
         if transport == "bridgeJob":
-            job = bridge_command(runtime_config, {"command": "uiJobGet", "jobId": run_id})
-            result_text = job.get("result", "")
-            if result_text:
-                candidate_result = json.loads(result_text)
-                if is_scenario_result(candidate_result):
-                    manager_result = candidate_result
+            result_deadline = time.monotonic() + float(config.get("resultWaitAfterExitSeconds", 30))
+            while time.monotonic() < result_deadline:
+                job = bridge_command(runtime_config, {"command": "uiJobGet", "jobId": run_id})
+                result_text = job.get("result", "")
+                if result_text:
+                    candidate_result = json.loads(result_text)
+                    if is_scenario_result(candidate_result):
+                        manager_result = candidate_result
+                        break
+                time.sleep(float(config.get("progressPollSeconds", 1)))
         elif transport == "inlineLog" and manager_log.exists():
             raw_log = manager_log.read_bytes()
             log_text = ""
