@@ -29,6 +29,7 @@ if hasattr(sys.stdout, "reconfigure"):
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from hidden_desktop_capture import capture_window
 from uia_runner import run_uia_bridge_request, run_uia_steps
+from agent_ui import diagnose_ui_failure, normalize_ui_report
 
 
 class UiWorkerError(RuntimeError):
@@ -48,7 +49,7 @@ NATIVE_UI_ACTIONS: set[str] = {
 }
 NATIVE_UI_ROOT_FIELDS = {
     "$schema", "name", "navigationLink", "dismissStartupDialogs", "startupDialogAttempts",
-    "startupDialogButtons", "startupSettleSeconds", "uiaBeforeSteps", "uiaSteps", "steps",
+    "startupDialogButtons", "restartTestClientOnStartup", "startupSettleSeconds", "uiaBeforeSteps", "uiaSteps", "steps",
 }
 NATIVE_UI_STEP_FIELDS = {
     "action", "name", "command", "link", "uuid", "kind", "metadataName", "form", "saveAs",
@@ -56,9 +57,10 @@ NATIVE_UI_STEP_FIELDS = {
     "depth", "value", "expected", "exists", "visible", "enabled", "readOnly", "checked", "strict",
     "finishRow", "onChangeWait", "replace", "waitClosed", "optional", "elementType", "onPrompt",
     "dialogTitle", "promptTimeout", "row", "choiceRow", "element", "field", "button",
-    "dialogButton", "table", "choiceTable", "targetForm", "choiceForm",
+    "dialogButton", "table", "choiceTable", "targetForm", "choiceForm", "reference", "choiceField",
 }
 NATIVE_UI_SELECTOR_FIELDS = {"title", "objectName", "formName", "metadataFullName", "saveAs", "timeout", "pollingInterval"}
+NATIVE_UI_REFERENCE_FIELDS = {"kind", "metadataName", "uuid", "choiceField"}
 
 
 def utc_now() -> datetime:
@@ -116,6 +118,20 @@ def prepare_native_ui_scenario(data: Any) -> dict[str, Any]:
                 step["link"] = f"e1cib/data/{kind_names[kind]}.{metadata_name}?ref={ref}"
             if not isinstance(step.get("link"), str) or not step["link"]:
                 raise UiWorkerError(f"UI scenario step {index}: openNavigationLink requires link or uuid shorthand")
+        reference = step.get("reference")
+        if reference is not None:
+            if action != "selectReference" or not isinstance(reference, dict):
+                raise UiWorkerError(f"UI scenario step {index}: reference is only valid for selectReference")
+            unknown_reference = sorted(set(reference) - NATIVE_UI_REFERENCE_FIELDS)
+            if unknown_reference:
+                raise UiWorkerError(
+                    f"UI scenario step {index}: reference has unknown fields: {', '.join(unknown_reference)}"
+                )
+            if reference.get("kind") not in {"catalog", "document"}:
+                raise UiWorkerError(f"UI scenario step {index}: reference.kind must be catalog or document")
+            for required in ("metadataName", "uuid"):
+                if not isinstance(reference.get(required), str) or not reference[required]:
+                    raise UiWorkerError(f"UI scenario step {index}: reference.{required} is required")
         for selector_name in ("element", "field", "button", "table", "targetForm", "choiceForm"):
             selector = step.get(selector_name)
             if selector is None:
@@ -127,6 +143,52 @@ def prepare_native_ui_scenario(data: Any) -> dict[str, Any]:
                 raise UiWorkerError(
                     f"UI scenario step {index}: {selector_name} has unknown fields: {', '.join(unknown_selector)}"
                 )
+    return result
+
+
+def resolve_native_ui_references(data: dict[str, Any], resolver: Any) -> dict[str, Any]:
+    """Resolve stable 1C references to current UI presentations before TestManager starts."""
+    result = copy.deepcopy(data)
+    for index, step in enumerate(result["steps"], 1):
+        reference = step.pop("reference", None)
+        if reference is None:
+            continue
+        response = resolver({
+            "command": "GetObject", "kind": reference["kind"], "name": reference["metadataName"],
+            "uuid": reference["uuid"], "includeTables": False,
+        })
+        if not response.get("ok", True):
+            raise UiWorkerError(f"UI scenario step {index}: reference lookup failed: {response.get('error', response)}")
+        presentation = (response.get("ref") or {}).get("presentation")
+        if not isinstance(presentation, str) or not presentation:
+            raise UiWorkerError(f"UI scenario step {index}: reference lookup returned no presentation")
+        step.setdefault("value", presentation)
+        step.setdefault("expected", presentation)
+        step.setdefault("strict", True)
+        choice_field = step.pop("choiceField", None) or reference.get("choiceField", "Наименование")
+        if step.get("choiceTable") is not None:
+            step.setdefault("choiceRow", {choice_field: presentation})
+        elif step.get("strategy", "auto").lower() == "choiceform" or step.get("choiceForm") is not None:
+            step.setdefault("row", {choice_field: presentation})
+    return result
+
+
+def reference_bridge_config(config: dict[str, Any]) -> dict[str, Any]:
+    result = copy.deepcopy(config)
+    for target_name, bridge_name in (
+        ("targetBridgeBaseUrl", "bridgeBaseUrl"), ("targetBridgeHeaders", "bridgeHeaders"),
+        ("targetBridgeUsername", "bridgeUsername"), ("targetBridgePassword", "bridgePassword"),
+        ("targetBridgeTimeoutSeconds", "bridgeTimeoutSeconds"),
+    ):
+        if target_name in config:
+            result[bridge_name] = config[target_name]
+    environment_values = {}
+    for alias, environment_name in config.get("environmentPlaceholders", {}).items():
+        if environment_name in os.environ:
+            environment_values[alias] = os.environ[environment_name]
+    for field in ("bridgeBaseUrl", "bridgeHeaders", "bridgeUsername", "bridgePassword", "bridgeTimeoutSeconds"):
+        if field in result:
+            result[field] = expand(result[field], environment_values)
     return result
 
 
@@ -233,6 +295,17 @@ def suppress_1c_startup_ui(command: list[str]) -> list[str]:
     return result
 
 
+def isolate_test_client_startup_parameter(command: list[str]) -> list[str]:
+    """Prevent TestClient from inheriting the TestManager /C startup parameter."""
+    result = list(command)
+    lowered = [argument.lower() for argument in result]
+    if "/testclient" not in lowered or "/ctemp" in lowered:
+        return result
+    insertion_index = lowered.index("/testclient")
+    result.insert(insertion_index, "/CTemp")
+    return result
+
+
 class RunningProcess:
     pid: int
 
@@ -290,9 +363,21 @@ class ProcessBackend:
 
 class WindowsProcessHandle(RunningProcess):
     STILL_ACTIVE = 259
+    WAIT_OBJECT_0 = 0
+    WM_CLOSE = 0x0010
 
-    def __init__(self, kernel32: Any, process_handle: int, thread_handle: int, pid: int):
+    def __init__(
+        self,
+        kernel32: Any,
+        user32: Any,
+        desktop: int,
+        process_handle: int,
+        thread_handle: int,
+        pid: int,
+    ):
         self.kernel32 = kernel32
+        self.user32 = user32
+        self.desktop = desktop
         self.process_handle = process_handle
         self.thread_handle = thread_handle
         self.pid = pid
@@ -305,6 +390,19 @@ class WindowsProcessHandle(RunningProcess):
 
     def terminate(self) -> None:
         if self.poll() is None:
+            callback_type = ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, wintypes.LPARAM)
+
+            @callback_type
+            def close_owned_window(window: int, _parameter: int) -> bool:
+                process_id = wintypes.DWORD()
+                self.user32.GetWindowThreadProcessId(window, ctypes.byref(process_id))
+                if process_id.value == self.pid:
+                    self.user32.PostMessageW(window, self.WM_CLOSE, 0, 0)
+                return True
+
+            self.user32.EnumDesktopWindows(self.desktop, close_owned_window, 0)
+            if self.kernel32.WaitForSingleObject(self.process_handle, 15_000) == self.WAIT_OBJECT_0:
+                return
             if not self.kernel32.TerminateProcess(self.process_handle, 1):
                 raise ctypes.WinError()
             self.kernel32.WaitForSingleObject(self.process_handle, 10_000)
@@ -358,6 +456,12 @@ class WindowsHiddenDesktopBackend:
         ]
         self.user32.CloseDesktop.restype = wintypes.BOOL
         self.user32.CloseDesktop.argtypes = [wintypes.HANDLE]
+        self.user32.EnumDesktopWindows.restype = wintypes.BOOL
+        self.user32.EnumDesktopWindows.argtypes = [wintypes.HANDLE, ctypes.c_void_p, wintypes.LPARAM]
+        self.user32.GetWindowThreadProcessId.restype = wintypes.DWORD
+        self.user32.GetWindowThreadProcessId.argtypes = [wintypes.HWND, ctypes.POINTER(wintypes.DWORD)]
+        self.user32.PostMessageW.restype = wintypes.BOOL
+        self.user32.PostMessageW.argtypes = [wintypes.HWND, wintypes.UINT, wintypes.WPARAM, wintypes.LPARAM]
         self.kernel32.CreateProcessW.restype = wintypes.BOOL
         self.kernel32.CreateProcessW.argtypes = [
             wintypes.LPCWSTR, wintypes.LPWSTR, ctypes.c_void_p, ctypes.c_void_p,
@@ -372,6 +476,8 @@ class WindowsHiddenDesktopBackend:
         self.kernel32.WaitForSingleObject.argtypes = [wintypes.HANDLE, wintypes.DWORD]
         self.kernel32.CloseHandle.restype = wintypes.BOOL
         self.kernel32.CloseHandle.argtypes = [wintypes.HANDLE]
+        self.kernel32.OpenProcess.restype = wintypes.HANDLE
+        self.kernel32.OpenProcess.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
         self.desktop = self.user32.CreateDesktopW(desktop_name, None, None, 0, self.GENERIC_ALL, None)
         if not self.desktop:
             raise ctypes.WinError(ctypes.get_last_error())
@@ -395,10 +501,19 @@ class WindowsHiddenDesktopBackend:
             raise ctypes.WinError(ctypes.get_last_error())
         return WindowsProcessHandle(
             self.kernel32,
+            self.user32,
+            self.desktop,
             process_info.hProcess,
             process_info.hThread,
             process_info.dwProcessId,
         )
+
+    def adopt(self, pid: int) -> RunningProcess:
+        access = 0x00100000 | 0x00001000 | 0x0001  # SYNCHRONIZE | QUERY_LIMITED_INFORMATION | TERMINATE
+        process_handle = self.kernel32.OpenProcess(access, False, pid)
+        if not process_handle:
+            raise ctypes.WinError(ctypes.get_last_error())
+        return WindowsProcessHandle(self.kernel32, self.user32, self.desktop, process_handle, 0, pid)
 
     def close(self) -> None:
         if self.desktop:
@@ -456,6 +571,52 @@ def choose_free_port(host: str = "127.0.0.1") -> int:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
         probe.bind((host, 0))
         return int(probe.getsockname()[1])
+
+
+def listener_pid_windows(port: int) -> int | None:
+    if os.name != "nt":
+        return None
+    completed = subprocess.run(
+        ["netstat", "-ano", "-p", "tcp"],
+        check=False,
+        capture_output=True,
+        text=True,
+        creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+    )
+    for line in completed.stdout.splitlines():
+        parts = line.split()
+        if len(parts) < 5 or parts[0].upper() != "TCP":
+            continue
+        local_endpoint = parts[1]
+        if not local_endpoint.endswith(f":{port}"):
+            continue
+        if parts[3].upper() != "LISTENING":
+            continue
+        try:
+            return int(parts[4])
+        except ValueError:
+            continue
+    return None
+
+
+def wait_for_restarted_test_client(
+    backend: ProcessBackend | WindowsHiddenDesktopBackend | XvfbBackend,
+    host: str,
+    port: int,
+    timeout: float,
+) -> RunningProcess | None:
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        try:
+            with socket.create_connection((host, port), timeout=0.25):
+                if isinstance(backend, WindowsHiddenDesktopBackend):
+                    pid = listener_pid_windows(port)
+                    if pid is not None:
+                        return backend.adopt(pid)
+                return None
+        except (OSError, RuntimeError):
+            time.sleep(0.25)
+    return None
 
 
 def wait_for_startup(process: RunningProcess, delay: float) -> None:
@@ -572,6 +733,13 @@ def run_ui_worker(config: dict[str, Any], scenario_path: str | Path, artifact_di
     scenario = source_scenario
     if source_scenario.suffix.lower() == ".json":
         scenario_data = prepare_native_ui_scenario(json.loads(source_scenario.read_text(encoding="utf-8-sig")))
+        if any(step.get("reference") is not None for step in scenario_data["steps"]):
+            reference_config = reference_bridge_config(config)
+            if not reference_config.get("bridgeBaseUrl"):
+                raise UiWorkerError("selectReference.reference requires targetBridgeBaseUrl or bridgeBaseUrl")
+            scenario_data = resolve_native_ui_references(
+                scenario_data, lambda payload: bridge_command(reference_config, payload)
+            )
         scenario_data.pop("$schema", None)
         scenario = artifacts / f"scenario-{run_id}.ui.json"
         scenario.write_text(json.dumps(scenario_data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -602,6 +770,7 @@ def run_ui_worker(config: dict[str, Any], scenario_path: str | Path, artifact_di
         variables[alias] = os.environ[environment_name]
     client_command = expand(config["clientCommand"], variables)
     manager_command = expand(config["managerCommand"], variables)
+    client_command = isolate_test_client_startup_parameter(client_command)
     if config.get("suppressStartupUi", True):
         client_command = suppress_1c_startup_ui(client_command)
         manager_command = suppress_1c_startup_ui(manager_command)
@@ -614,6 +783,7 @@ def run_ui_worker(config: dict[str, Any], scenario_path: str | Path, artifact_di
         result_file.parent.mkdir(parents=True, exist_ok=True)
     secret_flags = config.get("secretFlags", [])
     client: RunningProcess | None = None
+    client_processes: list[RunningProcess] = []
     manager: RunningProcess | None = None
     backend = None
     status = "failed"
@@ -637,6 +807,7 @@ def run_ui_worker(config: dict[str, Any], scenario_path: str | Path, artifact_di
         backend = create_backend(runtime_config, run_id)
         progress("startup", f"Starting TestClient on isolated {backend.name} backend")
         client = backend.start(client_command)
+        client_processes.append(client)
         if config.get("probeTestPort", False):
             wait_for_port(
                 str(config.get("testHost", "127.0.0.1")),
@@ -681,6 +852,39 @@ def run_ui_worker(config: dict[str, Any], scenario_path: str | Path, artifact_di
                     progress_text = progress_job.get("result", "")
                     if progress_text:
                         partial = json.loads(progress_text)
+                        if isinstance(partial, dict) and partial.get("status") == "client-restart-request":
+                            request_id = str(partial.get("requestId", ""))
+                            if request_id and request_id not in handled_uia_requests:
+                                handled_uia_requests.add(request_id)
+                                progress("restart", "Restarting worker-owned TestClient", requestId=request_id)
+                                # First let 1C process the Restart button so application code can
+                                # persist its per-user "do not ask again" choice.
+                                restart_deadline = time.monotonic() + 15
+                                while client is not None and client.poll() is None and time.monotonic() < restart_deadline:
+                                    time.sleep(0.1)
+                                if client is not None and client.poll() is None:
+                                    client.terminate()
+                                adopted = wait_for_restarted_test_client(
+                                    backend,
+                                    str(config.get("testHost", "127.0.0.1")),
+                                    test_port,
+                                    float(config.get("platformRestartWaitSeconds", 20)),
+                                )
+                                if adopted is not None:
+                                    client = adopted
+                                    client_processes.append(client)
+                                    progress("restart", "Adopted platform-restarted TestClient", clientPid=client.pid)
+                                else:
+                                    client = backend.start(client_command)
+                                    client_processes.append(client)
+                                    progress("restart", "Platform restart was not detected; started fallback TestClient", clientPid=client.pid)
+                                bridge_command(runtime_config, {
+                                    "command": "uiJobSet", "jobId": run_id, "status": "client-restart-started",
+                                    "result": json.dumps({
+                                        "ok": True, "status": "client-restart-started", "requestId": request_id,
+                                    }, ensure_ascii=True, separators=(",", ":")),
+                                })
+                            continue
                         if isinstance(partial, dict) and partial.get("status") == "uia-request":
                             request_id = str(partial.get("requestId", ""))
                             if request_id and request_id not in handled_uia_requests:
@@ -721,6 +925,19 @@ def run_ui_worker(config: dict[str, Any], scenario_path: str | Path, artifact_di
                                     totalSteps=partial.get("totalSteps"),
                                     step=current,
                                 )
+                        elif (
+                            is_scenario_result(partial)
+                            and config.get("captureOnFinish", False)
+                            and screenshot_file is None
+                            and isinstance(backend, WindowsHiddenDesktopBackend)
+                            and client is not None
+                        ):
+                            try:
+                                screenshot_file = str(
+                                    capture_window(backend.desktop_name, client.pid, artifacts / "screenshot.bmp")
+                                )
+                            except Exception as exc:
+                                screenshot_error = {"type": type(exc).__name__, "message": str(exc)}
                 except Exception:
                     pass
             if now >= next_heartbeat:
@@ -798,7 +1015,12 @@ def run_ui_worker(config: dict[str, Any], scenario_path: str | Path, artifact_di
                 status = "failed"
                 error = {"type": "UiaFailure", "message": "A UI Automation fallback step failed"}
 
-        if config.get("captureOnFinish", False) and isinstance(backend, WindowsHiddenDesktopBackend) and client is not None:
+        if (
+            config.get("captureOnFinish", False)
+            and screenshot_file is None
+            and isinstance(backend, WindowsHiddenDesktopBackend)
+            and client is not None
+        ):
             try:
                 screenshot_file = str(capture_window(backend.desktop_name, client.pid, artifacts / "screenshot.bmp"))
             except Exception as exc:
@@ -808,8 +1030,14 @@ def run_ui_worker(config: dict[str, Any], scenario_path: str | Path, artifact_di
         progress("failed", str(exc))
     finally:
         progress("cleanup", "Stopping worker-owned TestManager and TestClient processes")
-        for process in (manager, client):
+        owned_processes = ([manager] if manager is not None else []) + list(reversed(client_processes))
+        seen_processes: set[int] = set()
+        for process in owned_processes:
             if process is not None:
+                identity = id(process)
+                if identity in seen_processes:
+                    continue
+                seen_processes.add(identity)
                 try:
                     process.terminate()
                 finally:
@@ -825,6 +1053,7 @@ def run_ui_worker(config: dict[str, Any], scenario_path: str | Path, artifact_di
     finished = utc_now()
     diagnostics_file = None
     diagnostics: list[dict[str, Any]] = []
+    manager_result_for_agent = copy.deepcopy(manager_result)
     if isinstance(manager_result, dict):
         for step in manager_result.get("steps", []):
             if isinstance(step, dict) and "diagnostics" in step:
@@ -864,6 +1093,12 @@ def run_ui_worker(config: dict[str, Any], scenario_path: str | Path, artifact_di
         report["error"] = error
     if screenshot_error:
         report["screenshotError"] = screenshot_error
+    agent_ui_source = dict(report)
+    agent_ui_source["managerResult"] = manager_result_for_agent
+    report["agentUi"] = normalize_ui_report(agent_ui_source)
+    agent_diagnostics = diagnose_ui_failure(report)
+    if agent_diagnostics:
+        report["agentDiagnostics"] = agent_diagnostics
     summary = {
         "runId": run_id,
         "status": status,

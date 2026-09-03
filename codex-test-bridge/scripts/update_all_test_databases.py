@@ -195,6 +195,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--legacy-cfe", default=str(ROOT / "codex-test-bridge-legacy.cfe"))
     parser.add_argument("--timeout", type=float, default=900)
     parser.add_argument("--install-attempts", type=int, default=3, help="Retries for transient Designer or publication failures")
+    parser.add_argument("--database", action="append", default=[], help="Only update matching Ref, project folder, or Bridge.AppName; repeatable")
     parser.add_argument("--dry-run", action="store_true", help="Detect variants without modifying infobases")
     parser.add_argument("--allow-bootstrap-user", action="store_true", required=True)
     args = parser.parse_args(argv)
@@ -208,6 +209,15 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("--install-attempts must be between 1 and 10")
 
     databases = load_registry(args.registry)
+    if args.database:
+        requested = {value.casefold() for value in args.database}
+        databases = [database for database in databases if requested.intersection({
+            str(database.get("Ref", "")).casefold(),
+            Path(str(database.get("path", ""))).name.casefold(),
+            str((database.get("Bridge") or {}).get("AppName", "")).casefold(),
+        })]
+        if not databases:
+            raise UpdateError("No registry databases matched --database")
     cfe_files = {"full": Path(args.full_cfe).resolve(), "legacy": Path(args.legacy_cfe).resolve()}
     if not args.dry_run:
         for variant, cfe in cfe_files.items():

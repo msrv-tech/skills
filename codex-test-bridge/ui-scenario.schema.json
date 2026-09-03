@@ -12,6 +12,8 @@
     "dismissStartupDialogs": {"type": "boolean", "default": true},
     "startupDialogAttempts": {"type": "integer", "minimum": 1, "maximum": 20, "default": 5},
     "startupDialogButtons": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "restartTestClientOnStartup": {"type": "boolean", "default": false},
+    "closeTestClientOnFinish": {"type": "boolean", "default": true},
     "startupSettleSeconds": {"type": "integer", "minimum": 0, "maximum": 60, "default": 3},
     "uiaBeforeSteps": {"type": "array", "items": {"type": "object"}},
     "uiaSteps": {"type": "array", "items": {"type": "object"}},
@@ -31,6 +33,17 @@
         "metadataFullName": {"type": "string"},
         "saveAs": {"type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_-]*$"},
         "timeout": {"type": "number", "exclusiveMinimum": 0}
+      }
+    },
+    "reference": {
+      "type": "object",
+      "required": ["kind", "metadataName", "uuid"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {"enum": ["catalog", "document"]},
+        "metadataName": {"type": "string", "minLength": 1},
+        "uuid": {"type": "string", "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"},
+        "choiceField": {"type": "string", "minLength": 1}
       }
     },
     "step": {
@@ -75,6 +88,8 @@
         "promptTimeout": {"type": "number", "exclusiveMinimum": 0},
         "row": {"type": "object", "minProperties": 1},
         "choiceRow": {"type": "object", "minProperties": 1},
+        "reference": {"$ref": "#/$defs/reference"},
+        "choiceField": {"type": "string", "minLength": 1},
         "element": {"$ref": "#/$defs/selector"},
         "field": {"$ref": "#/$defs/selector"},
         "button": {"$ref": "#/$defs/selector"},

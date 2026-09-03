@@ -14,6 +14,8 @@
 
 		Если Команда = "health" Тогда
 			Возврат JSONОтвет(КомандаHealth());
+		ИначеЕсли Команда = "capabilities" Тогда
+			Возврат JSONОтвет(КомандаCapabilities());
 		ИначеЕсли Команда = "metadata" Тогда
 			Возврат JSONОтвет(КомандаMetadata(Данные));
 		ИначеЕсли Команда = "describe" Тогда
@@ -95,6 +97,32 @@
 	КонецЕсли;
 	CodexUIJobsServer.УдалитьЗадание(Идентификатор);
 	Возврат Новый Структура("ok,jobId", Истина, Идентификатор);
+КонецФункции
+
+Функция КомандаCapabilities()
+	Команды = Новый Массив;
+	Для Каждого ИмяКоманды Из СтрРазделить("Health,Capabilities,Metadata,Describe,Query,ExecuteBSL,CallCommonModule,GetObject,WriteObject,DeleteObject,CreateCatalogItem,CreateDocument,PostDocument,RenderExternalPrintForm,RenderExternalReport,UIJobCreate,UIJobGet,UIJobSet,UIJobDelete", ",") Цикл
+		Команды.Добавить(ИмяКоманды);
+	КонецЦикла;
+	ДействияUI = Новый Массив;
+	Для Каждого ИмяДействия Из СтрРазделить("assertConnected,openNavigationLink,executeCommand,nextWindow,activateWindow,waitForm,waitFormClosed,waitElement,assertElement,inspectUi,inspectTable,inspectCommandInterface,clickCommandInterface,activateForm,activateElement,inputText,selectReference,selectFromDropdown,setCheckbox,openChoice,selectTableRow,assertTableRow,inputTableCell,click,assertField,handleDialog,closeForm", ",") Цикл
+		ДействияUI.Добавить(ИмяДействия);
+	КонецЦикла;
+	ВозможностиUI = Новый Структура;
+	ВозможностиUI.Вставить("worker", Истина); // CTB_FULL_UI
+	ВозможностиUI.Вставить("actions", ДействияUI);
+	ВозможностиUI.Вставить("referenceByUuid", Истина);
+	ВозможностиUI.Вставить("tableCells", Истина);
+	ВозможностиUI.Вставить("agentInspect", Истина);
+	ВозможностиUI.Вставить("warmBatch", Истина);
+
+	Результат = КомандаHealth();
+	Результат.Вставить("bridgeVersion", "0.2.0");
+	Результат.Вставить("contractVersion", 2);
+	Результат.Вставить("variant", "full"); // CTB_FULL_VARIANT
+	Результат.Вставить("commands", Команды);
+	Результат.Вставить("ui", ВозможностиUI);
+	Возврат Результат;
 КонецФункции
 
 Функция КомандаHealth()

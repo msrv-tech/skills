@@ -1,0 +1,44 @@
+{
+  "$schema": "../hybrid-scenario.schema.json",
+  "name": "Server fixture and stable UUID UI navigation",
+  "arrange": {
+    "name": "Create fixture",
+    "steps": [
+      {
+        "name": "Create item",
+        "saveAs": "item",
+        "request": {
+          "command": "CreateCatalogItem",
+          "catalog": "ТестовыйСправочник",
+          "fields": {"Наименование": "Codex hybrid fixture"}
+        }
+      }
+    ]
+  },
+  "ui": {
+    "name": "Open fixture",
+    "steps": [
+      {
+        "action": "openNavigationLink",
+        "kind": "catalog",
+        "metadataName": "ТестовыйСправочник",
+        "uuid": "${item.ref.uuid}"
+      },
+      {"action": "inspectUi", "depth": 6}
+    ]
+  },
+  "assert": {
+    "name": "Fixture remains readable",
+    "steps": [
+      {
+        "request": {
+          "command": "GetObject",
+          "kind": "catalog",
+          "name": "ТестовыйСправочник",
+          "uuid": "${item.ref.uuid}"
+        },
+        "assert": [{"path": "ok", "operator": "eq", "expected": true}]
+      }
+    ]
+  }
+}

@@ -9,12 +9,14 @@
   "resultTransport": "bridgeJob",
   "captureOnFinish": true,
   "bridgeBaseUrl": "{managerBridgeBaseUrl}",
+  "targetBridgeBaseUrl": "{clientBridgeBaseUrl}",
   "environmentPlaceholders": {
     "platformExecutable": "CODEX_1C_EXECUTABLE",
     "clientServerConnection": "CODEX_1C_CLIENT_SERVER_CONNECTION",
     "clientUsername": "CODEX_1C_CLIENT_USERNAME",
     "managerServerConnection": "CODEX_1C_MANAGER_SERVER_CONNECTION",
     "managerBridgeBaseUrl": "CODEX_1C_MANAGER_BRIDGE_URL",
+    "clientBridgeBaseUrl": "CODEX_1C_CLIENT_BRIDGE_URL",
     "managerUsername": "CODEX_1C_MANAGER_USERNAME"
   },
   "clientCommand": [

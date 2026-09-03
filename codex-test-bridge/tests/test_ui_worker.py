@@ -10,8 +10,10 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from ui_worker import (
     UiWorkerError, expand, navigation_ref_from_uuid, prepare_native_ui_scenario, redact_command,
-    run_ui_worker, suppress_1c_startup_ui, validate_worker_config,
+    isolate_test_client_startup_parameter, resolve_native_ui_references, run_ui_worker,
+    suppress_1c_startup_ui, validate_worker_config,
 )
+from agent_ui import diagnose_ui_failure, normalize_ui_tree
 from uia_runner import _locate_inner_button_by_pixels
 from client import compact_ui_result
 
@@ -66,6 +68,31 @@ class UiWorkerTests(unittest.TestCase):
             "e1cib/data/Справочник.ВнутренниеДокументы?ref=93f40050568b412711e40dada14919f5",
         )
 
+    def test_reference_uuid_is_resolved_to_choice_contract(self):
+        scenario = prepare_native_ui_scenario({"steps": [{
+            "action": "selectReference", "strategy": "choiceForm",
+            "field": {"objectName": "Организация"}, "table": {"objectName": "Список"},
+            "reference": {"kind": "catalog", "metadataName": "Организации", "uuid": "a14919f5-0dad-11e4-93f4-0050568b4127"},
+        }]})
+        resolved = resolve_native_ui_references(scenario, lambda request: {
+            "ok": True, "ref": {"uuid": request["uuid"], "presentation": "Основная организация"},
+        })
+        step = resolved["steps"][0]
+        self.assertNotIn("reference", step)
+        self.assertEqual(step["value"], "Основная организация")
+        self.assertEqual(step["row"], {"Наименование": "Основная организация"})
+        self.assertTrue(step["strict"])
+
+    def test_agent_ui_normalizes_tree_and_failure(self):
+        normalized = normalize_ui_tree([
+            {"level": 1, "type": "ТестируемаяТаблицаФормы", "name": "Товары", "title": "Товары"},
+            {"level": 2, "type": "ТестируемоеПолеФормы", "name": "ТоварыКоличество", "title": "Количество"},
+        ])
+        self.assertEqual(normalized["tables"][0]["selector"], {"objectName": "Товары"})
+        self.assertEqual(normalized["tables"][0]["columns"][0]["name"], "ТоварыКоличество")
+        diagnosis = diagnose_ui_failure({"ok": False, "error": {"message": "UI object was not found"}})
+        self.assertEqual(diagnosis["category"], "selector-not-found")
+
     def test_invalid_native_scenario_is_rejected_before_start(self):
         with self.assertRaisesRegex(UiWorkerError, "non-empty array"):
             prepare_native_ui_scenario({"steps": []})
@@ -104,6 +131,9 @@ class UiWorkerTests(unittest.TestCase):
         self.assertIn("onChangeWait", step["properties"])
         self.assertIn("replace", step["properties"])
         self.assertIn("uiaBeforeSteps", schema["properties"])
+        self.assertIn("restartTestClientOnStartup", schema["properties"])
+        self.assertFalse(schema["properties"]["restartTestClientOnStartup"]["default"])
+        self.assertTrue(schema["properties"]["closeTestClientOnFinish"]["default"])
 
     def test_native_module_has_table_cell_editing_primitives(self):
         module = (
@@ -117,6 +147,10 @@ class UiWorkerTests(unittest.TestCase):
         self.assertIn("Таблица.ЗакончитьРедактированиеСтроки(Ложь)", module)
         self.assertIn("Таблица.ПолучитьТекстЯчейки", module)
         self.assertNotIn("commitActiveField", module)
+        self.assertIn("CTB_НайтиКнопкуБезопасногоПерезапуска", module)
+        self.assertIn('ЗакрытыеСтартовыеДиалоги.Найти("restartTestClient")', module)
+        self.assertIn("CTB_ЗакрытьТестКлиентШтатно", module)
+        self.assertIn("ТестКлиент.РазорватьСоединение()", module)
 
     def test_uia_runner_has_visual_inner_button_fallback(self):
         runner = (Path(__file__).resolve().parents[1] / "uia_runner.py").read_text(encoding="utf-8")
@@ -190,6 +224,14 @@ class UiWorkerTests(unittest.TestCase):
 
         unchanged = suppress_1c_startup_ui(["python", "manager.py"])
         self.assertEqual(unchanged, ["python", "manager.py"])
+
+    def test_test_client_startup_parameter_is_isolated(self):
+        command = isolate_test_client_startup_parameter(["1cv8c", "ENTERPRISE", "/TestClient", "-TPort", "1538"])
+        self.assertIn("/CTemp", command)
+        self.assertLess(command.index("/CTemp"), command.index("/TestClient"))
+        self.assertEqual(command.count("/CTemp"), 1)
+        self.assertEqual(isolate_test_client_startup_parameter(command), command)
+        self.assertEqual(isolate_test_client_startup_parameter(["python", "client.py"]), ["python", "client.py"])
 
     def test_redacted_command_is_safe_to_serialize_in_report(self):
         command = ["1cv8c", "ENTERPRISE", "/F", "private-database-path", "/N", "private-login", "/P", "private-password"]

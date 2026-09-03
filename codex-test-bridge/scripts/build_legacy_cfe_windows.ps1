@@ -35,8 +35,12 @@ $moduleText = [regex]::Replace(
     '')
 $moduleText = [regex]::Replace(
     $moduleText,
-    '(?ms)^[^\r\n]*UIJobCreate\(.*?(?=^[^\r\n]*Health\(\))',
+    '(?ms)^[^\r\n]*UIJobCreate\(.*?(?=^[^\r\n]*Capabilities\(\)[^\r\n]*$)',
     '')
+$bslFalse = -join ([char[]](0x041B,0x043E,0x0436,0x044C))
+$moduleText = [regex]::Replace($moduleText, '(?m)(^.*"worker", )[^\r\n]+(\); // CTB_FULL_UI.*$)', '${1}' + $bslFalse + '${2}')
+$moduleText = [regex]::Replace($moduleText, '(?m)(^.*"variant", )"full"(\); // CTB_FULL_VARIANT.*$)', '${1}"legacy"${2}')
+$moduleText = $moduleText.Replace(',UIJobCreate,UIJobGet,UIJobSet,UIJobDelete', '')
 [System.IO.File]::WriteAllText($modulePath, $moduleText, [System.Text.UTF8Encoding]::new($false))
 
 $configurationPath = Join-Path $sourceDir "Configuration.xml"

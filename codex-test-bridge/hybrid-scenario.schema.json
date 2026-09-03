@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.codex/1c-hybrid-scenario.schema.json",
+  "title": "CodexTestBridge hybrid scenario",
+  "type": "object",
+  "required": ["ui"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {"type": "string"},
+    "name": {"type": "string"},
+    "arrange": {"$ref": "#/$defs/stage"},
+    "ui": {"$ref": "#/$defs/stage"},
+    "assert": {"$ref": "#/$defs/stage"},
+    "cleanup": {"$ref": "#/$defs/stage"}
+  },
+  "$defs": {
+    "stage": {
+      "oneOf": [
+        {"type": "string", "minLength": 1},
+        {"type": "object"}
+      ]
+    }
+  }
+}

@@ -17,6 +17,7 @@ sys.path.insert(0, str(ROOT))
 
 from scripts.install_cfe_with_bridge_bootstrap import bridge_execute  # noqa: E402
 from ui_worker import load_worker_config, run_ui_worker  # noqa: E402
+from ui_batch import run_ui_batch  # noqa: E402
 
 
 def main() -> int:
@@ -29,7 +30,7 @@ def main() -> int:
     parser.add_argument("--manager-bridge-user", default="")
     parser.add_argument("--manager-bridge-password-env", default="CODEX_1C_MANAGER_BRIDGE_PASSWORD")
     parser.add_argument("--worker-config", required=True)
-    parser.add_argument("--scenario", required=True)
+    parser.add_argument("--scenario", action="append", required=True, help="UI scenario; repeat for one warm batch")
     parser.add_argument("--artifact-dir", required=True)
     parser.add_argument("--report", default="")
     args = parser.parse_args()
@@ -83,11 +84,11 @@ def main() -> int:
         manager_created = True
         os.environ["CODEX_1C_CLIENT_USERNAME"] = target_user
         os.environ["CODEX_1C_MANAGER_USERNAME"] = manager_user
-        report = run_ui_worker(
-            load_worker_config(args.worker_config),
-            args.scenario,
-            args.artifact_dir,
-        )
+        worker_config = load_worker_config(args.worker_config)
+        if len(args.scenario) == 1:
+            report = run_ui_worker(worker_config, args.scenario[0], args.artifact_dir)
+        else:
+            report = run_ui_batch(worker_config, args.scenario, args.artifact_dir)
         if args.report:
             report_path = Path(args.report).resolve()
             report_path.parent.mkdir(parents=True, exist_ok=True)

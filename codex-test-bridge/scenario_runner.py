@@ -99,7 +99,7 @@ class ScenarioRunner:
         self.send_command = send_command
         self.sleep = sleep
 
-    def run(self, scenario: dict[str, Any]) -> dict[str, Any]:
+    def run(self, scenario: dict[str, Any], defer_cleanup: bool = False) -> dict[str, Any]:
         validate_scenario(scenario)
         started = datetime.now(timezone.utc)
         run_id = str(uuid.uuid4())
@@ -131,7 +131,7 @@ class ScenarioRunner:
             status = "failed"
             error = {"type": type(exc).__name__, "message": str(exc)}
         finally:
-            cleanup = self._cleanup(created) if scenario.get("cleanup", True) else []
+            cleanup = self._cleanup(created) if scenario.get("cleanup", True) and not defer_cleanup else []
             cleanup.extend(self._run_finally(scenario.get("finally", []), context))
 
         cleanup_ok = all(item.get("ok", False) for item in cleanup)
@@ -151,10 +151,15 @@ class ScenarioRunner:
             "durationMs": round((finished - started).total_seconds() * 1000),
             "steps": results,
             "cleanup": cleanup,
+            "outputs": {key: value for key, value in context.items() if key != "run"},
+            "createdObjects": [item.__dict__ for item in created] if defer_cleanup else [],
         }
         if error:
             report["error"] = error
         return report
+
+    def cleanup_created(self, items: list[dict[str, str]]) -> list[dict[str, Any]]:
+        return self._cleanup([CreatedObject(item["kind"], item["name"], item["uuid"]) for item in items])
 
     def _run_step(self, index: int, raw_step: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         step = substitute(copy.deepcopy(raw_step), context)

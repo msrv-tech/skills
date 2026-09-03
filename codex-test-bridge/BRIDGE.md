@@ -387,6 +387,8 @@ python .\client.py run-ui `
 только env-плейсхолдеры. Worker автоматически добавляет
 `/DisableStartupDialogs /DisableStartupMessages /DisableSplash`; TestManager
 закрывает только безопасные стартовые диалоги.
+Автоматический выбор `Перезапустить` по умолчанию отключён; при необходимости
+он включается в сценарии через `restartTestClientOnStartup: true`.
 Встроенный test manager находится в модуле
 управляемого приложения CFE; внешние обработки не нужны. Полный контракт backend,
 DSL и placeholders описан в [`UI_WORKER.md`](UI_WORKER.md).
@@ -430,3 +432,28 @@ $P/ibcmd config check --database-path "$WORK/ib" \
 $P/ibcmd config save --database-path "$WORK/ib" \
   --extension=CodexTestBridge ./codex-test-bridge.cfe
 ```
+
+## Контракт для агентов
+
+Перед генерацией теста агент может проверить установленный вариант bridge:
+
+```powershell
+python .\client.py --base-url $bridgeUrl capabilities
+python .\client.py --base-url $bridgeUrl doctor --worker-config .\local.worker.json
+```
+
+`capabilities` сообщает версию контракта, `full|legacy`, серверные команды и
+доступность UI worker. `doctor` не запускает 1С: он проверяет HTTP-контракт и
+валидность локальной конфигурации worker.
+
+Для сквозного теста используй `run-hybrid`: server arrange создаёт данные,
+результаты `saveAs` подставляются в UI-сценарий, затем выполняется server assert,
+а созданные arrange-объекты удаляются даже при падении UI:
+
+```powershell
+python .\client.py --base-url $bridgeUrl run-hybrid .\local.worker.json .\case.hybrid.json --artifact-dir .\artifacts\case
+```
+
+Несколько коротких UI-сценариев можно выполнить одним запуском клиента и
+менеджера: `run-ui-batch worker.json a.ui.json b.ui.json`. Это тёплый batch, а
+не фоновый сервис: процессы гарантированно завершаются после набора.

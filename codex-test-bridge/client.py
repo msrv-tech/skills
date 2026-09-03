@@ -16,6 +16,10 @@ from scenario_runner import (
     save_report,
 )
 from ui_worker import load_worker_config, run_ui_worker
+from agent_ui import normalize_ui_report
+from hybrid_runner import run_hybrid_scenario
+from ui_batch import run_ui_batch
+from bridge_doctor import run_doctor
 
 
 REQUEST_TIMEOUT = 60.0
@@ -86,6 +90,9 @@ def main() -> int:
     sub = parser.add_subparsers(dest="cmd", required=True)
 
     sub.add_parser("health")
+    sub.add_parser("capabilities", help="Show machine-readable bridge and UI capabilities")
+    doctor = sub.add_parser("doctor", help="Check bridge contract and optionally validate a UI worker config")
+    doctor.add_argument("--worker-config", default="", help="Validate this UI worker configuration without launching 1C")
 
     metadata = sub.add_parser("metadata")
     metadata.add_argument("--sections", default="", help="Comma-separated: catalogs,documents,enums,informationRegisters,accumulationRegisters")
@@ -171,16 +178,48 @@ def main() -> int:
     ui.add_argument("--report", default="", help="Write worker JSON report to this path")
     ui.add_argument("--full-output", action="store_true", help="Print the complete UI tree instead of a compact summary")
 
+    ui_batch = sub.add_parser("run-ui-batch", help="Run UI scenarios in one warm client/manager lifecycle")
+    ui_batch.add_argument("worker_config")
+    ui_batch.add_argument("scenario_files", nargs="+")
+    ui_batch.add_argument("--artifact-dir", default="artifacts/ui-batch")
+    ui_batch.add_argument("--report", default="")
+    ui_batch.add_argument("--full-output", action="store_true")
+
+    inspect = sub.add_parser("ui-inspect", help="Open an optional link and return an agent-normalized UI map")
+    inspect.add_argument("worker_config")
+    inspect.add_argument("--link", default="")
+    inspect.add_argument("--uuid", default="")
+    inspect.add_argument("--kind", choices=["catalog", "document"], default="catalog")
+    inspect.add_argument("--metadata-name", default="")
+    inspect.add_argument("--depth", type=int, default=8)
+    inspect.add_argument("--artifact-dir", default="artifacts/ui-inspect")
+    inspect.add_argument("--report", default="")
+
+    hybrid = sub.add_parser("run-hybrid", help="Run server arrange, native UI act, server assert, cleanup")
+    hybrid.add_argument("worker_config")
+    hybrid.add_argument("scenario_file")
+    hybrid.add_argument("--artifact-dir", default="artifacts/hybrid")
+    hybrid.add_argument("--report", default="")
+
     args = parser.parse_args()
     if args.timeout <= 0:
         parser.error("--timeout must be greater than zero")
     REQUEST_TIMEOUT = args.timeout
-    if args.cmd != "run-ui" and not args.base_url:
+    local_commands = {"run-ui", "run-ui-batch", "ui-inspect"}
+    if args.cmd not in local_commands and not args.base_url:
         parser.error("--base-url is required for this command")
     base_url = args.base_url.rstrip("/")
 
     if args.cmd == "health":
         result = request_json(f"{base_url}/health")
+    elif args.cmd == "capabilities":
+        result = request_json(f"{base_url}/command", {"command": "Capabilities"})
+    elif args.cmd == "doctor":
+        result = run_doctor(
+            lambda: request_json(f"{base_url}/health"),
+            lambda: request_json(f"{base_url}/command", {"command": "Capabilities"}),
+            args.worker_config,
+        )
     elif args.cmd == "metadata":
         payload = {"command": "Metadata"}
         if args.sections:
@@ -307,10 +346,46 @@ def main() -> int:
         if args.report:
             save_report(result, args.report)
         output_result = result if args.full_output else compact_ui_result(result, args.report)
+    elif args.cmd == "run-ui-batch":
+        result = run_ui_batch(load_worker_config(args.worker_config), args.scenario_files, args.artifact_dir)
+        if args.report:
+            save_report(result, args.report)
+        output_result = result if args.full_output else compact_ui_result(result, args.report)
+    elif args.cmd == "ui-inspect":
+        if args.uuid and not args.metadata_name:
+            parser.error("ui-inspect --uuid requires --metadata-name")
+        inspect_steps = []
+        if args.link or args.uuid:
+            step = {"action": "openNavigationLink"}
+            if args.link:
+                step["link"] = args.link
+            else:
+                step.update({"uuid": args.uuid, "kind": args.kind, "metadataName": args.metadata_name})
+            inspect_steps.append(step)
+        inspect_steps.append({"action": "inspectUi", "depth": args.depth})
+        artifact_dir = Path(args.artifact_dir).resolve()
+        artifact_dir.mkdir(parents=True, exist_ok=True)
+        scenario_path = artifact_dir / "inspect.ui.json"
+        scenario_path.write_text(json.dumps({"name": "agent UI inspect", "steps": inspect_steps}, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        result = run_ui_worker(load_worker_config(args.worker_config), scenario_path, artifact_dir)
+        if args.report:
+            save_report(result, args.report)
+        output_result = normalize_ui_report(result)
+    elif args.cmd == "run-hybrid":
+        definition_path = Path(args.scenario_file).resolve()
+        definition = json.loads(definition_path.read_text(encoding="utf-8-sig"))
+        result = run_hybrid_scenario(
+            definition, definition_path,
+            lambda payload: request_json(f"{base_url}/command", payload),
+            load_worker_config(args.worker_config), args.artifact_dir,
+        )
+        if args.report:
+            save_report(result, args.report)
+        output_result = result
     else:
         raise AssertionError(args.cmd)
 
-    print(json.dumps(output_result if args.cmd == "run-ui" else result, ensure_ascii=False, indent=2))
+    print(json.dumps(output_result if args.cmd in {"run-ui", "run-ui-batch", "ui-inspect", "run-hybrid"} else result, ensure_ascii=False, indent=2))
     return 0 if result.get("ok", True) else 1
 
 
