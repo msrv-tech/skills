@@ -732,14 +732,32 @@ def run_ui_worker(config: dict[str, Any], scenario_path: str | Path, artifact_di
     scenario_text = ""
     scenario = source_scenario
     if source_scenario.suffix.lower() == ".json":
-        scenario_data = prepare_native_ui_scenario(json.loads(source_scenario.read_text(encoding="utf-8-sig")))
-        if any(step.get("reference") is not None for step in scenario_data["steps"]):
+        raw_scenario = json.loads(source_scenario.read_text(encoding="utf-8-sig"))
+        if isinstance(raw_scenario.get("scenarios"), list):
+            scenario_data = copy.deepcopy(raw_scenario)
+            if not scenario_data["scenarios"]:
+                raise UiWorkerError("UI suite must contain a non-empty scenarios array")
             reference_config = reference_bridge_config(config)
-            if not reference_config.get("bridgeBaseUrl"):
-                raise UiWorkerError("selectReference.reference requires targetBridgeBaseUrl or bridgeBaseUrl")
-            scenario_data = resolve_native_ui_references(
-                scenario_data, lambda payload: bridge_command(reference_config, payload)
-            )
+            for item in scenario_data["scenarios"]:
+                if not isinstance(item, dict) or not isinstance(item.get("scenario"), dict):
+                    raise UiWorkerError("Each UI suite item must contain a scenario object")
+                item["scenario"] = prepare_native_ui_scenario(item["scenario"])
+                item["scenario"].pop("$schema", None)
+                if any(step.get("reference") is not None for step in item["scenario"]["steps"]):
+                    if not reference_config.get("bridgeBaseUrl"):
+                        raise UiWorkerError("selectReference.reference requires targetBridgeBaseUrl or bridgeBaseUrl")
+                    item["scenario"] = resolve_native_ui_references(
+                        item["scenario"], lambda payload: bridge_command(reference_config, payload)
+                    )
+        else:
+            scenario_data = prepare_native_ui_scenario(raw_scenario)
+            if any(step.get("reference") is not None for step in scenario_data["steps"]):
+                reference_config = reference_bridge_config(config)
+                if not reference_config.get("bridgeBaseUrl"):
+                    raise UiWorkerError("selectReference.reference requires targetBridgeBaseUrl or bridgeBaseUrl")
+                scenario_data = resolve_native_ui_references(
+                    scenario_data, lambda payload: bridge_command(reference_config, payload)
+                )
         scenario_data.pop("$schema", None)
         scenario = artifacts / f"scenario-{run_id}.ui.json"
         scenario.write_text(json.dumps(scenario_data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -801,9 +819,17 @@ def run_ui_worker(config: dict[str, Any], scenario_path: str | Path, artifact_di
         runtime_config = expand(runtime_config, variables)
         if transport == "bridgeJob":
             progress("startup", "Creating bridge job")
-            bridge_command(runtime_config, {
-                "command": "uiJobCreate", "jobId": run_id, "scenario": scenario_text,
-            })
+            if isinstance(scenario_data, dict) and isinstance(scenario_data.get("scenarios"), list):
+                bridge_command(runtime_config, {
+                    "command": "uiSuiteJobCreate", "jobId": run_id,
+                    "name": scenario_data.get("name", "ui-suite"),
+                    "scenarios": scenario_data["scenarios"],
+                    "failFast": bool(scenario_data.get("failFast", False)),
+                })
+            else:
+                bridge_command(runtime_config, {
+                    "command": "uiJobCreate", "jobId": run_id, "scenario": scenario_text,
+                })
         backend = create_backend(runtime_config, run_id)
         progress("startup", f"Starting TestClient on isolated {backend.name} backend")
         client = backend.start(client_command)
@@ -838,6 +864,7 @@ def run_ui_worker(config: dict[str, Any], scenario_path: str | Path, artifact_di
         last_progress_signature: tuple[Any, ...] | None = None
         last_partial_result: dict[str, Any] | None = None
         handled_uia_requests: set[str] = set()
+        captured_failed_scenarios: set[str] = set()
         current_step_started = time.monotonic()
         while time.monotonic() < manager_deadline:
             exit_code = manager.poll()
@@ -910,6 +937,19 @@ def run_ui_worker(config: dict[str, Any], scenario_path: str | Path, artifact_di
                         if isinstance(partial, dict) and partial.get("status") == "running":
                             last_partial_result = partial
                             current = partial.get("step") or {}
+                            if (
+                                current.get("status") == "failed"
+                                and isinstance(backend, WindowsHiddenDesktopBackend)
+                                and client is not None
+                            ):
+                                scenario_name = str(partial.get("name", "scenario"))
+                                safe_name = "".join(char if char.isalnum() or char in "-_" else "_" for char in scenario_name)
+                                if safe_name not in captured_failed_scenarios:
+                                    captured_failed_scenarios.add(safe_name)
+                                    try:
+                                        capture_window(backend.desktop_name, client.pid, artifacts / f"failed-{safe_name}.bmp")
+                                    except Exception:
+                                        pass
                             signature = (
                                 partial.get("stage"), partial.get("currentStep"),
                                 current.get("status"), current.get("action"), current.get("name"),
@@ -919,8 +959,9 @@ def run_ui_worker(config: dict[str, Any], scenario_path: str | Path, artifact_di
                                 current_step_started = now
                                 progress(
                                     "running",
-                                    f"Step {partial.get('currentStep', 0)}/{partial.get('totalSteps', 0)}: "
+                                    f"{partial.get('name', 'scenario')}: step {partial.get('currentStep', 0)}/{partial.get('totalSteps', 0)}: "
                                     f"{current.get('name') or current.get('action') or partial.get('stage')}",
+                                    scenarioName=partial.get("name"),
                                     currentStep=partial.get("currentStep"),
                                     totalSteps=partial.get("totalSteps"),
                                     step=current,

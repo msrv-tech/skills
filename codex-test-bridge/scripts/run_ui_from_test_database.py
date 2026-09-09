@@ -14,8 +14,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from ui_batch import run_ui_batch  # noqa: E402
 from ui_worker import load_worker_config, run_ui_worker  # noqa: E402
+from ui_suite import run_ui_suite, save_ui_suite_junit  # noqa: E402
 
 
 REQUIRED_FIELDS = ("Srvr", "Ref", "User", "Password")
@@ -75,6 +75,8 @@ def main() -> int:
     parser.add_argument("--scenario", action="append", required=True)
     parser.add_argument("--artifact-dir", required=True)
     parser.add_argument("--report", default="")
+    parser.add_argument("--junit", default="")
+    parser.add_argument("--fail-fast", action="store_true")
     args = parser.parse_args()
 
     registry = json.loads(Path(args.registry).read_text(encoding="utf-8-sig"))
@@ -97,7 +99,7 @@ def main() -> int:
         if len(args.scenario) == 1:
             report = run_ui_worker(worker_config, args.scenario[0], args.artifact_dir)
         else:
-            report = run_ui_batch(worker_config, args.scenario, args.artifact_dir)
+            report = run_ui_suite(worker_config, args.scenario, args.artifact_dir, fail_fast=args.fail_fast)
 
     if args.report:
         report_path = Path(args.report).resolve()
@@ -105,6 +107,8 @@ def main() -> int:
         report_path.write_text(
             json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8"
         )
+    if args.junit:
+        save_ui_suite_junit(report, args.junit)
     print(json.dumps(report, ensure_ascii=False, indent=2))
     return 0 if report.get("ok") else 1
 

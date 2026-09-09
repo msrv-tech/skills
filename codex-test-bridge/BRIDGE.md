@@ -455,5 +455,8 @@ python .\client.py --base-url $bridgeUrl run-hybrid .\local.worker.json .\case.h
 ```
 
 Несколько коротких UI-сценариев можно выполнить одним запуском клиента и
-менеджера: `run-ui-batch worker.json a.ui.json b.ui.json`. Это тёплый batch, а
+менеджера: `run-ui-suite worker.json a.ui.json b.ui.json --junit junit.xml`. Это
+тёплый suite: каждый файл остаётся отдельным testcase в JSON/JUnit, а один
+упавший сценарий не удаляет результаты предыдущих. `run-ui-batch` сохранён как
+совместимый псевдоним.
 не фоновый сервис: процессы гарантированно завершаются после набора.

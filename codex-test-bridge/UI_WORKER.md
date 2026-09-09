@@ -507,6 +507,16 @@ python .\client.py ui-inspect .\local.worker.json --uuid $uuid --kind document -
 неоднозначность считается ошибкой. Каждый неуспешный отчёт содержит
 `agentDiagnostics.category/nextAction`, а полный `agentUi` остаётся в report.
 
-`run-ui-batch` объединяет сценарии и выполняет их в одной скрытой сессии, что
+`run-ui-suite` выполняет UI-сценарии последовательно в одной скрытой сессии
+TestClient/TestManager, сохраняя отдельный результат каждого сценария. Можно
+передать файлы и/или каталог; каталог рекурсивно ищет `*.ui.json`:
+
+```powershell
+python .\client.py run-ui-suite worker.json .\ui-scenarios --artifact-dir .\artifacts\ui-suite --report .\artifacts\ui-suite\report.json --junit .\artifacts\ui-suite\junit.xml
+```
+
+После сценария bridge закрывает только открытые им формы и сбрасывает ссылки
+на формы. При ошибке сохраняется диагностика сценария; `--fail-fast` останавливает
+набор после первой ошибки. `run-ui-batch` оставлен как совместимый псевдоним.
 убирает повторный запуск платформы. Сценарии в batch должны оставлять UI в
 предсказуемом состоянии (обычно завершаться `closeForm`).

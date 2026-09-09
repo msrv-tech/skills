@@ -19,6 +19,7 @@ from ui_worker import load_worker_config, run_ui_worker
 from agent_ui import normalize_ui_report
 from hybrid_runner import run_hybrid_scenario
 from ui_batch import run_ui_batch
+from ui_suite import run_ui_suite, save_ui_suite_junit
 from bridge_doctor import run_doctor
 
 
@@ -178,7 +179,16 @@ def main() -> int:
     ui.add_argument("--report", default="", help="Write worker JSON report to this path")
     ui.add_argument("--full-output", action="store_true", help="Print the complete UI tree instead of a compact summary")
 
-    ui_batch = sub.add_parser("run-ui-batch", help="Run UI scenarios in one warm client/manager lifecycle")
+    ui_suite = sub.add_parser("run-ui-suite", help="Run UI scenarios in one warm client/manager lifecycle with separate results")
+    ui_suite.add_argument("worker_config")
+    ui_suite.add_argument("scenario_paths", nargs="+", help="UI scenario files and/or directories searched recursively for *.ui.json")
+    ui_suite.add_argument("--artifact-dir", default="artifacts/ui-suite")
+    ui_suite.add_argument("--report", default="")
+    ui_suite.add_argument("--junit", default="")
+    ui_suite.add_argument("--fail-fast", action="store_true")
+    ui_suite.add_argument("--full-output", action="store_true")
+
+    ui_batch = sub.add_parser("run-ui-batch", help="Deprecated alias for run-ui-suite")
     ui_batch.add_argument("worker_config")
     ui_batch.add_argument("scenario_files", nargs="+")
     ui_batch.add_argument("--artifact-dir", default="artifacts/ui-batch")
@@ -205,7 +215,7 @@ def main() -> int:
     if args.timeout <= 0:
         parser.error("--timeout must be greater than zero")
     REQUEST_TIMEOUT = args.timeout
-    local_commands = {"run-ui", "run-ui-batch", "ui-inspect"}
+    local_commands = {"run-ui", "run-ui-suite", "run-ui-batch", "ui-inspect"}
     if args.cmd not in local_commands and not args.base_url:
         parser.error("--base-url is required for this command")
     base_url = args.base_url.rstrip("/")
@@ -347,9 +357,18 @@ def main() -> int:
             save_report(result, args.report)
         output_result = result if args.full_output else compact_ui_result(result, args.report)
     elif args.cmd == "run-ui-batch":
-        result = run_ui_batch(load_worker_config(args.worker_config), args.scenario_files, args.artifact_dir)
+        result = run_ui_suite(load_worker_config(args.worker_config), args.scenario_files, args.artifact_dir)
         if args.report:
             save_report(result, args.report)
+        output_result = result if args.full_output else compact_ui_result(result, args.report)
+    elif args.cmd == "run-ui-suite":
+        result = run_ui_suite(
+            load_worker_config(args.worker_config), args.scenario_paths, args.artifact_dir, fail_fast=args.fail_fast,
+        )
+        if args.report:
+            save_report(result, args.report)
+        if args.junit:
+            save_ui_suite_junit(result, args.junit)
         output_result = result if args.full_output else compact_ui_result(result, args.report)
     elif args.cmd == "ui-inspect":
         if args.uuid and not args.metadata_name:
@@ -385,7 +404,7 @@ def main() -> int:
     else:
         raise AssertionError(args.cmd)
 
-    print(json.dumps(output_result if args.cmd in {"run-ui", "run-ui-batch", "ui-inspect", "run-hybrid"} else result, ensure_ascii=False, indent=2))
+    print(json.dumps(output_result if args.cmd in {"run-ui", "run-ui-suite", "run-ui-batch", "ui-inspect", "run-hybrid"} else result, ensure_ascii=False, indent=2))
     return 0 if result.get("ok", True) else 1
 
 

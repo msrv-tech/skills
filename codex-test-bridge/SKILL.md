@@ -322,5 +322,5 @@ cross-db worker обязательно передай локально `targetBr
 Сквозной сценарий «server arrange → UI act → server assert → cleanup» запускай
 через `run-hybrid`. Результаты `saveAs` arrange доступны в UI и assert как
 `${alias.path}`; созданные arrange-объекты удаляются автоматически. Набор
-коротких независимых UI-тестов запускай через `run-ui-batch`: это одна тёплая
+коротких независимых UI-тестов запускай через `run-ui-suite`: это одна тёплая
 сессия TestClient/TestManager, и каждый сценарий должен сам закрывать формы.

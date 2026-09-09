@@ -44,6 +44,8 @@
 			Возврат JSONОтвет(КомандаRenderExternalReport(Данные));
 		ИначеЕсли Команда = "uijobcreate" Тогда
 			Возврат JSONОтвет(КомандаUIJobCreate(Данные));
+		ИначеЕсли Команда = "uisuitejobcreate" Тогда
+			Возврат JSONОтвет(КомандаUISuiteJobCreate(Данные));
 		ИначеЕсли Команда = "uijobget" Тогда
 			Возврат JSONОтвет(КомандаUIJobGet(Данные));
 		ИначеЕсли Команда = "uijobset" Тогда
@@ -79,6 +81,19 @@
 	Возврат Задание;
 КонецФункции
 
+Функция КомандаUISuiteJobCreate(Данные)
+	Идентификатор = Строка(Получить(Данные, "jobId", ""));
+	Сценарии = Получить(Данные, "scenarios", Неопределено);
+	Если ПустаяСтрока(Идентификатор) Или ТипЗнч(Сценарии) <> Тип("Массив") Или Сценарии.Количество() = 0 Тогда
+		ВызватьИсключение "uiSuiteJobCreate requires jobId and non-empty scenarios";
+	КонецЕсли;
+	Набор = Новый Структура;
+	Набор.Вставить("name", Строка(Получить(Данные, "name", "ui-suite")));
+	Набор.Вставить("scenarios", Сценарии);
+	Набор.Вставить("failFast", Получить(Данные, "failFast", Ложь));
+	Возврат CodexUIJobsServer.СоздатьЗадание(Идентификатор, ЗаписатьJSONСтроку(Набор));
+КонецФункции
+
 Функция КомандаUIJobSet(Данные)
 	Идентификатор = Строка(Получить(Данные, "jobId", ""));
 	Статус = Строка(Получить(Данные, "status", ""));
@@ -101,7 +116,7 @@
 
 Функция КомандаCapabilities()
 	Команды = Новый Массив;
-	Для Каждого ИмяКоманды Из СтрРазделить("Health,Capabilities,Metadata,Describe,Query,ExecuteBSL,CallCommonModule,GetObject,WriteObject,DeleteObject,CreateCatalogItem,CreateDocument,PostDocument,RenderExternalPrintForm,RenderExternalReport,UIJobCreate,UIJobGet,UIJobSet,UIJobDelete", ",") Цикл
+	Для Каждого ИмяКоманды Из СтрРазделить("Health,Capabilities,Metadata,Describe,Query,ExecuteBSL,CallCommonModule,GetObject,WriteObject,DeleteObject,CreateCatalogItem,CreateDocument,PostDocument,RenderExternalPrintForm,RenderExternalReport,UIJobCreate,UISuiteJobCreate,UIJobGet,UIJobSet,UIJobDelete", ",") Цикл
 		Команды.Добавить(ИмяКоманды);
 	КонецЦикла;
 	ДействияUI = Новый Массив;
@@ -115,6 +130,7 @@
 	ВозможностиUI.Вставить("tableCells", Истина);
 	ВозможностиUI.Вставить("agentInspect", Истина);
 	ВозможностиUI.Вставить("warmBatch", Истина);
+	ВозможностиUI.Вставить("suite", Истина);
 
 	Результат = КомандаHealth();
 	Результат.Вставить("bridgeVersion", "0.2.0");
@@ -603,6 +619,13 @@
 	Чтение = Новый ЧтениеJSON;
 	Чтение.УстановитьСтроку(Тело);
 	Возврат ПрочитатьJSON(Чтение);
+КонецФункции
+
+Функция ЗаписатьJSONСтроку(Данные)
+	Запись = Новый ЗаписьJSON;
+	Запись.УстановитьСтроку();
+	ЗаписатьJSON(Запись, Данные);
+	Возврат Запись.Закрыть();
 КонецФункции
 
 Функция JSONОтвет(Данные, КодСостояния = 200)
