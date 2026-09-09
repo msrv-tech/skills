@@ -1,0 +1,12 @@
+{
+  "name": "Hybrid suite smoke",
+  "scenarios": [
+    {
+      "id": "bridge-and-ui",
+      "before": {"steps": [{"request": {"command": "Health"}}]},
+      "ui": {"name": "Native connection", "steps": [{"action": "assertConnected"}]},
+      "after": {"steps": [{"request": {"command": "Health"}}]},
+      "finally": {"steps": [{"request": {"command": "Health"}}]}
+    }
+  ]
+}

@@ -1171,6 +1171,17 @@ def run_uia_bridge_request(desktop_name: str, process_id: int, request: dict[str
                 "status": "uia-response",
                 "actual": actual,
             }
+        if action == "waitfortarget":
+            title = str(request.get("title") or "")
+            if not title:
+                raise UiaRunnerError("waitForTarget requires targetForm.title")
+            element = _find(uia, root, {"name": title}, float(request.get("timeout", 60)))
+            return {
+                "ok": True,
+                "requestId": request.get("requestId"),
+                "status": "uia-response",
+                "actual": _safe_element_info(element),
+            }
         raise UiaRunnerError(f"Unsupported UIA bridge action: {request.get('action')}")
     except Exception as exc:
         return {

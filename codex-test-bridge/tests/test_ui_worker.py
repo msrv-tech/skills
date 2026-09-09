@@ -62,11 +62,34 @@ class UiWorkerTests(unittest.TestCase):
         scenario = prepare_native_ui_scenario({"steps": [{
             "action": "openNavigationLink", "kind": "catalog", "metadataName": "ВнутренниеДокументы",
             "uuid": "a14919f5-0dad-11e4-93f4-0050568b4127",
+            "targetForm": {"formName": "Справочник.ВнутренниеДокументы.Форма.ФормаЭлемента"},
         }]})
         self.assertEqual(
             scenario["steps"][0]["link"],
             "e1cib/data/Справочник.ВнутренниеДокументы?ref=93f40050568b412711e40dada14919f5",
         )
+
+    def test_navigation_requires_a_real_target_form(self):
+        with self.assertRaisesRegex(UiWorkerError, "requires targetForm"):
+            prepare_native_ui_scenario({"steps": [{"action": "openNavigationLink", "link": "e1cib/app/Обработка.Тест"}]})
+        with self.assertRaisesRegex(UiWorkerError, "requires formName, objectName, or title"):
+            prepare_native_ui_scenario({"steps": [{
+                "action": "openNavigationLink", "link": "e1cib/app/Обработка.Тест", "targetForm": {"timeout": 10},
+            }]})
+
+    def test_open_data_processor_is_validated_without_a_manual_link(self):
+        prepared = prepare_native_ui_scenario({"steps": [{
+            "action": "openDataProcessor", "metadataName": "ЕМС_РабочееМестоМенеджера", "formName": "Форма",
+            "targetForm": {"formName": "Обработка.ЕМС_РабочееМестоМенеджера.Форма.Форма"},
+        }]})
+        self.assertEqual(prepared["steps"][0]["metadataName"], "ЕМС_РабочееМестоМенеджера")
+        with self.assertRaisesRegex(UiWorkerError, "requires metadataName"):
+            prepare_native_ui_scenario({"steps": [{"action": "openDataProcessor", "targetForm": {"title": "Тест"}}]})
+
+    def test_invalid_navigation_example_has_an_explicit_target(self):
+        example = Path(__file__).resolve().parents[1] / "examples" / "invalid-navigation.ui.json"
+        scenario = prepare_native_ui_scenario(json.loads(example.read_text(encoding="utf-8")))
+        self.assertEqual(scenario["steps"][0]["targetForm"]["formName"], "Обработка.__CodexBridgeMissing__.Форма.Форма")
 
     def test_reference_uuid_is_resolved_to_choice_contract(self):
         scenario = prepare_native_ui_scenario({"steps": [{
@@ -110,6 +133,7 @@ class UiWorkerTests(unittest.TestCase):
         self.assertIn("selectReference", actions)
         self.assertIn("inspectUI", actions)
         self.assertIn("openNavigationLink", actions)
+        self.assertIn("openDataProcessor", actions)
         self.assertIn("inspectTable", actions)
         self.assertIn("selectFromDropdown", actions)
         self.assertIn("openChoice", actions)
@@ -151,6 +175,12 @@ class UiWorkerTests(unittest.TestCase):
         self.assertIn('ЗакрытыеСтартовыеДиалоги.Найти("restartTestClient")', module)
         self.assertIn("CTB_ЗакрытьТестКлиентШтатно", module)
         self.assertIn("ТестКлиент.РазорватьСоединение()", module)
+        self.assertIn("CTB_ОткрытьНавигационнуюЦель", module)
+        self.assertIn("CTB_ПроверитьЧтоФормаНеОшибкаНавигации", module)
+        self.assertIn('"opendataprocessor"', module)
+        self.assertIn("CTB_ОбработатьКомандуОткрытияФормы", module)
+        self.assertIn("ОткрытьФорму(ПолноеИмяФормы)", module)
+        self.assertIn("CTB_ОткрытьФормуЧерезТестКлиент", module)
 
     def test_uia_runner_has_visual_inner_button_fallback(self):
         runner = (Path(__file__).resolve().parents[1] / "uia_runner.py").read_text(encoding="utf-8")

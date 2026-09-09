@@ -40,7 +40,7 @@ PLACEHOLDER = re.compile(r"\{([A-Za-z][A-Za-z0-9]*)}")
 DEFAULT_SECRET_FLAGS = ["/P", "/N", "/S", "/F", "--password", "--token", "--user", "--server", "--database-path"]
 DEFAULT_1C_STARTUP_FLAGS = ["/DisableStartupDialogs", "/DisableStartupMessages", "/DisableSplash"]
 NATIVE_UI_ACTIONS: set[str] = {
-    "assertConnected", "openNavigationLink", "executeCommand", "nextWindow", "activateWindow",
+    "assertConnected", "openNavigationLink", "openDataProcessor", "openForm", "executeCommand", "nextWindow", "activateWindow",
     "waitForm", "waitFormClosed", "waitElement", "assertElement", "inspectUi", "inspectUI", "inspectTable",
     "inspectCommandInterface", "clickCommandInterface", "activateForm", "activateElement",
     "inputText", "selectReference", "selectFromDropdown", "setCheckbox", "openChoice",
@@ -52,7 +52,7 @@ NATIVE_UI_ROOT_FIELDS = {
     "startupDialogButtons", "restartTestClientOnStartup", "startupSettleSeconds", "uiaBeforeSteps", "uiaSteps", "steps",
 }
 NATIVE_UI_STEP_FIELDS = {
-    "action", "name", "command", "link", "uuid", "kind", "metadataName", "form", "saveAs",
+    "action", "name", "command", "link", "uuid", "kind", "metadataKind", "metadataName", "form", "saveAs",
     "title", "objectName", "formName", "timeout", "attempts", "strategy", "match", "direction",
     "depth", "value", "expected", "exists", "visible", "enabled", "readOnly", "checked", "strict",
     "finishRow", "onChangeWait", "replace", "waitClosed", "optional", "elementType", "onPrompt",
@@ -118,6 +118,27 @@ def prepare_native_ui_scenario(data: Any) -> dict[str, Any]:
                 step["link"] = f"e1cib/data/{kind_names[kind]}.{metadata_name}?ref={ref}"
             if not isinstance(step.get("link"), str) or not step["link"]:
                 raise UiWorkerError(f"UI scenario step {index}: openNavigationLink requires link or uuid shorthand")
+        if action == "openDataProcessor":
+            if not isinstance(step.get("metadataName"), str) or not step["metadataName"]:
+                raise UiWorkerError(f"UI scenario step {index}: openDataProcessor requires metadataName")
+            form_name = step.get("formName")
+            if form_name is not None and (not isinstance(form_name, str) or not form_name):
+                raise UiWorkerError(f"UI scenario step {index}: openDataProcessor.formName must be a non-empty string")
+        if action == "openForm":
+            if step.get("metadataKind") not in {"catalog", "document", "dataProcessor", "report", "commonForm"}:
+                raise UiWorkerError(f"UI scenario step {index}: openForm.metadataKind is unsupported")
+            if not isinstance(step.get("metadataName"), str) or not step["metadataName"]:
+                raise UiWorkerError(f"UI scenario step {index}: openForm requires metadataName")
+            if step.get("metadataKind") != "commonForm" and (not isinstance(step.get("formName"), str) or not step["formName"]):
+                raise UiWorkerError(f"UI scenario step {index}: openForm.formName is required except for commonForm")
+        if action in {"openNavigationLink", "openDataProcessor", "openForm"}:
+            target = step.get("targetForm")
+            if not isinstance(target, dict):
+                raise UiWorkerError(f"UI scenario step {index}: {action} requires targetForm")
+            if not any(isinstance(target.get(key), str) and target[key] for key in ("formName", "objectName", "title")):
+                raise UiWorkerError(
+                    f"UI scenario step {index}: targetForm requires formName, objectName, or title"
+                )
         reference = step.get("reference")
         if reference is not None:
             if action != "selectReference" or not isinstance(reference, dict):
@@ -703,7 +724,7 @@ def create_backend(config: dict[str, Any], run_id: str) -> ProcessBackend | Wind
     return ProcessBackend(environment, working_directory)
 
 
-def run_ui_worker(config: dict[str, Any], scenario_path: str | Path, artifact_dir: str | Path) -> dict[str, Any]:
+def run_ui_worker(config: dict[str, Any], scenario_path: str | Path, artifact_dir: str | Path, server_hook_handler: Any = None) -> dict[str, Any]:
     validate_worker_config(config)
     started = utc_now()
     run_id = uuid.uuid4().hex
@@ -879,6 +900,19 @@ def run_ui_worker(config: dict[str, Any], scenario_path: str | Path, artifact_di
                     progress_text = progress_job.get("result", "")
                     if progress_text:
                         partial = json.loads(progress_text)
+                        if isinstance(partial, dict) and partial.get("status") == "server-hook-request":
+                            hook_id = str(partial.get("hookId", ""))
+                            if hook_id and hook_id not in handled_uia_requests:
+                                handled_uia_requests.add(hook_id)
+                                progress("server", f"{partial.get('scenarioName', 'scenario')}: {partial.get('phase', 'server')}", scenarioName=partial.get("scenarioName"), phase=partial.get("phase"))
+                                try:
+                                    response = server_hook_handler(partial) if server_hook_handler else {"ok": False, "error": "No server hook handler"}
+                                except Exception as exc:
+                                    response = {"ok": False, "error": f"{type(exc).__name__}: {exc}"}
+                                response.setdefault("hookId", hook_id)
+                                response.setdefault("status", "server-hook-response")
+                                bridge_command(runtime_config, {"command": "uiJobSet", "jobId": run_id, "status": "server-hook-response", "result": json.dumps(response, ensure_ascii=True, separators=(",", ":"))})
+                            continue
                         if isinstance(partial, dict) and partial.get("status") == "client-restart-request":
                             request_id = str(partial.get("requestId", ""))
                             if request_id and request_id not in handled_uia_requests:

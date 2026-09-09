@@ -1,0 +1,16 @@
+{
+  "$schema": "../ui-scenario.schema.json",
+  "name": "Open an ordinary data processor",
+  "steps": [
+    {
+      "action": "openDataProcessor",
+      "metadataName": "ЕМС_РабочееМестоМенеджера",
+      "formName": "Форма",
+      "targetForm": {
+        "title": "Рабочее место менеджера: ЕМС, Астра",
+        "timeout": 90,
+        "saveAs": "rmm"
+      }
+    }
+  ]
+}

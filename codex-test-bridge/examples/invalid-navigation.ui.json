@@ -1,0 +1,14 @@
+{
+  "$schema": "../ui-scenario.schema.json",
+  "name": "Invalid navigation must fail",
+  "steps": [
+    {
+      "action": "openNavigationLink",
+      "link": "e1cib/app/Обработка.__CodexBridgeMissing__",
+      "targetForm": {
+        "formName": "Обработка.__CodexBridgeMissing__.Форма.Форма",
+        "timeout": 20
+      }
+    }
+  ]
+}

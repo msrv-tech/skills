@@ -18,6 +18,7 @@ from scenario_runner import (
 from ui_worker import load_worker_config, run_ui_worker
 from agent_ui import normalize_ui_report
 from hybrid_runner import run_hybrid_scenario
+from hybrid_suite import run_hybrid_suite, save_hybrid_suite_junit
 from ui_batch import run_ui_batch
 from ui_suite import run_ui_suite, save_ui_suite_junit
 from bridge_doctor import run_doctor
@@ -211,11 +212,18 @@ def main() -> int:
     hybrid.add_argument("--artifact-dir", default="artifacts/hybrid")
     hybrid.add_argument("--report", default="")
 
+    hybrid_suite = sub.add_parser("run-hybrid-suite", help="Run server hooks and UI scenarios in one warm session")
+    hybrid_suite.add_argument("worker_config")
+    hybrid_suite.add_argument("suite_file")
+    hybrid_suite.add_argument("--artifact-dir", default="artifacts/hybrid-suite")
+    hybrid_suite.add_argument("--report", default="")
+    hybrid_suite.add_argument("--junit", default="")
+
     args = parser.parse_args()
     if args.timeout <= 0:
         parser.error("--timeout must be greater than zero")
     REQUEST_TIMEOUT = args.timeout
-    local_commands = {"run-ui", "run-ui-suite", "run-ui-batch", "ui-inspect"}
+    local_commands = {"run-ui", "run-ui-suite", "run-ui-batch", "ui-inspect", "run-hybrid-suite"}
     if args.cmd not in local_commands and not args.base_url:
         parser.error("--base-url is required for this command")
     base_url = args.base_url.rstrip("/")
@@ -401,10 +409,16 @@ def main() -> int:
         if args.report:
             save_report(result, args.report)
         output_result = result
+    elif args.cmd == "run-hybrid-suite":
+        definition_path = Path(args.suite_file).resolve()
+        result = run_hybrid_suite(json.loads(definition_path.read_text(encoding="utf-8-sig")), definition_path, load_worker_config(args.worker_config), args.artifact_dir)
+        if args.report: save_report(result, args.report)
+        if args.junit: save_hybrid_suite_junit(result, args.junit)
+        output_result = result
     else:
         raise AssertionError(args.cmd)
 
-    print(json.dumps(output_result if args.cmd in {"run-ui", "run-ui-suite", "run-ui-batch", "ui-inspect", "run-hybrid"} else result, ensure_ascii=False, indent=2))
+    print(json.dumps(output_result if args.cmd in {"run-ui", "run-ui-suite", "run-ui-batch", "ui-inspect", "run-hybrid", "run-hybrid-suite"} else result, ensure_ascii=False, indent=2))
     return 0 if result.get("ok", True) else 1
 
 

@@ -234,8 +234,14 @@ python .\client.py run-ui .\server.example.invalid.json .\examples\native-ui-smo
 ```
 
 На Windows backend `auto` создаёт невидимый Win32 desktop, на Linux запускает
-Xvfb. Формы открывай без меню действием `openNavigationLink` с прямой ссылкой
-`e1cib/...` и `targetForm`. Для ссылки на конкретный объект можно передать
+Xvfb. Обычные формы открывай без меню действием `openForm`: передай
+`metadataKind` (`catalog`, `document`, `dataProcessor`, `report`, `commonForm`),
+`metadataName`, `formName` и обязательный `targetForm`. Для обработки есть
+короткая форма `openDataProcessor`. Эти действия выполняют штатный клиентский
+`ОткрытьФорму()` и не требуют подбирать `e1cib`-ссылку. `openNavigationLink`
+оставляй только для действительно навигационных ссылок; у него также обязателен
+`targetForm` с `formName`, `objectName` или `title`, а форма ошибки навигации
+всегда означает failed. Для ссылки на конкретный объект можно передать
 `uuid`, `kind: catalog|document` и `metadataName`: worker сам сформирует ref в
 порядке групп UUID 4-5-3-2-1. Навигационная команда после принятия выполняется
 ровно один раз; `attempts` повторяет только отвергнутую команду, а

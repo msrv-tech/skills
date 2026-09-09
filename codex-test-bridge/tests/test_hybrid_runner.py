@@ -19,7 +19,7 @@ class HybridRunnerTests(unittest.TestCase):
         definition = {
             "name": "hybrid",
             "arrange": {"steps": [{"saveAs": "item", "request": {"command": "CreateCatalogItem", "catalog": "Items", "fields": {}}}]},
-            "ui": {"steps": [{"action": "openNavigationLink", "kind": "catalog", "metadataName": "Items", "uuid": "${item.ref.uuid}"}]},
+            "ui": {"steps": [{"action": "openNavigationLink", "kind": "catalog", "metadataName": "Items", "uuid": "${item.ref.uuid}", "targetForm": {"title": "Items"}}]},
             "assert": {"steps": [{"request": {"command": "Health"}}]},
         }
         with tempfile.TemporaryDirectory() as temp, patch("hybrid_runner.run_ui_worker", return_value={"ok": True}):

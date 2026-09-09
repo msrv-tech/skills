@@ -1,0 +1,56 @@
+"""Warm UI suite with server bridge hooks between UI scenarios."""
+from __future__ import annotations
+
+import json
+import os
+from pathlib import Path
+from typing import Any, Callable
+
+from hybrid_runner import _definition
+from scenario_runner import ScenarioRunner, substitute
+from ui_suite import save_ui_suite_junit
+from ui_worker import UiWorkerError, bridge_command, run_ui_worker
+
+
+def run_hybrid_suite(definition: dict[str, Any], definition_path: str | Path, worker_config: dict[str, Any], artifact_dir: str | Path) -> dict[str, Any]:
+    if not isinstance(definition, dict) or not isinstance(definition.get("scenarios"), list) or not definition["scenarios"]:
+        raise UiWorkerError("Hybrid suite requires a non-empty scenarios array")
+    base, artifacts = Path(definition_path).resolve().parent, Path(artifact_dir).resolve()
+    artifacts.mkdir(parents=True, exist_ok=True)
+    items, contexts, created = [], {}, {}
+    for index, raw in enumerate(definition["scenarios"], 1):
+        if not isinstance(raw, dict) or "ui" not in raw:
+            raise UiWorkerError(f"Hybrid suite scenario {index} requires ui")
+        scenario = _definition(raw["ui"], base)
+        if scenario is None: raise UiWorkerError(f"Hybrid suite scenario {index} has invalid ui")
+        items.append({"id": raw.get("id", f"scenario-{index}"), "source": str(definition_path), "scenario": scenario, "before": _definition(raw.get("before"), base), "after": _definition(raw.get("after"), base), "finally": _definition(raw.get("finally"), base)})
+    suite_path = artifacts / "hybrid-suite.ui.json"
+    suite_path.write_text(json.dumps({"name": definition.get("name", "hybrid-suite"), "failFast": bool(definition.get("failFast", False)), "scenarios": items}, ensure_ascii=False, indent=2), encoding="utf-8")
+    hook_config = dict(worker_config)
+    bridge_url = str(hook_config.get("bridgeBaseUrl", ""))
+    for alias, environment_name in hook_config.get("environmentPlaceholders", {}).items():
+        bridge_url = bridge_url.replace("{" + str(alias) + "}", os.environ.get(str(environment_name), ""))
+    hook_config["bridgeBaseUrl"] = bridge_url
+    server = ScenarioRunner(lambda payload: bridge_command(hook_config, payload))
+    def hook(request: dict[str, Any]) -> dict[str, Any]:
+        index, phase = int(request["scenarioIndex"]), request["phase"]
+        item = items[index - 1]
+        item_id = str(item["id"])
+        stage = item.get(phase)
+        context = contexts.setdefault(item_id, {})
+        if stage is None: return {"ok": True, "scenario": substitute(item["scenario"], context)}
+        stage = substitute(stage, context)
+        result = server.run(stage, defer_cleanup=phase == "before")
+        if phase == "before":
+            context.update(result.get("outputs", {})); created[item_id] = result.get("createdObjects", [])
+        if phase == "finally": result["createdCleanup"] = server.cleanup_created(created.get(item_id, []))
+        return {"ok": bool(result.get("ok")), "scenario": substitute(item["scenario"], context), "result": result, "error": result.get("error")}
+    result = run_ui_worker(worker_config, suite_path, artifacts, server_hook_handler=hook)
+    manager = result.get("managerResult") if isinstance(result.get("managerResult"), dict) else {}
+    result["scenarios"] = manager.get("scenarios", [])
+    result["suite"] = {"warm": True, "hybrid": True, "requested": len(items), "failFast": bool(definition.get("failFast", False))}
+    result["ok"] = bool(result.get("ok")) and len(result["scenarios"]) == len(items) and all(x.get("ok") for x in result["scenarios"])
+    return result
+
+def save_hybrid_suite_junit(result: dict[str, Any], path: str | Path) -> None:
+    save_ui_suite_junit(result, path)
