@@ -60,6 +60,7 @@ def run_hybrid_suite(definition: dict[str, Any], definition_path: str | Path, wo
             outputs = result.get("outputs", {})
             contexts[item_id].update(outputs)
             shared_context.update(outputs)
+            context.update(outputs)
         if phase == "before":
             created[item_id] = result.get("createdObjects", [])
         if phase == "finally": result["createdCleanup"] = server.cleanup_created(created.get(item_id, []))
