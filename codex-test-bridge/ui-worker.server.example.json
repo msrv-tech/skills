@@ -1,7 +1,7 @@
 {
   "backend": "windowsDesktop",
   "testHost": "127.0.0.1",
-  "testPort": 1538,
+  "testPort": "auto",
   "probeTestPort": false,
   "startupDelaySeconds": 20,
   "startupTimeoutSeconds": 60,

@@ -1182,6 +1182,21 @@ def run_uia_bridge_request(desktop_name: str, process_id: int, request: dict[str
                 "status": "uia-response",
                 "actual": _safe_element_info(element),
             }
+        if action == "presskey":
+            key = str(request.get("key", "")).lower()
+            virtual_keys = {"right": 0x27, "left": 0x25, "down": 0x28, "up": 0x26,
+                            "enter": 0x0D, "space": 0x20,
+                            **{f"f{number}": 0x6F + number for number in range(1, 13)}}
+            if key not in virtual_keys:
+                raise UiaRunnerError(f"Unsupported UIA bridge key: {key}")
+            # SendInput is bound to the interactive desktop and can block for a
+            # hidden TestClient desktop. Do not use the threaded key helper here:
+            # an isolated desktop may reject PostThreadMessage. Address the
+            # TestClient HWND directly with the normal key down/up pair.
+            _post_window_message(user32, int(hwnd), 0x0100, virtual_keys[key], 1)
+            _post_window_message(user32, int(hwnd), 0x0101, virtual_keys[key], (1 << 30) | (1 << 31) | 1)
+            return {"ok": True, "requestId": request.get("requestId"), "status": "uia-response",
+                    "actual": {"key": key}}
         raise UiaRunnerError(f"Unsupported UIA bridge action: {request.get('action')}")
     except Exception as exc:
         return {

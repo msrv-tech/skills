@@ -134,10 +134,12 @@ class UiWorkerTests(unittest.TestCase):
         self.assertIn("inspectUI", actions)
         self.assertIn("openNavigationLink", actions)
         self.assertIn("openDataProcessor", actions)
+        self.assertIn("clickCommandInterface", actions)
         self.assertIn("inspectTable", actions)
         self.assertIn("selectFromDropdown", actions)
         self.assertIn("openChoice", actions)
         self.assertIn("selectTableRow", actions)
+        self.assertIn("expandTreeRow", actions)
         self.assertIn("waitElement", actions)
         self.assertIn("assertElement", actions)
         self.assertIn("setCheckbox", actions)
@@ -153,11 +155,38 @@ class UiWorkerTests(unittest.TestCase):
         self.assertIn("choiceTable", step["properties"])
         self.assertIn("choiceRow", step["properties"])
         self.assertIn("onChangeWait", step["properties"])
+        self.assertIn("expandParents", step["properties"])
         self.assertIn("replace", step["properties"])
         self.assertIn("uiaBeforeSteps", schema["properties"])
         self.assertIn("restartTestClientOnStartup", schema["properties"])
         self.assertFalse(schema["properties"]["restartTestClientOnStartup"]["default"])
         self.assertTrue(schema["properties"]["closeTestClientOnFinish"]["default"])
+
+    def test_tree_row_expansion_contract_is_validated(self):
+        scenario = prepare_native_ui_scenario({"steps": [{
+            "action": "expandTreeRow", "table": {"objectName": "Дерево"},
+            "row": {"Group": "Parent"},
+        }, {
+            "action": "selectTableRow", "table": {"objectName": "Дерево"},
+            "expandParents": [{"Group": "Parent"}], "row": {"Item": "Child"},
+        }]})
+        self.assertEqual(scenario["steps"][1]["expandParents"][0]["Group"], "Parent")
+        with self.assertRaisesRegex(UiWorkerError, "expandTreeRow requires row"):
+            prepare_native_ui_scenario({"steps": [{"action": "expandTreeRow"}]})
+
+    def test_command_interface_can_target_saved_form(self):
+        scenario = prepare_native_ui_scenario({"steps": [{
+            "action": "clickCommandInterface",
+            "form": "workplace",
+            "button": {"title": "Refresh"},
+        }]})
+        self.assertEqual(scenario["steps"][0]["form"], "workplace")
+        module = (
+            Path(__file__).resolve().parents[1]
+            / "src" / "Ext" / "ManagedApplicationModule.bsl"
+        ).read_text(encoding="utf-8-sig")
+        self.assertIn("CTB_ОкноКомандногоИнтерфейса", module)
+        self.assertIn("Форма.Активизировать()", module)
 
     def test_native_module_has_table_cell_editing_primitives(self):
         module = (
@@ -177,6 +206,15 @@ class UiWorkerTests(unittest.TestCase):
         self.assertIn("ТестКлиент.РазорватьСоединение()", module)
         self.assertIn("CTB_ОткрытьНавигационнуюЦель", module)
         self.assertIn("CTB_ПроверитьЧтоФормаНеОшибкаНавигации", module)
+
+    def test_dialog_button_search_covers_message_box_containers(self):
+        module = (
+            Path(__file__).resolve().parents[1]
+            / "src" / "Ext" / "ManagedApplicationModule.bsl"
+        ).read_text(encoding="utf-8-sig")
+        self.assertIn("Функция CTB_НайтиКнопкуДиалога", module)
+        self.assertIn('Окно.ПолучитьКомандныйИнтерфейс()', module)
+        self.assertIn('"ТестируемаяКнопкаКомандногоИнтерфейса"', module)
         self.assertIn('"opendataprocessor"', module)
         self.assertIn("CTB_ОбработатьКомандуОткрытияФормы", module)
         self.assertIn("ОткрытьФорму(ПолноеИмяФормы)", module)

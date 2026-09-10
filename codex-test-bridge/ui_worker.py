@@ -28,7 +28,7 @@ if hasattr(sys.stdout, "reconfigure"):
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from hidden_desktop_capture import capture_window
-from uia_runner import run_uia_bridge_request, run_uia_steps
+from uia_runner import run_uia_steps
 from agent_ui import diagnose_ui_failure, normalize_ui_report
 
 
@@ -44,7 +44,7 @@ NATIVE_UI_ACTIONS: set[str] = {
     "waitForm", "waitFormClosed", "waitElement", "assertElement", "inspectUi", "inspectUI", "inspectTable",
     "inspectCommandInterface", "clickCommandInterface", "activateForm", "activateElement",
     "inputText", "selectReference", "selectFromDropdown", "setCheckbox", "openChoice",
-    "selectTableRow", "assertTableRow", "inputTableCell", "click", "assertField",
+    "selectTableRow", "assertTableRow", "expandTreeRow", "pressKey", "inputTableCell", "click", "assertField",
     "handleDialog", "closeForm",
 }
 NATIVE_UI_ROOT_FIELDS = {
@@ -56,11 +56,34 @@ NATIVE_UI_STEP_FIELDS = {
     "title", "objectName", "formName", "timeout", "attempts", "strategy", "match", "direction",
     "depth", "value", "expected", "exists", "visible", "enabled", "readOnly", "checked", "strict",
     "finishRow", "onChangeWait", "replace", "waitClosed", "optional", "elementType", "onPrompt",
-    "dialogTitle", "promptTimeout", "row", "choiceRow", "element", "field", "button",
+    "dialogTitle", "promptTimeout", "row", "expandParents", "key", "choiceRow", "element", "field", "button",
     "dialogButton", "table", "choiceTable", "targetForm", "choiceForm", "reference", "choiceField",
 }
 NATIVE_UI_SELECTOR_FIELDS = {"title", "objectName", "formName", "metadataFullName", "saveAs", "timeout", "pollingInterval"}
 NATIVE_UI_REFERENCE_FIELDS = {"kind", "metadataName", "uuid", "choiceField"}
+
+
+def run_uia_bridge_request_isolated(desktop_name: str, process_id: int, request: dict[str, Any], timeout_seconds: float) -> dict[str, Any]:
+    """Run potentially blocking UIA COM work outside the worker process."""
+    helper = Path(__file__).with_name("uia_bridge_helper.py")
+    payload = json.dumps({"desktopName": desktop_name, "processId": process_id, "request": request}, ensure_ascii=True)
+    try:
+        completed = subprocess.run(
+            [sys.executable, str(helper)], input=payload, text=True, encoding="utf-8",
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=max(1.0, timeout_seconds),
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+        )
+    except subprocess.TimeoutExpired:
+        return {"ok": False, "requestId": request.get("requestId"), "status": "uia-response",
+                "error": f"UIA helper timed out after {timeout_seconds:g}s"}
+    try:
+        response = json.loads(completed.stdout)
+        if isinstance(response, dict):
+            return response
+    except (TypeError, json.JSONDecodeError):
+        pass
+    return {"ok": False, "requestId": request.get("requestId"), "status": "uia-response",
+            "error": f"UIA helper returned invalid response (exit {completed.returncode}): {completed.stderr.strip()}"}
 
 
 def utc_now() -> datetime:
@@ -105,6 +128,15 @@ def prepare_native_ui_scenario(data: Any) -> dict[str, Any]:
         action = step.get("action")
         if action not in NATIVE_UI_ACTIONS:
             raise UiWorkerError(f"UI scenario step {index} has unsupported action: {action}")
+        if action == "expandTreeRow" and not isinstance(step.get("row"), dict):
+            raise UiWorkerError(f"UI scenario step {index}: expandTreeRow requires row")
+
+        if action == "pressKey" and (not isinstance(step.get("key"), str) or not step["key"]):
+            raise UiWorkerError(f"UI scenario step {index}: pressKey requires key")
+        if "expandParents" in step:
+            parents = step["expandParents"]
+            if action not in {"selectTableRow", "assertTableRow"} or not isinstance(parents, list) or not parents or not all(isinstance(parent, dict) and parent for parent in parents):
+                raise UiWorkerError(f"UI scenario step {index}: expandParents must be a non-empty array of row selectors")
         if action == "openNavigationLink":
             if not step.get("link") and step.get("uuid"):
                 kind = step.get("kind")
@@ -952,7 +984,10 @@ def run_ui_worker(config: dict[str, Any], scenario_path: str | Path, artifact_di
                                 handled_uia_requests.add(request_id)
                                 progress("uia", f"Running UIA bridge request: {partial.get('action')}", requestId=request_id)
                                 if isinstance(backend, WindowsHiddenDesktopBackend) and client is not None:
-                                    response = run_uia_bridge_request(backend.desktop_name, client.pid, partial)
+                                    response = run_uia_bridge_request_isolated(
+                                        backend.desktop_name, client.pid, partial,
+                                        float(config.get("uiaBridgeTimeoutSeconds", 20)),
+                                    )
                                 else:
                                     response = {
                                         "ok": False,

@@ -120,7 +120,7 @@
 		Команды.Добавить(ИмяКоманды);
 	КонецЦикла;
 	ДействияUI = Новый Массив;
-	Для Каждого ИмяДействия Из СтрРазделить("assertConnected,openNavigationLink,executeCommand,nextWindow,activateWindow,waitForm,waitFormClosed,waitElement,assertElement,inspectUi,inspectTable,inspectCommandInterface,clickCommandInterface,activateForm,activateElement,inputText,selectReference,selectFromDropdown,setCheckbox,openChoice,selectTableRow,assertTableRow,inputTableCell,click,assertField,handleDialog,closeForm", ",") Цикл
+	Для Каждого ИмяДействия Из СтрРазделить("assertConnected,openNavigationLink,openDataProcessor,openForm,executeCommand,nextWindow,activateWindow,waitForm,waitFormClosed,waitElement,assertElement,inspectUi,inspectTable,inspectCommandInterface,clickCommandInterface,activateForm,activateElement,inputText,selectReference,selectFromDropdown,setCheckbox,openChoice,selectTableRow,assertTableRow,expandTreeRow,inputTableCell,click,assertField,handleDialog,closeForm", ",") Цикл
 		ДействияUI.Добавить(ИмяДействия);
 	КонецЦикла;
 	ВозможностиUI = Новый Структура;

@@ -1,7 +1,7 @@
 {
   "backend": "auto",
   "testHost": "127.0.0.1",
-  "testPort": 1538,
+  "testPort": "auto",
   "probeTestPort": false,
   "startupDelaySeconds": 10,
   "startupTimeoutSeconds": 60,

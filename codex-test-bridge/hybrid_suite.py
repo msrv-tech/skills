@@ -1,13 +1,14 @@
 """Warm UI suite with server bridge hooks between UI scenarios."""
 from __future__ import annotations
 
+import copy
 import json
 import os
 from pathlib import Path
 from typing import Any, Callable
 
 from hybrid_runner import _definition
-from scenario_runner import ScenarioRunner, substitute
+from scenario_runner import ScenarioRunner, TOKEN, read_path, substitute
 from ui_suite import save_ui_suite_junit
 from ui_worker import UiWorkerError, bridge_command, run_ui_worker
 
@@ -17,7 +18,7 @@ def run_hybrid_suite(definition: dict[str, Any], definition_path: str | Path, wo
         raise UiWorkerError("Hybrid suite requires a non-empty scenarios array")
     base, artifacts = Path(definition_path).resolve().parent, Path(artifact_dir).resolve()
     artifacts.mkdir(parents=True, exist_ok=True)
-    items, contexts, created = [], {}, {}
+    items, contexts, created, shared_context = [], {}, {}, {}
     for index, raw in enumerate(definition["scenarios"], 1):
         if not isinstance(raw, dict) or "ui" not in raw:
             raise UiWorkerError(f"Hybrid suite scenario {index} requires ui")
@@ -32,17 +33,35 @@ def run_hybrid_suite(definition: dict[str, Any], definition_path: str | Path, wo
         bridge_url = bridge_url.replace("{" + str(alias) + "}", os.environ.get(str(environment_name), ""))
     hook_config["bridgeBaseUrl"] = bridge_url
     server = ScenarioRunner(lambda payload: bridge_command(hook_config, payload))
+    def substitute_shared(value: Any, context: dict[str, Any]) -> Any:
+        """Resolve prior-scenario values, preserving aliases made in this stage."""
+        if isinstance(value, dict): return {key: substitute_shared(item, context) for key, item in value.items()}
+        if isinstance(value, list): return [substitute_shared(item, context) for item in value]
+        if not isinstance(value, str): return value
+        whole = TOKEN.fullmatch(value)
+        if whole:
+            try: return read_path(context, whole.group(1))
+            except Exception: return value
+        def replace(match: Any) -> str:
+            try: return str(read_path(context, match.group(1)))
+            except Exception: return match.group(0)
+        return TOKEN.sub(replace, value)
     def hook(request: dict[str, Any]) -> dict[str, Any]:
         index, phase = int(request["scenarioIndex"]), request["phase"]
         item = items[index - 1]
         item_id = str(item["id"])
         stage = item.get(phase)
-        context = contexts.setdefault(item_id, {})
+        context = dict(shared_context)
+        context.update(contexts.setdefault(item_id, {}))
         if stage is None: return {"ok": True, "scenario": substitute(item["scenario"], context)}
-        stage = substitute(stage, context)
+        stage = substitute_shared(copy.deepcopy(stage), context)
         result = server.run(stage, defer_cleanup=phase == "before")
+        if phase in {"before", "after"}:
+            outputs = result.get("outputs", {})
+            contexts[item_id].update(outputs)
+            shared_context.update(outputs)
         if phase == "before":
-            context.update(result.get("outputs", {})); created[item_id] = result.get("createdObjects", [])
+            created[item_id] = result.get("createdObjects", [])
         if phase == "finally": result["createdCleanup"] = server.cleanup_created(created.get(item_id, []))
         return {"ok": bool(result.get("ok")), "scenario": substitute(item["scenario"], context), "result": result, "error": result.get("error")}
     result = run_ui_worker(worker_config, suite_path, artifacts, server_hook_handler=hook)
