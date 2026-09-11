@@ -31,6 +31,7 @@ class Opener:
         self.timeout = None
 
     def open(self, _request, timeout):
+        self.request = _request
         self.timeout = timeout
         if self.error:
             raise self.error
@@ -38,6 +39,13 @@ class Opener:
 
 
 class ClientTests(unittest.TestCase):
+    def test_request_sends_russian_json_as_utf8(self):
+        opener = Opener(Response('{"ok": true}'))
+        with patch("client.urllib.request.build_opener", return_value=opener):
+            client.request_json("http://localhost/command", {"text": "ВЫБРАТЬ 1 КАК X;"})
+        self.assertEqual(opener.request.data.decode("utf-8"), '{"text": "ВЫБРАТЬ 1 КАК X;"}')
+        self.assertEqual(opener.request.get_header("Content-type"), "application/json; charset=utf-8")
+
     def test_request_uses_configured_timeout(self):
         opener = Opener(Response('{"ok": true}'))
         old_timeout = client.REQUEST_TIMEOUT

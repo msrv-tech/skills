@@ -93,6 +93,7 @@ def main() -> int:
 
     sub.add_parser("health")
     sub.add_parser("capabilities", help="Show machine-readable bridge and UI capabilities")
+    sub.add_parser("smoke-utf8", help="Verify UTF-8 JSON decoding with Russian Query and ExecuteBSL")
     doctor = sub.add_parser("doctor", help="Check bridge contract and optionally validate a UI worker config")
     doctor.add_argument("--worker-config", default="", help="Validate this UI worker configuration without launching 1C")
 
@@ -232,6 +233,23 @@ def main() -> int:
         result = request_json(f"{base_url}/health")
     elif args.cmd == "capabilities":
         result = request_json(f"{base_url}/command", {"command": "Capabilities"})
+    elif args.cmd == "smoke-utf8":
+        query = request_json(f"{base_url}/command", {
+            "command": "Query",
+            "text": "ВЫБРАТЬ 1 КАК X;",
+            "limit": 1,
+        })
+        bsl = request_json(f"{base_url}/command", {
+            "command": "ExecuteBSL",
+            "code": 'РезультатВыполнения = Новый Структура("Проверка", Истина);',
+            "params": [],
+        })
+        bsl_result = bsl.get("result") if isinstance(bsl.get("result"), dict) else {}
+        result = {
+            "ok": query.get("ok") is True and bsl.get("ok") is True and bsl_result.get("Проверка") is True,
+            "query": query,
+            "executeBSL": bsl,
+        }
     elif args.cmd == "doctor":
         result = run_doctor(
             lambda: request_json(f"{base_url}/health"),
