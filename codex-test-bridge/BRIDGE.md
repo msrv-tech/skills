@@ -454,6 +454,15 @@ python .\client.py --base-url $bridgeUrl doctor --worker-config .\local.worker.j
 python .\client.py --base-url $bridgeUrl run-hybrid .\local.worker.json .\case.hybrid.json --artifact-dir .\artifacts\case
 ```
 
+Если `before` создаёт задачу, открывай её в UI через `openForm` с
+`metadataKind: "task"`, `metadataName`, `uuid: "${alias.Задача}"`, `formName`
+и `targetForm`. Bridge передаёт ссылку на задачу через временное хранилище
+TestClient. Не используй в этом пути `openNavigationLink`: у задач после server
+hook он может потерять связь TestManager/TestClient.
+Для штатной формы выполнения задачи используй `openTaskExecutionForm` с UUID и
+`targetForm`: bridge получает форму через `ФормаВыполненияЗадачи()` и передаёт
+её параметры TestClient. Не моделируй переход UIA-кликом по декорации.
+
 Несколько коротких UI-сценариев можно выполнить одним запуском клиента и
 менеджера: `run-ui-suite worker.json a.ui.json b.ui.json --junit junit.xml`. Это
 тёплый suite: каждый файл остаётся отдельным testcase в JSON/JUnit, а один

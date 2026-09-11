@@ -235,13 +235,21 @@ python .\client.py run-ui .\server.example.invalid.json .\examples\native-ui-smo
 
 На Windows backend `auto` создаёт невидимый Win32 desktop, на Linux запускает
 Xvfb. Обычные формы открывай без меню действием `openForm`: передай
-`metadataKind` (`catalog`, `document`, `dataProcessor`, `report`, `commonForm`),
+`metadataKind` (`catalog`, `document`, `task`, `dataProcessor`, `report`, `commonForm`),
 `metadataName`, `formName` и обязательный `targetForm`. Для обработки есть
 короткая форма `openDataProcessor`. Эти действия выполняют штатный клиентский
 `ОткрытьФорму()` и не требуют подбирать `e1cib`-ссылку. `openNavigationLink`
 оставляй только для действительно навигационных ссылок; у него также обязателен
 `targetForm` с `formName`, `objectName` или `title`, а форма ошибки навигации
-всегда означает failed. Для ссылки на конкретный объект можно передать
+всегда означает failed. Для задачи, созданной server hook в hybrid-сценарии,
+используй `openForm` с `metadataKind: "task"`, `metadataName`, `uuid`,
+`formName` и `targetForm`: Bridge передаст типизированную ссылку через
+временное хранилище TestClient и откроет форму штатным `ОткрытьФорму()`.
+Если задача должна открыться именно в назначенной форме выполнения, используй
+`openTaskExecutionForm` с `uuid` и `targetForm`: bridge запрашивает штатную
+`ФормаВыполненияЗадачи()` и открывает возвращённые имя формы и параметры. Не
+нажимай для этого декорацию «Перейти в форму…» и не используй UIA. Для
+`openNavigationLink` конкретного объекта можно передать
 `uuid`, `kind: catalog|document` и `metadataName`: worker сам сформирует ref в
 порядке групп UUID 4-5-3-2-1. Навигационная команда после принятия выполняется
 ровно один раз; `attempts` повторяет только отвергнутую команду, а
@@ -330,3 +338,7 @@ cross-db worker обязательно передай локально `targetBr
 `${alias.path}`; созданные arrange-объекты удаляются автоматически. Набор
 коротких независимых UI-тестов запускай через `run-ui-suite`: это одна тёплая
 сессия TestClient/TestManager, и каждый сценарий должен сам закрывать формы.
+Для задачи из `before` не используй `openNavigationLink`: на части
+конфигураций он может потерять связь TestManager/TestClient. Открывай её через
+`openForm` с `metadataKind: "task"` и UUID из `${alias.path}`. Если нужны
+кнопки и поля специальной формы выполнения, используй `openTaskExecutionForm`.

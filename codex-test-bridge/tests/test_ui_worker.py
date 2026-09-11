@@ -86,6 +86,26 @@ class UiWorkerTests(unittest.TestCase):
         with self.assertRaisesRegex(UiWorkerError, "requires metadataName"):
             prepare_native_ui_scenario({"steps": [{"action": "openDataProcessor", "targetForm": {"title": "Тест"}}]})
 
+    def test_open_task_execution_form_requires_a_task_uuid(self):
+        prepared = prepare_native_ui_scenario({"steps": [{
+            "action": "openTaskExecutionForm", "metadataName": "ЗадачаИсполнителя", "uuid": "a14919f5-0dad-11e4-93f4-0050568b4127",
+            "targetForm": {"formName": "БизнесПроцесс.Тест.Форма.Задача"},
+        }]})
+        self.assertEqual(prepared["steps"][0]["action"], "openTaskExecutionForm")
+        with self.assertRaisesRegex(UiWorkerError, "requires uuid"):
+            prepare_native_ui_scenario({"steps": [{"action": "openTaskExecutionForm", "targetForm": {"title": "Тест"}}]})
+        with self.assertRaisesRegex(UiWorkerError, "requires metadataName"):
+            prepare_native_ui_scenario({"steps": [{"action": "openTaskExecutionForm", "uuid": "a14919f5-0dad-11e4-93f4-0050568b4127", "targetForm": {"title": "Тест"}}]})
+
+    def test_click_element_accepts_a_semantic_decoration_selector(self):
+        prepared = prepare_native_ui_scenario({"steps": [{
+            "action": "clickElement",
+            "form": "taskCard",
+            "elementType": "decoration",
+            "element": {"title": "Перейти в форму для выполнения задачи"},
+        }]})
+        self.assertEqual(prepared["steps"][0]["elementType"], "decoration")
+
     def test_invalid_navigation_example_has_an_explicit_target(self):
         example = Path(__file__).resolve().parents[1] / "examples" / "invalid-navigation.ui.json"
         scenario = prepare_native_ui_scenario(json.loads(example.read_text(encoding="utf-8")))
@@ -134,6 +154,8 @@ class UiWorkerTests(unittest.TestCase):
         self.assertIn("inspectUI", actions)
         self.assertIn("openNavigationLink", actions)
         self.assertIn("openDataProcessor", actions)
+
+        self.assertIn("clickElement", actions)
         self.assertIn("clickCommandInterface", actions)
         self.assertIn("inspectTable", actions)
         self.assertIn("selectFromDropdown", actions)
@@ -215,9 +237,37 @@ class UiWorkerTests(unittest.TestCase):
         self.assertIn("Функция CTB_НайтиКнопкуДиалога", module)
         self.assertIn('Окно.ПолучитьКомандныйИнтерфейс()', module)
         self.assertIn('"ТестируемаяКнопкаКомандногоИнтерфейса"', module)
+
+    def test_warm_suite_restores_test_client_after_server_hook(self):
+        module = (
+            Path(__file__).resolve().parents[1]
+            / "src" / "Ext" / "ManagedApplicationModule.bsl"
+        ).read_text(encoding="utf-8-sig")
+        suite_start = module.index("Функция CTB_ВыполнитьНаборUIСценариев")
+        suite_end = module.index("Функция CTB_ЗапроситьСервернуюФазуНабора", suite_start)
+        suite = module[suite_start:suite_end]
+        self.assertIn("CTB_ПереподключитьТестКлиентПослеСервернойФазы(ТестКлиент, Хост, Порт)", suite)
+        self.assertLess(suite.index("CTB_ПереподключитьТестКлиентПослеСервернойФазы"), suite.index("CTB_ВыполнитьСценарий"))
+        self.assertIn("ТестКлиент.РазорватьСоединение()", module)
+        self.assertIn("ТестКлиент.УстановитьСоединение()", module)
+
+    def test_server_hook_wait_releases_test_client_before_next_ui_scenario(self):
+        module = (
+            Path(__file__).resolve().parents[1]
+            / "src" / "Ext" / "ManagedApplicationModule.bsl"
+        ).read_text(encoding="utf-8-sig")
+        start = module.index("Функция CTB_ЗапроситьСервернуюФазуНабора")
+        end = module.index("Процедура CTB_ЗакрытьФормыСценария", start)
+        hook = module[start:end]
+        self.assertIn("CTB_ТекущийТестКлиент.РазорватьСоединение()", hook)
+        self.assertNotIn("CTB_ПаузаТестКлиента(CTB_ТекущийТестКлиент)", hook)
+        self.assertIn("CTB_ПереподключитьТестКлиентПослеСервернойФазы", module)
         self.assertIn('"opendataprocessor"', module)
         self.assertIn("CTB_ОбработатьКомандуОткрытияФормы", module)
-        self.assertIn("ОткрытьФорму(ПолноеИмяФормы)", module)
+        self.assertIn("ОткрытьФорму(ПолноеИмяФормы, ПараметрыОткрытия)", module)
+        self.assertIn('Новый Структура("Ключ", ПолучитьИзВременногоХранилища(АдресСсылки))', module)
+        self.assertIn("CTB_ЗапроситьUIAВызовЭлемента", module)
+        self.assertIn('НРег(Строка(ВидЭлемента)) = "decoration"', module)
         self.assertIn("CTB_ОткрытьФормуЧерезТестКлиент", module)
 
     def test_uia_runner_has_visual_inner_button_fallback(self):

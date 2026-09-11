@@ -25,8 +25,6 @@ def run_hybrid_suite(definition: dict[str, Any], definition_path: str | Path, wo
         scenario = _definition(raw["ui"], base)
         if scenario is None: raise UiWorkerError(f"Hybrid suite scenario {index} has invalid ui")
         items.append({"id": raw.get("id", f"scenario-{index}"), "source": str(definition_path), "scenario": scenario, "before": _definition(raw.get("before"), base), "after": _definition(raw.get("after"), base), "finally": _definition(raw.get("finally"), base)})
-    suite_path = artifacts / "hybrid-suite.ui.json"
-    suite_path.write_text(json.dumps({"name": definition.get("name", "hybrid-suite"), "failFast": bool(definition.get("failFast", False)), "scenarios": items}, ensure_ascii=False, indent=2), encoding="utf-8")
     hook_config = dict(worker_config)
     bridge_url = str(hook_config.get("bridgeBaseUrl", ""))
     for alias, environment_name in hook_config.get("environmentPlaceholders", {}).items():
@@ -46,9 +44,7 @@ def run_hybrid_suite(definition: dict[str, Any], definition_path: str | Path, wo
             try: return str(read_path(context, match.group(1)))
             except Exception: return match.group(0)
         return TOKEN.sub(replace, value)
-    def hook(request: dict[str, Any]) -> dict[str, Any]:
-        index, phase = int(request["scenarioIndex"]), request["phase"]
-        item = items[index - 1]
+    def run_phase(item: dict[str, Any], phase: str) -> dict[str, Any]:
         item_id = str(item["id"])
         stage = item.get(phase)
         context = dict(shared_context)
@@ -65,6 +61,11 @@ def run_hybrid_suite(definition: dict[str, Any], definition_path: str | Path, wo
             created[item_id] = result.get("createdObjects", [])
         if phase == "finally": result["createdCleanup"] = server.cleanup_created(created.get(item_id, []))
         return {"ok": bool(result.get("ok")), "scenario": substitute(item["scenario"], context), "result": result, "error": result.get("error")}
+
+    suite_path = artifacts / "hybrid-suite.ui.json"
+    suite_path.write_text(json.dumps({"name": definition.get("name", "hybrid-suite"), "failFast": bool(definition.get("failFast", False)), "scenarios": items}, ensure_ascii=False, indent=2), encoding="utf-8")
+    def hook(request: dict[str, Any]) -> dict[str, Any]:
+        return run_phase(items[int(request["scenarioIndex"]) - 1], request["phase"])
     result = run_ui_worker(worker_config, suite_path, artifacts, server_hook_handler=hook)
     manager = result.get("managerResult") if isinstance(result.get("managerResult"), dict) else {}
     result["scenarios"] = manager.get("scenarios", [])

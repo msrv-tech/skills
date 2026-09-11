@@ -996,6 +996,19 @@ def _elements(uia, root):
 
 
 def _matches(element, selector: dict[str, Any]) -> bool:
+    name_or_automation_id = selector.get("nameOrAutomationId")
+    if name_or_automation_id is not None:
+        candidates = [str(value) for value in name_or_automation_id if str(value)]
+        if not candidates:
+            return False
+        current_name = element.CurrentName or ""
+        current_automation_id = element.CurrentAutomationId or ""
+        if not any(
+            fnmatch.fnmatchcase(current_name, candidate)
+            or fnmatch.fnmatchcase(current_automation_id, candidate)
+            for candidate in candidates
+        ):
+            return False
     name = selector.get("name", "*")
     if not fnmatch.fnmatchcase(element.CurrentName or "", name):
         return False
@@ -1181,6 +1194,34 @@ def run_uia_bridge_request(desktop_name: str, process_id: int, request: dict[str
                 "requestId": request.get("requestId"),
                 "status": "uia-response",
                 "actual": _safe_element_info(element),
+            }
+        if action == "invokeelement":
+            from comtypes.gen.UIAutomationClient import IUIAutomationInvokePattern, IUIAutomationLegacyIAccessiblePattern
+            title = str(request.get("title") or "")
+            element_name = str(request.get("elementName") or "")
+            if not title and not element_name:
+                raise UiaRunnerError("invokeElement requires element title or name")
+            element = _find(
+                uia,
+                root,
+                {"nameOrAutomationId": [title, element_name]},
+                float(request.get("timeout", 20)),
+            )
+            try:
+                element.GetCurrentPattern(10000).QueryInterface(IUIAutomationInvokePattern).Invoke()
+                method = "invoke"
+            except Exception:
+                try:
+                    element.GetCurrentPattern(10018).QueryInterface(IUIAutomationLegacyIAccessiblePattern).DoDefaultAction()
+                    method = "legacyDefaultAction"
+                except Exception:
+                    _click_element(user32, element)
+                    method = "elementClick"
+            return {
+                "ok": True,
+                "requestId": request.get("requestId"),
+                "status": "uia-response",
+                "actual": {"method": method, **_safe_element_info(element)},
             }
         if action == "presskey":
             key = str(request.get("key", "")).lower()
