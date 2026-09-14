@@ -60,7 +60,15 @@ def run_hybrid_suite(definition: dict[str, Any], definition_path: str | Path, wo
         if phase == "before":
             created[item_id] = result.get("createdObjects", [])
         if phase == "finally": result["createdCleanup"] = server.cleanup_created(created.get(item_id, []))
-        return {"ok": bool(result.get("ok")), "scenario": substitute(item["scenario"], context), "result": result, "error": result.get("error")}
+        # Resolve aliases produced by this phase, but retain placeholders that
+        # deliberately belong to later segments.  ``substitute`` is strict and
+        # therefore turns those valid forward references into a hook failure.
+        return {
+            "ok": bool(result.get("ok")),
+            "scenario": substitute_shared(copy.deepcopy(item["scenario"]), context),
+            "result": result,
+            "error": result.get("error"),
+        }
 
     suite_path = artifacts / "hybrid-suite.ui.json"
     suite_path.write_text(json.dumps({"name": definition.get("name", "hybrid-suite"), "failFast": bool(definition.get("failFast", False)), "scenarios": items}, ensure_ascii=False, indent=2), encoding="utf-8")

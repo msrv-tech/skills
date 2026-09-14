@@ -44,7 +44,7 @@ NATIVE_UI_ACTIONS: set[str] = {
     "waitForm", "waitFormClosed", "waitElement", "assertElement", "inspectUi", "inspectUI", "inspectTable",
     "inspectCommandInterface", "clickCommandInterface", "activateForm", "activateElement", "clickElement",
     "inputText", "selectReference", "selectFromDropdown", "setCheckbox", "openChoice",
-    "selectTableRow", "assertTableRow", "expandTreeRow", "pressKey", "inputTableCell", "click", "assertField",
+    "selectTableRow", "assertTableRow", "expandTreeRow", "pressKey", "inputTableCell", "click", "invokeFormCommand", "assertField",
     "handleDialog", "closeForm",
 }
 NATIVE_UI_ROOT_FIELDS = {
@@ -53,7 +53,7 @@ NATIVE_UI_ROOT_FIELDS = {
 }
 NATIVE_UI_STEP_FIELDS = {
     "action", "name", "command", "link", "clientNavigationLink", "uuid", "kind", "metadataKind", "metadataName", "form", "saveAs",
-    "title", "objectName", "formName", "timeout", "attempts", "strategy", "match", "direction",
+    "title", "objectName", "formName", "timeout", "attempts", "strategy", "clickMode", "match", "direction",
     "depth", "value", "expected", "exists", "visible", "enabled", "readOnly", "checked", "strict",
     "finishRow", "onChangeWait", "replace", "waitClosed", "optional", "elementType", "onPrompt",
     "dialogTitle", "promptTimeout", "row", "expandParents", "key", "choiceRow", "element", "field", "button",
@@ -358,14 +358,13 @@ def suppress_1c_startup_ui(command: list[str]) -> list[str]:
 
 
 def isolate_test_client_startup_parameter(command: list[str]) -> list[str]:
-    """Prevent TestClient from inheriting the TestManager /C startup parameter."""
-    result = list(command)
-    lowered = [argument.lower() for argument in result]
-    if "/testclient" not in lowered or "/ctemp" in lowered:
-        return result
-    insertion_index = lowered.index("/testclient")
-    result.insert(insertion_index, "/CTemp")
-    return result
+    """Keep the explicitly supplied TestClient command unchanged.
+
+    Client and manager use separate process commands.  Injecting the bare
+    ``/CTemp`` switch before ``/TestClient`` makes some 1C launchers consume
+    the next switch as its value, silently starting an ordinary client.
+    """
+    return list(command)
 
 
 class RunningProcess:
@@ -482,6 +481,34 @@ class WindowsHiddenDesktopBackend:
     name = "windowsDesktop"
     GENERIC_ALL = 0x10000000
     CREATE_UNICODE_ENVIRONMENT = 0x00000400
+    # 1cv8 can replace the launcher process while processing startup options.
+    # Owning the whole tree avoids leaking a full client when that happens.
+    JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE = 0x00002000
+    JOB_OBJECT_EXTENDED_LIMIT_INFORMATION = 9
+
+    class JOBOBJECT_BASIC_LIMIT_INFORMATION(ctypes.Structure):
+        _fields_ = [
+            ("PerProcessUserTimeLimit", ctypes.c_int64), ("PerJobUserTimeLimit", ctypes.c_int64),
+            ("LimitFlags", wintypes.DWORD), ("MinimumWorkingSetSize", ctypes.c_size_t),
+            ("MaximumWorkingSetSize", ctypes.c_size_t), ("ActiveProcessLimit", wintypes.DWORD),
+            ("Affinity", ctypes.c_size_t), ("PriorityClass", wintypes.DWORD), ("SchedulingClass", wintypes.DWORD),
+        ]
+
+    class JOBOBJECT_IO_COUNTERS(ctypes.Structure):
+        _fields_ = [(name, ctypes.c_uint64) for name in (
+            "ReadOperationCount", "WriteOperationCount", "OtherOperationCount",
+            "ReadTransferCount", "WriteTransferCount", "OtherTransferCount",
+        )]
+
+    class JOBOBJECT_EXTENDED_LIMIT_INFORMATION(ctypes.Structure):
+        _fields_ = [
+            # The native basic struct is 64 bytes on supported Windows ABIs;
+            # LimitFlags is the DWORD at offset 16.
+            ("BasicLimitInformation", ctypes.c_byte * 64),
+            ("IoInfo", ctypes.c_byte * 48),
+            ("ProcessMemoryLimit", ctypes.c_size_t), ("JobMemoryLimit", ctypes.c_size_t),
+            ("PeakProcessMemoryUsed", ctypes.c_size_t), ("PeakJobMemoryUsed", ctypes.c_size_t),
+        ]
 
     class STARTUPINFO(ctypes.Structure):
         _fields_ = [
@@ -540,6 +567,21 @@ class WindowsHiddenDesktopBackend:
         self.kernel32.CloseHandle.argtypes = [wintypes.HANDLE]
         self.kernel32.OpenProcess.restype = wintypes.HANDLE
         self.kernel32.OpenProcess.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
+        self.kernel32.CreateJobObjectW.restype = wintypes.HANDLE
+        self.kernel32.CreateJobObjectW.argtypes = [ctypes.c_void_p, wintypes.LPCWSTR]
+        self.kernel32.SetInformationJobObject.restype = wintypes.BOOL
+        self.kernel32.SetInformationJobObject.argtypes = [wintypes.HANDLE, ctypes.c_int, ctypes.c_void_p, wintypes.DWORD]
+        self.kernel32.AssignProcessToJobObject.restype = wintypes.BOOL
+        self.kernel32.AssignProcessToJobObject.argtypes = [wintypes.HANDLE, wintypes.HANDLE]
+        self.job = self.kernel32.CreateJobObjectW(None, None)
+        if not self.job:
+            raise ctypes.WinError(ctypes.get_last_error())
+        job_limits = self.JOBOBJECT_EXTENDED_LIMIT_INFORMATION()
+        wintypes.DWORD.from_buffer(job_limits.BasicLimitInformation, 16).value = self.JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
+        if not self.kernel32.SetInformationJobObject(self.job, self.JOB_OBJECT_EXTENDED_LIMIT_INFORMATION, ctypes.byref(job_limits), ctypes.sizeof(job_limits)):
+            self.kernel32.CloseHandle(self.job)
+            self.job = None
+            raise ctypes.WinError(ctypes.get_last_error())
         self.desktop = self.user32.CreateDesktopW(desktop_name, None, None, 0, self.GENERIC_ALL, None)
         if not self.desktop:
             raise ctypes.WinError(ctypes.get_last_error())
@@ -561,6 +603,11 @@ class WindowsHiddenDesktopBackend:
         )
         if not success:
             raise ctypes.WinError(ctypes.get_last_error())
+        if not self.kernel32.AssignProcessToJobObject(self.job, process_info.hProcess):
+            self.kernel32.TerminateProcess(process_info.hProcess, 1)
+            self.kernel32.CloseHandle(process_info.hThread)
+            self.kernel32.CloseHandle(process_info.hProcess)
+            raise ctypes.WinError(ctypes.get_last_error())
         return WindowsProcessHandle(
             self.kernel32,
             self.user32,
@@ -578,6 +625,9 @@ class WindowsHiddenDesktopBackend:
         return WindowsProcessHandle(self.kernel32, self.user32, self.desktop, process_handle, 0, pid)
 
     def close(self) -> None:
+        if self.job:
+            self.kernel32.CloseHandle(self.job)
+            self.job = None
         if self.desktop:
             self.user32.CloseDesktop(self.desktop)
             self.desktop = None
@@ -814,7 +864,32 @@ def run_warm_ui_segments(
     client: RunningProcess | None = None
     results: list[dict[str, Any]] = []
     fail_fast = bool(runtime.get("failFast", False))
+    first_item: dict[str, Any] | None = None
+
     try:
+        # The platform lifecycle is TestManager first, then TestClient.  The
+        # manager retries its initial attachment while the client starts; do
+        # not require an unrelated client-side timer handshake before it may
+        # execute the actual first UI action.
+        first_item = copy.deepcopy(segments[0])
+        if before_segment:
+            prepared_first = before_segment(first_item, 1)
+            if not isinstance(prepared_first, dict) or not prepared_first.get("ok", False):
+                raise UiWorkerError((prepared_first or {}).get("error", "First before phase failed"))
+            else:
+                first_item["scenario"] = prepared_first.get("scenario", first_item.get("scenario"))
+        else:
+            prepared_first = {"ok": True}
+        first_scenario = first_item.get("scenario")
+        if isinstance(first_scenario, dict):
+            first_scenario = prepare_native_ui_scenario(first_scenario)
+            first_scenario.pop("$schema", None)
+        if not isinstance(first_scenario, dict):
+            raise UiWorkerError("First warm UI segment does not contain a scenario")
+        # Create the stable correlated job before client startup. The warm
+        # client receives this id in /C; extension commands consume it only
+        # when TestManager invokes them through the platform RPC channel.
+        bridge_command(runtime, {"command": "uiJobCreate", "jobId": suite_id, "scenario": json.dumps(first_scenario, ensure_ascii=True, separators=(",", ":"))})
         progress("startup", f"Starting warm TestClient on isolated {backend.name} backend")
         client = backend.start(client_command)
         if runtime.get("probeTestPort", False):
@@ -824,9 +899,9 @@ def run_warm_ui_segments(
         progress("connect", "Warm TestClient startup completed", clientPid=client.pid)
 
         for index, raw in enumerate(segments, 1):
-            item = copy.deepcopy(raw)
+            item = copy.deepcopy(first_item if index == 1 else raw)
             item_id, name = str(item.get("id", f"scenario-{index}")), str(item.get("name", item.get("id", f"scenario-{index}")))
-            if before_segment:
+            if before_segment and index != 1:
                 prepared = before_segment(item, index)
                 if not isinstance(prepared, dict) or not prepared.get("ok", False):
                     failed = {"scenarioId": item_id, "name": name, "ok": False, "status": "failed", "error": (prepared or {}).get("error", "Before phase failed"), "steps": []}
@@ -839,15 +914,21 @@ def run_warm_ui_segments(
             scenario = item.get("scenario")
             if not isinstance(scenario, dict):
                 raise UiWorkerError(f"Warm UI segment {item_id} does not contain a scenario")
-            scenario = prepare_native_ui_scenario(scenario)
+            scenario = first_scenario if index == 1 else prepare_native_ui_scenario(scenario)
             scenario.pop("$schema", None)
-            job_id = uuid.uuid4().hex
+            # The TestClient receives its job id only once at process startup
+            # (via CodexUITestClient:Job=...).  A warm client therefore must
+            # poll one stable job id for every sequential segment.  The job
+            # record is still deleted and recreated below, so results from a
+            # completed segment cannot leak into the next one.
+            job_id = suite_id
             manager: RunningProcess | None = None
             manager_result: dict[str, Any] | None = None
             manager_exit: int | None = None
             try:
                 progress("startup", f"{name}: creating UI job", scenarioName=name, scenarioId=item_id)
-                bridge_command(runtime, {"command": "uiJobCreate", "jobId": job_id, "scenario": json.dumps(scenario, ensure_ascii=True, separators=(",", ":"))})
+                if index != 1:
+                    bridge_command(runtime, {"command": "uiJobCreate", "jobId": job_id, "scenario": json.dumps(scenario, ensure_ascii=True, separators=(",", ":"))})
                 variables = dict(common_variables, runId=job_id, jobId=job_id, scenario=str(artifacts / f"segment-{index}.ui.json"), clientLog=str(artifacts / f"client-{suite_id}.log"), managerLog=str(artifacts / f"manager-{job_id}.log"), scenarioBase64="")
                 manager_command = expand(runtime["managerCommand"], variables)
                 if runtime.get("suppressStartupUi", True): manager_command = suppress_1c_startup_ui(manager_command)
@@ -901,9 +982,14 @@ def run_warm_ui_segments(
                 if manager is not None:
                     try: manager.terminate()
                     finally: manager.close()
-                try: bridge_command(runtime, {"command": "uiJobDelete", "jobId": job_id})
-                except Exception: pass
     finally:
+        try:
+            last_job = bridge_command(runtime, {"command": "uiJobGet", "jobId": suite_id})
+            write_atomic_json(artifacts / "last-job.json", last_job)
+        except Exception:
+            pass
+        try: bridge_command(runtime, {"command": "uiJobDelete", "jobId": suite_id})
+        except Exception: pass
         progress("cleanup", "Stopping warm TestClient")
         if client is not None:
             try: client.terminate()

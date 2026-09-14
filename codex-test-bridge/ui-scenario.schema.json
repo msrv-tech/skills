@@ -50,7 +50,7 @@
       "type": "object",
       "required": ["action"],
       "properties": {
-        "action": {"enum": ["assertConnected", "openNavigationLink", "openDataProcessor", "openForm", "openTaskExecutionForm", "executeCommand", "nextWindow", "activateWindow", "waitForm", "waitFormClosed", "waitElement", "assertElement", "inspectUi", "inspectUI", "inspectTable", "inspectCommandInterface", "clickCommandInterface", "activateForm", "activateElement", "clickElement", "inputText", "selectReference", "selectFromDropdown", "setCheckbox", "openChoice", "selectTableRow", "assertTableRow", "expandTreeRow", "pressKey", "inputTableCell", "click", "assertField", "handleDialog", "closeForm"]},
+        "action": {"enum": ["assertConnected", "openNavigationLink", "openDataProcessor", "openForm", "openTaskExecutionForm", "executeCommand", "nextWindow", "activateWindow", "waitForm", "waitFormClosed", "waitElement", "assertElement", "inspectUi", "inspectUI", "inspectTable", "inspectCommandInterface", "clickCommandInterface", "activateForm", "activateElement", "clickElement", "inputText", "selectReference", "selectFromDropdown", "setCheckbox", "openChoice", "selectTableRow", "assertTableRow", "expandTreeRow", "pressKey", "inputTableCell", "click", "invokeFormCommand", "assertField", "handleDialog", "closeForm"]},
         "name": {"type": "string"},
         "command": {"type": "string"},
         "link": {"type": "string", "minLength": 1},
@@ -67,6 +67,7 @@
         "pollingInterval": {"type": "number", "minimum": 1, "maximum": 30},
         "attempts": {"type": "integer", "minimum": 1, "maximum": 20},
         "strategy": {"enum": ["auto", "dropdownExact", "typeAhead", "choiceForm"]},
+        "clickMode": {"enum": ["auto", "form", "command", "uia"]},
         "match": {"enum": ["exact", "first"]},
         "direction": {"enum": ["down", "up", "both"]},
         "key": {"type": "string", "minLength": 1},

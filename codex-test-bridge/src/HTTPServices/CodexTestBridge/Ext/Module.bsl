@@ -50,6 +50,10 @@
 			Возврат JSONОтвет(КомандаUIJobGet(Данные));
 		ИначеЕсли Команда = "uijobset" Тогда
 			Возврат JSONОтвет(КомандаUIJobSet(Данные));
+		ИначеЕсли Команда = "uijobsetscenario" Тогда
+			Возврат JSONОтвет(КомандаUIJobSetScenario(Данные));
+		ИначеЕсли Команда = "uijobpreparetaskexecutionform" Тогда
+			Возврат JSONОтвет(КомандаUIJobPrepareTaskExecutionForm(Данные));
 		ИначеЕсли Команда = "uijobdelete" Тогда
 			Возврат JSONОтвет(КомандаUIJobDelete(Данные));
 		Иначе
@@ -105,6 +109,33 @@
 	Возврат CodexUIJobsServer.ПолучитьЗадание(Идентификатор);
 КонецФункции
 
+Функция КомандаUIJobSetScenario(Данные)
+	Идентификатор = Строка(Получить(Данные, "jobId", ""));
+	Сценарий = Строка(Получить(Данные, "scenario", ""));
+	Если ПустаяСтрока(Идентификатор) Или ПустаяСтрока(Сценарий) Тогда
+		ВызватьИсключение "uiJobSetScenario requires jobId and scenario";
+	КонецЕсли;
+	CodexUIJobsServer.СохранитьСценарий(Идентификатор, Сценарий);
+	Возврат CodexUIJobsServer.ПолучитьЗадание(Идентификатор);
+КонецФункции
+
+Функция КомандаUIJobPrepareTaskExecutionForm(Данные)
+	Идентификатор = Строка(Получить(Данные, "jobId", ""));
+	ИмяМетаданных = Строка(Получить(Данные, "metadataName", ""));
+	UUID = Строка(Получить(Данные, "uuid", ""));
+	Если ПустаяСтрока(Идентификатор) Или ПустаяСтрока(ИмяМетаданных) Или ПустаяСтрока(UUID) Тогда
+		ВызватьИсключение "uiJobPrepareTaskExecutionForm requires jobId, metadataName, and uuid";
+	КонецЕсли;
+	Описание = CodexUIJobsServer.ПоместитьФормуВыполненияЗадачиВоВременноеХранилище(ИмяМетаданных, UUID);
+	// Parameters of a task execution form contain a typed task reference.
+	// Do not serialize that structure through an information register: a
+	// TestClient can rebuild the same typed reference locally from its UUID.
+	КомандаКлиента = Новый Структура("formName,taskReferenceByUuid,metadataName,uuid,requireFormKey",
+		Получить(Описание, "formName", ""), Истина, ИмяМетаданных, UUID, Истина);
+	CodexUIJobsServer.СохранитьРезультат(Идентификатор, ЗаписатьJSONСтроку(КомандаКлиента), "client-form-request");
+	Возврат CodexUIJobsServer.ПолучитьЗадание(Идентификатор);
+КонецФункции
+
 Функция КомандаUIJobDelete(Данные)
 	Идентификатор = Строка(Получить(Данные, "jobId", ""));
 	Если ПустаяСтрока(Идентификатор) Тогда
@@ -116,11 +147,11 @@
 
 Функция КомандаCapabilities()
 	Команды = Новый Массив;
-	Для Каждого ИмяКоманды Из СтрРазделить("Health,Capabilities,Metadata,Describe,Query,ExecuteBSL,CallCommonModule,GetObject,WriteObject,DeleteObject,CreateCatalogItem,CreateDocument,PostDocument,RenderExternalPrintForm,RenderExternalReport,UIJobCreate,UISuiteJobCreate,UIJobGet,UIJobSet,UIJobDelete", ",") Цикл
+	Для Каждого ИмяКоманды Из СтрРазделить("Health,Capabilities,Metadata,Describe,Query,ExecuteBSL,CallCommonModule,GetObject,WriteObject,DeleteObject,CreateCatalogItem,CreateDocument,PostDocument,RenderExternalPrintForm,RenderExternalReport,UIJobCreate,UISuiteJobCreate,UIJobGet,UIJobSet,UIJobSetScenario,UIJobPrepareTaskExecutionForm,UIJobDelete", ",") Цикл
 		Команды.Добавить(ИмяКоманды);
 	КонецЦикла;
 	ДействияUI = Новый Массив;
-	Для Каждого ИмяДействия Из СтрРазделить("assertConnected,openNavigationLink,openDataProcessor,openForm,executeCommand,nextWindow,activateWindow,waitForm,waitFormClosed,waitElement,assertElement,inspectUi,inspectTable,inspectCommandInterface,clickCommandInterface,activateForm,activateElement,inputText,selectReference,selectFromDropdown,setCheckbox,openChoice,selectTableRow,assertTableRow,expandTreeRow,inputTableCell,click,assertField,handleDialog,closeForm", ",") Цикл
+	Для Каждого ИмяДействия Из СтрРазделить("assertConnected,openNavigationLink,openDataProcessor,openForm,executeCommand,nextWindow,activateWindow,waitForm,waitFormClosed,waitElement,assertElement,inspectUi,inspectTable,inspectCommandInterface,clickCommandInterface,activateForm,activateElement,inputText,selectReference,selectFromDropdown,setCheckbox,openChoice,selectTableRow,assertTableRow,expandTreeRow,inputTableCell,click,invokeFormCommand,assertField,handleDialog,closeForm", ",") Цикл
 		ДействияUI.Добавить(ИмяДействия);
 	КонецЦикла;
 	ВозможностиUI = Новый Структура;
@@ -133,7 +164,7 @@
 	ВозможностиUI.Вставить("suite", Истина);
 
 	Результат = КомандаHealth();
-	Результат.Вставить("bridgeVersion", "0.2.0");
+	Результат.Вставить("bridgeVersion", "0.3.0");
 	Результат.Вставить("contractVersion", 2);
 	Результат.Вставить("variant", "full"); // CTB_FULL_VARIANT
 	Результат.Вставить("commands", Команды);

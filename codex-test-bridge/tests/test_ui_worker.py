@@ -97,6 +97,37 @@ class UiWorkerTests(unittest.TestCase):
         with self.assertRaisesRegex(UiWorkerError, "requires metadataName"):
             prepare_native_ui_scenario({"steps": [{"action": "openTaskExecutionForm", "uuid": "a14919f5-0dad-11e4-93f4-0050568b4127", "targetForm": {"title": "Тест"}}]})
 
+    def test_task_execution_rebuilds_typed_key_in_test_client(self):
+        root = Path(__file__).resolve().parents[1]
+        client_module = (root / "src" / "Ext" / "ManagedApplicationModule.bsl").read_text(encoding="utf-8-sig")
+        server_module = (root / "src" / "CommonModules" / "CodexUIJobsServer" / "Ext" / "Module.bsl").read_text(encoding="utf-8-sig")
+        self.assertIn("persistentPayload", client_module)
+        self.assertIn("СохранитьPayload(CTB_ТекущийИдентификаторЗадания, ОписаниеФормы.parameters)", client_module)
+        self.assertIn("ПолучитьPayload(CTB_ИдентификаторЗаданияКлиентскихФорм)", client_module)
+        self.assertIn("CTB_ОтправитьКомандуОткрытияФормы(ТестКлиент, Шаг, Команда", client_module)
+        self.assertIn("ПоместитьФормуВыполненияЗадачиВоВременноеХранилище", server_module)
+        self.assertIn("Функция ПолучитьСсылкуЗадачи", server_module)
+        self.assertIn("Метаданные.Задачи.Найти(ИмяМетаданных)", server_module)
+        self.assertIn('"Задача = Задачи." + ИмяМетаданных', server_module)
+        self.assertNotIn("Задачи[ИмяМетаданных]", server_module)
+        self.assertIn("navigationLink", server_module)
+        special_open = client_module[client_module.index("Функция CTB_ОткрытьФормуВыполненияЗадачи"):client_module.index("Функция CTB_ОтправитьКомандуОткрытияФормы")]
+        self.assertIn("CTB_ОткрытьФормуЧерезКомандуTestClient", special_open)
+        self.assertNotIn("CTB_ОтправитьКомандуОткрытияФормы", special_open)
+
+    def test_warm_runner_uses_stable_correlated_job_without_timer_bootstrap(self):
+        root = Path(__file__).resolve().parents[1]
+        worker = (root / "ui_worker.py").read_text(encoding="utf-8")
+        self.assertIn("stable correlated job", worker)
+        self.assertIn("extension commands consume it only", worker)
+        self.assertNotIn("managed runtime is ready", worker)
+        self.assertNotIn("stage_initial_task_execution_form", worker)
+        module = (root / "src" / "Ext" / "ManagedApplicationModule.bsl").read_text(encoding="utf-8-sig")
+        self.assertIn('"e1cib/command/ОбщаяКоманда.CodexNavigate"', module)
+        command = (root / "src" / "CommonCommands" / "CodexNavigate" / "Ext" / "CommandModule.bsl").read_text(encoding="utf-8-sig")
+        self.assertIn('Задание.status <> "client-form-request"', command)
+        self.assertIn('"client-form-response"', command)
+
     def test_click_element_accepts_a_semantic_decoration_selector(self):
         prepared = prepare_native_ui_scenario({"steps": [{
             "action": "clickElement",
@@ -210,6 +241,20 @@ class UiWorkerTests(unittest.TestCase):
         self.assertIn("CTB_ОкноКомандногоИнтерфейса", module)
         self.assertIn("Форма.Активизировать()", module)
 
+    def test_click_prefers_semantic_command_button_with_form_fallback(self):
+        scenario = prepare_native_ui_scenario({"steps": [{
+            "action": "click", "form": "review",
+            "button": {"objectName": "Approve"}, "clickMode": "auto",
+        }]})
+        self.assertEqual(scenario["steps"][0]["clickMode"], "auto")
+        module = (
+            Path(__file__).resolve().parents[1]
+            / "src" / "Ext" / "ManagedApplicationModule.bsl"
+        ).read_text(encoding="utf-8-sig")
+        self.assertIn("CTB_НажатьКнопкуФормыИлиКомандногоИнтерфейса", module)
+        self.assertIn('"ТестируемаяКнопкаКомандногоИнтерфейса"', module)
+        self.assertIn('CTB_Получить(Шаг, "clickMode", "auto")', module)
+
     def test_native_module_has_table_cell_editing_primitives(self):
         module = (
             Path(__file__).resolve().parents[1]
@@ -228,6 +273,19 @@ class UiWorkerTests(unittest.TestCase):
         self.assertIn("ТестКлиент.РазорватьСоединение()", module)
         self.assertIn("CTB_ОткрытьНавигационнуюЦель", module)
         self.assertIn("CTB_ПроверитьЧтоФормаНеОшибкаНавигации", module)
+
+    def test_input_text_checks_editability_before_interacting(self):
+        module = (
+            Path(__file__).resolve().parents[1]
+            / "src" / "Ext" / "ManagedApplicationModule.bsl"
+        ).read_text(encoding="utf-8-sig")
+        start = module.index('ИначеЕсли Действие = "inputtext" Тогда')
+        end = module.index('ИначеЕсли Действие = "selectfromdropdown" Тогда', start)
+        input_text_branch = module[start:end]
+        self.assertLess(input_text_branch.index("CTB_ПроверитьДоступностьПоляДляВвода"), input_text_branch.index("Поле.Активизировать"))
+        self.assertIn('"enabled"', module)
+        self.assertIn('"readOnly"', module)
+        self.assertIn("InputText target is not editable", module)
 
     def test_dialog_button_search_covers_message_box_containers(self):
         module = (
@@ -251,7 +309,7 @@ class UiWorkerTests(unittest.TestCase):
         self.assertIn("ТестКлиент.РазорватьСоединение()", module)
         self.assertIn("ТестКлиент.УстановитьСоединение()", module)
 
-    def test_server_hook_wait_releases_test_client_before_next_ui_scenario(self):
+    def test_server_hook_wait_keeps_test_client_timer_available_for_next_ui_scenario(self):
         module = (
             Path(__file__).resolve().parents[1]
             / "src" / "Ext" / "ManagedApplicationModule.bsl"
@@ -259,7 +317,7 @@ class UiWorkerTests(unittest.TestCase):
         start = module.index("Функция CTB_ЗапроситьСервернуюФазуНабора")
         end = module.index("Процедура CTB_ЗакрытьФормыСценария", start)
         hook = module[start:end]
-        self.assertIn("CTB_ТекущийТестКлиент.РазорватьСоединение()", hook)
+        self.assertNotIn("CTB_ТекущийТестКлиент.РазорватьСоединение()", hook)
         self.assertNotIn("CTB_ПаузаТестКлиента(CTB_ТекущийТестКлиент)", hook)
         self.assertIn("CTB_ПереподключитьТестКлиентПослеСервернойФазы", module)
         self.assertIn('"opendataprocessor"', module)
@@ -345,9 +403,7 @@ class UiWorkerTests(unittest.TestCase):
 
     def test_test_client_startup_parameter_is_isolated(self):
         command = isolate_test_client_startup_parameter(["1cv8c", "ENTERPRISE", "/TestClient", "-TPort", "1538"])
-        self.assertIn("/CTemp", command)
-        self.assertLess(command.index("/CTemp"), command.index("/TestClient"))
-        self.assertEqual(command.count("/CTemp"), 1)
+        self.assertEqual(command, ["1cv8c", "ENTERPRISE", "/TestClient", "-TPort", "1538"])
         self.assertEqual(isolate_test_client_startup_parameter(command), command)
         self.assertEqual(isolate_test_client_startup_parameter(["python", "client.py"]), ["python", "client.py"])
 
@@ -509,6 +565,12 @@ class UiWorkerTests(unittest.TestCase):
             report = run_ui_worker(config, scenario, root / "artifacts")
             self.assertTrue(report["ok"], report)
             self.assertEqual(report["backend"], "windowsDesktop")
+
+    def test_windows_backend_owns_launcher_process_tree(self):
+        worker = (Path(__file__).resolve().parents[1] / "ui_worker.py").read_text(encoding="utf-8")
+        self.assertIn("JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE", worker)
+        self.assertIn("CreateJobObjectW", worker)
+        self.assertIn("AssignProcessToJobObject", worker)
 
 
 if __name__ == "__main__":

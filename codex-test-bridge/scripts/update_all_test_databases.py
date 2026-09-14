@@ -187,6 +187,47 @@ def install_database(
             raise UpdateError("Hidden CFE installation failed")
 
 
+def install_database_with_registered_user(
+    database: dict[str, Any], platform: Path, cfe: Path, timeout: float,
+) -> None:
+    """Install with the registry user without creating a bootstrap account.
+
+    This preserves another installer's temporary accounts when the registered
+    user already has Designer rights.  It is also useful for a single targeted
+    update: the normal bootstrap path remains the default for registry-wide
+    updates.
+    """
+    validate_install_fields(database)
+    username = str(database.get("User", ""))
+    if not username:
+        raise UpdateError("Database entry has no registered User")
+    password_environment = "CODEX_CTB_REGISTERED_USER_PASSWORD"
+    environment = os.environ.copy()
+    environment[password_environment] = str(database.get("Password", ""))
+    with tempfile.TemporaryDirectory(prefix="ctb-registered-user-update-") as temporary:
+        log_path = Path(temporary) / "designer.log"
+        command = [
+            sys.executable,
+            str(ROOT / "scripts" / "install_cfe_designer_hidden.py"),
+            "--platform", str(platform),
+            "--server", database["Srvr"],
+            "--database", database["Ref"],
+            "--user", username,
+            "--password-env", password_environment,
+            "--extension", "CodexTestBridge",
+            "--cfe", str(cfe),
+            "--log", str(log_path),
+            "--timeout", str(timeout),
+        ]
+        completed = subprocess.run(
+            command, cwd=ROOT, env=environment, stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+            timeout=timeout + 60,
+        )
+        if completed.returncode != 0:
+            raise UpdateError("Registered-user CFE installation failed")
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Update CodexTestBridge in all test databases from a private registry")
     parser.add_argument("--registry", default=os.environ.get("CODEX_1C_TEST_DATABASES", ""), help="Private test-databases JSON path")
@@ -198,6 +239,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--database", action="append", default=[], help="Only update matching Ref, project folder, or Bridge.AppName; repeatable")
     parser.add_argument("--dry-run", action="store_true", help="Detect variants without modifying infobases")
     parser.add_argument("--allow-bootstrap-user", action="store_true", required=True)
+    parser.add_argument("--use-registered-user", action="store_true", help="Install with the registry user without creating a bootstrap account")
     args = parser.parse_args(argv)
     if not args.registry:
         parser.error("--registry or CODEX_1C_TEST_DATABASES is required")
@@ -235,11 +277,15 @@ def main(argv: list[str] | None = None) -> int:
             print(f"[{label}] compatibility={mode}, variant={variant}", flush=True)
             if args.dry_run:
                 continue
-            assert_no_bootstrap_users(database)
+            if not args.use_registered_user:
+                assert_no_bootstrap_users(database)
             for attempt in range(1, args.install_attempts + 1):
                 print(f"[{label}] installing, attempt {attempt}/{args.install_attempts}", flush=True)
                 try:
-                    install_database(database, Path(args.platform).resolve(), cfe_files[variant], args.timeout)
+                    if args.use_registered_user:
+                        install_database_with_registered_user(database, Path(args.platform).resolve(), cfe_files[variant], args.timeout)
+                    else:
+                        install_database(database, Path(args.platform).resolve(), cfe_files[variant], args.timeout)
                     break
                 except Exception:
                     if attempt >= args.install_attempts:
@@ -251,7 +297,8 @@ def main(argv: list[str] | None = None) -> int:
                         time.sleep(5)
             print(f"[{label}] verifying GET and POST health", flush=True)
             verify_bridge(database)
-            assert_no_bootstrap_users(database)
+            if not args.use_registered_user:
+                assert_no_bootstrap_users(database)
             print(f"[{label}] passed", flush=True)
         except Exception as exc:
             failures += 1
