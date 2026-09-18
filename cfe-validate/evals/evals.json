@@ -6,21 +6,23 @@
       "prompt": "Проверь расширение в папке src/ на корректность структуры.",
       "expected_output": "Выведен отчёт валидации: 9 шагов проверки (XML well-formedness, InternalInfo, свойства расширения, enum-значения, ChildObjects, DefaultLanguage, файлы языков, каталоги объектов, заимствованные объекты). Итог: N ошибок, N предупреждений.",
       "expectations": [
-        "Скрипт cfe-validate.ps1 вызван с параметром -ExtensionPath src",
+        "Скрипт python3 <skills-root>/cfe-validate/scripts/cfe-validate.py на Linux или powershell.exe -NoProfile -File <skills-root>/cfe-validate/scripts/cfe-validate.ps1 на Windows вызван с параметром -ExtensionPath src",
         "Вывод содержит результаты всех 9 шагов проверки с метками [OK], [ERROR] или [WARN]",
         "Вывод содержит итоговую строку с количеством ошибок и предупреждений",
-        "Проверена корректность XML-структуры и наличие MetaDataObject/Configuration"
+        "Проверена корректность XML-структуры и наличие MetaDataObject/Configuration",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/cfe-validate/scripts/cfe-validate.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/cfe-validate/scripts/cfe-validate.ps1"
       ]
     },
     {
       "id": 2,
-      "prompt": "Проверь расширение C:\\ext\\МоёРасширение. Если есть ошибки — покажи их все, ограничение 50 ошибок.",
+      "prompt": "Проверь расширение <project-root>/ext/МоёРасширение. Если есть ошибки — покажи их все, ограничение 50 ошибок.",
       "expected_output": "Запущена валидация с лимитом MaxErrors=50. Вывод содержит все найденные ошибки ERROR и предупреждения WARN по каждому из 9 шагов.",
       "expectations": [
-        "Скрипт cfe-validate.ps1 вызван с параметром -ExtensionPath C:\\ext\\МоёРасширение",
-        "Скрипт cfe-validate.ps1 вызван с параметром -MaxErrors 50",
+        "Скрипт python3 <skills-root>/cfe-validate/scripts/cfe-validate.py на Linux или powershell.exe -NoProfile -File <skills-root>/cfe-validate/scripts/cfe-validate.ps1 на Windows вызван с параметром -ExtensionPath <project-root>/ext/МоёРасширение",
+        "Скрипт python3 <skills-root>/cfe-validate/scripts/cfe-validate.py на Linux или powershell.exe -NoProfile -File <skills-root>/cfe-validate/scripts/cfe-validate.ps1 на Windows вызван с параметром -MaxErrors 50",
         "Вывод содержит проверку ObjectBelonging=Adopted для заимствованных объектов",
-        "Вывод содержит проверку NamePrefix и Purpose в свойствах расширения"
+        "Вывод содержит проверку NamePrefix и Purpose в свойствах расширения",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/cfe-validate/scripts/cfe-validate.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/cfe-validate/scripts/cfe-validate.ps1"
       ]
     },
     {
@@ -28,11 +30,12 @@
       "prompt": "После создания расширения Расш1 в ext/src/ нужно убедиться что всё правильно. Сохрани результат валидации в файл validation-report.txt.",
       "expected_output": "Валидация выполнена, результат сохранён в файл validation-report.txt. В выводе показаны статусы всех 9 проверок.",
       "expectations": [
-        "Скрипт cfe-validate.ps1 вызван с параметром -ExtensionPath ext/src",
-        "Скрипт cfe-validate.ps1 вызван с параметром -OutFile validation-report.txt",
+        "Скрипт python3 <skills-root>/cfe-validate/scripts/cfe-validate.py на Linux или powershell.exe -NoProfile -File <skills-root>/cfe-validate/scripts/cfe-validate.ps1 на Windows вызван с параметром -ExtensionPath ext/src",
+        "Скрипт python3 <skills-root>/cfe-validate/scripts/cfe-validate.py на Linux или powershell.exe -NoProfile -File <skills-root>/cfe-validate/scripts/cfe-validate.ps1 на Windows вызван с параметром -OutFile validation-report.txt",
         "Файл validation-report.txt создан с результатами валидации",
         "Проверены enum-значения CompatibilityMode и Purpose расширения",
-        "Проверено что DefaultLanguage ссылается на язык в ChildObjects"
+        "Проверено что DefaultLanguage ссылается на язык в ChildObjects",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/cfe-validate/scripts/cfe-validate.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/cfe-validate/scripts/cfe-validate.ps1"
       ]
     }
   ]

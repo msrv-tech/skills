@@ -4,33 +4,36 @@
     {
       "id": 1,
       "prompt": "Измени версию конфигурации на 2.0.0.1 и поставщика на «ООО Ромашка» в конфигурации, которая лежит в src/.",
-      "expected_output": "Скрипт cf-edit.ps1 вызван с операцией modify-property, в Configuration.xml обновлены поля Version и Vendor.",
+      "expected_output": "Скрипт python3 <skills-root>/cf-edit/scripts/cf-edit.py на Linux или powershell.exe -NoProfile -File <skills-root>/cf-edit/scripts/cf-edit.ps1 на Windows вызван с операцией modify-property, в Configuration.xml обновлены поля Version и Vendor.",
       "expectations": [
-        "Скрипт cf-edit.ps1 вызван с параметром -Operation modify-property",
+        "Скрипт python3 <skills-root>/cf-edit/scripts/cf-edit.py на Linux или powershell.exe -NoProfile -File <skills-root>/cf-edit/scripts/cf-edit.ps1 на Windows вызван с параметром -Operation modify-property",
         "Параметр -Value содержит Version=2.0.0.1",
         "Параметр -Value содержит Vendor=ООО Ромашка (batch через ;;)",
-        "Параметр -ConfigPath указывает на src/ или Configuration.xml внутри src/"
+        "Параметр -ConfigPath указывает на src/ или Configuration.xml внутри src/",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/cf-edit/scripts/cf-edit.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/cf-edit/scripts/cf-edit.ps1"
       ]
     },
     {
       "id": 2,
-      "prompt": "Добавь справочники Товары и Контрагенты в состав конфигурации. Путь к исходникам: C:/WS/Erp/src/.",
-      "expected_output": "Скрипт cf-edit.ps1 вызван с операцией add-childObject, в Configuration.xml в секцию ChildObjects добавлены записи для Catalog.Товары и Catalog.Контрагенты.",
+      "prompt": "Добавь справочники Товары и Контрагенты в состав конфигурации. Путь к исходникам: <project-root>/WS/Erp/src/.",
+      "expected_output": "Скрипт python3 <skills-root>/cf-edit/scripts/cf-edit.py на Linux или powershell.exe -NoProfile -File <skills-root>/cf-edit/scripts/cf-edit.ps1 на Windows вызван с операцией add-childObject, в Configuration.xml в секцию ChildObjects добавлены записи для Catalog.Товары и Catalog.Контрагенты.",
       "expectations": [
-        "Скрипт cf-edit.ps1 вызван с параметром -Operation add-childObject",
+        "Скрипт python3 <skills-root>/cf-edit/scripts/cf-edit.py на Linux или powershell.exe -NoProfile -File <skills-root>/cf-edit/scripts/cf-edit.ps1 на Windows вызван с параметром -Operation add-childObject",
         "Параметр -Value содержит Catalog.Товары",
         "Параметр -Value содержит Catalog.Контрагенты (batch через ;;)",
-        "Параметр -ConfigPath указывает на C:/WS/Erp/src/"
+        "Параметр -ConfigPath указывает на <project-root>/WS/Erp/src/",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/cf-edit/scripts/cf-edit.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/cf-edit/scripts/cf-edit.ps1"
       ]
     },
     {
       "id": 3,
-      "prompt": "Добавь роль ПолныеПрава в список ролей по умолчанию конфигурации. Конфигурация в D:/Projects/MyCfg/src/.",
-      "expected_output": "Скрипт cf-edit.ps1 вызван с операцией add-defaultRole, в Configuration.xml добавлена роль ПолныеПрава в секцию DefaultRoles.",
+      "prompt": "Добавь роль ПолныеПрава в список ролей по умолчанию конфигурации. Конфигурация в <project-root>/Projects/MyCfg/src/.",
+      "expected_output": "Скрипт python3 <skills-root>/cf-edit/scripts/cf-edit.py на Linux или powershell.exe -NoProfile -File <skills-root>/cf-edit/scripts/cf-edit.ps1 на Windows вызван с операцией add-defaultRole, в Configuration.xml добавлена роль ПолныеПрава в секцию DefaultRoles.",
       "expectations": [
-        "Скрипт cf-edit.ps1 вызван с параметром -Operation add-defaultRole",
+        "Скрипт python3 <skills-root>/cf-edit/scripts/cf-edit.py на Linux или powershell.exe -NoProfile -File <skills-root>/cf-edit/scripts/cf-edit.ps1 на Windows вызван с параметром -Operation add-defaultRole",
         "Параметр -Value содержит ПолныеПрава",
-        "Параметр -ConfigPath указывает на D:/Projects/MyCfg/src/"
+        "Параметр -ConfigPath указывает на <project-root>/Projects/MyCfg/src/",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/cf-edit/scripts/cf-edit.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/cf-edit/scripts/cf-edit.ps1"
       ]
     }
   ]

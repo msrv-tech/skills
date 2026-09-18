@@ -3,36 +3,39 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "Создай новую файловую информационную базу по пути C:\\Bases\\TestDB.",
-      "expected_output": "Скрипт db-create.ps1 запущен с параметром -InfoBasePath C:\\Bases\\TestDB. База создана, лог показан пользователю. Предложено зарегистрировать базу в .v8-project.json.",
+      "prompt": "Создай новую файловую информационную базу по пути <project-root>/Bases/TestDB.",
+      "expected_output": "Скрипт python3 <skills-root>/db-create/scripts/db-create.py на Linux или powershell.exe -NoProfile -File <skills-root>/db-create/scripts/db-create.ps1 на Windows запущен с параметром -InfoBasePath <project-root>/Bases/TestDB. База создана, лог показан пользователю. Предложено зарегистрировать базу в .v8-project.json.",
       "expectations": [
-        "Скрипт db-create.ps1 вызван с параметром -InfoBasePath C:\\Bases\\TestDB",
+        "Скрипт python3 <skills-root>/db-create/scripts/db-create.py на Linux или powershell.exe -NoProfile -File <skills-root>/db-create/scripts/db-create.ps1 на Windows вызван с параметром -InfoBasePath <project-root>/Bases/TestDB",
         "Лог-файл прочитан и содержимое показано пользователю",
         "Предложена регистрация базы через /db-list add",
-        "Путь к платформе 1cv8.exe определён из .v8-project.json или автоопределён"
+        "Путь к платформе 1cv8/1cv8.exe разрешён из явного параметра, переменной окружения или стандартного каталога текущей ОС",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/db-create/scripts/db-create.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/db-create/scripts/db-create.ps1"
       ]
     },
     {
       "id": 2,
       "prompt": "Создай серверную базу MyApp_Test на сервере srv01. Добавь её в список баз с именем «Тестовая MyApp».",
-      "expected_output": "Скрипт db-create.ps1 запущен с параметрами -InfoBaseServer srv01, -InfoBaseRef MyApp_Test, -AddToList, -ListName \"Тестовая MyApp\".",
+      "expected_output": "Скрипт python3 <skills-root>/db-create/scripts/db-create.py на Linux или powershell.exe -NoProfile -File <skills-root>/db-create/scripts/db-create.ps1 на Windows запущен с параметрами -InfoBaseServer srv01, -InfoBaseRef MyApp_Test, -AddToList, -ListName \"Тестовая MyApp\".",
       "expectations": [
-        "Скрипт db-create.ps1 вызван с параметром -InfoBaseServer srv01",
-        "Скрипт db-create.ps1 вызван с параметром -InfoBaseRef MyApp_Test",
-        "Скрипт db-create.ps1 вызван с параметром -AddToList",
-        "Скрипт db-create.ps1 вызван с параметром -ListName \"Тестовая MyApp\"",
-        "Лог-файл прочитан и результат показан пользователю"
+        "Скрипт python3 <skills-root>/db-create/scripts/db-create.py на Linux или powershell.exe -NoProfile -File <skills-root>/db-create/scripts/db-create.ps1 на Windows вызван с параметром -InfoBaseServer srv01",
+        "Скрипт python3 <skills-root>/db-create/scripts/db-create.py на Linux или powershell.exe -NoProfile -File <skills-root>/db-create/scripts/db-create.ps1 на Windows вызван с параметром -InfoBaseRef MyApp_Test",
+        "Скрипт python3 <skills-root>/db-create/scripts/db-create.py на Linux или powershell.exe -NoProfile -File <skills-root>/db-create/scripts/db-create.ps1 на Windows вызван с параметром -AddToList",
+        "Скрипт python3 <skills-root>/db-create/scripts/db-create.py на Linux или powershell.exe -NoProfile -File <skills-root>/db-create/scripts/db-create.ps1 на Windows вызван с параметром -ListName \"Тестовая MyApp\"",
+        "Лог-файл прочитан и результат показан пользователю",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/db-create/scripts/db-create.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/db-create/scripts/db-create.ps1"
       ]
     },
     {
       "id": 3,
-      "prompt": "Создай базу C:\\Bases\\DevDB из шаблона CF-файла C:\\Templates\\erp.cf.",
-      "expected_output": "Скрипт db-create.ps1 запущен с параметрами -InfoBasePath C:\\Bases\\DevDB и -UseTemplate C:\\Templates\\erp.cf. Пользователь предупреждён что конфигурация будет загружена из шаблона.",
+      "prompt": "Создай базу <project-root>/Bases/DevDB из шаблона CF-файла <project-root>/Templates/erp.cf.",
+      "expected_output": "Скрипт python3 <skills-root>/db-create/scripts/db-create.py на Linux или powershell.exe -NoProfile -File <skills-root>/db-create/scripts/db-create.ps1 на Windows запущен с параметрами -InfoBasePath <project-root>/Bases/DevDB и -UseTemplate <project-root>/Templates/erp.cf. Пользователь предупреждён что конфигурация будет загружена из шаблона.",
       "expectations": [
-        "Скрипт db-create.ps1 вызван с параметром -InfoBasePath C:\\Bases\\DevDB",
-        "Скрипт db-create.ps1 вызван с параметром -UseTemplate C:\\Templates\\erp.cf",
+        "Скрипт python3 <skills-root>/db-create/scripts/db-create.py на Linux или powershell.exe -NoProfile -File <skills-root>/db-create/scripts/db-create.ps1 на Windows вызван с параметром -InfoBasePath <project-root>/Bases/DevDB",
+        "Скрипт python3 <skills-root>/db-create/scripts/db-create.py на Linux или powershell.exe -NoProfile -File <skills-root>/db-create/scripts/db-create.ps1 на Windows вызван с параметром -UseTemplate <project-root>/Templates/erp.cf",
         "Пользователь предупреждён что конфигурация из шаблона CF будет загружена в новую базу",
-        "Лог-файл прочитан и результат показан пользователю"
+        "Лог-файл прочитан и результат показан пользователю",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/db-create/scripts/db-create.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/db-create/scripts/db-create.ps1"
       ]
     }
   ]

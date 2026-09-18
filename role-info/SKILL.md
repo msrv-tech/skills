@@ -8,6 +8,22 @@ allowed-tools:
 
 # /role-info — анализ роли 1С
 
+<!-- docs-evals:python-entrypoint:start -->
+## Запуск скрипта
+
+Основной запуск на Linux выполняется Python 3 с аргументами CLI скрипта:
+
+```bash
+python3 "<skills-root>/role-info/scripts/role-info.py" -RightsPath <project-root>/Rights.xml
+```
+
+Windows PowerShell остаётся отдельным вариантом запуска:
+
+```powershell
+powershell.exe -NoProfile -File "<skills-root>/role-info/scripts/role-info.ps1" -RightsPath <project-root>/Rights.xml
+```
+<!-- docs-evals:python-entrypoint:end -->
+
 Парсит `Rights.xml` роли и выдаёт компактную сводку: объекты сгруппированы по типу, показаны только разрешённые права. Сжатие: тысячи строк XML → 50–150 строк текста.
 
 ## Использование

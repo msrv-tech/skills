@@ -9,6 +9,22 @@ allowed-tools:
 
 # /web-info — Статус Apache и публикаций 1С
 
+<!-- docs-evals:python-entrypoint:start -->
+## Запуск скрипта
+
+Основной запуск на Linux выполняется Python 3 с аргументами CLI скрипта:
+
+```bash
+python3 "<skills-root>/web-info/scripts/web-info.py" -ApachePath <ApachePath>
+```
+
+Windows PowerShell остаётся отдельным вариантом запуска:
+
+```powershell
+powershell.exe -NoProfile -File "<skills-root>/web-info/scripts/web-info.ps1" -ApachePath <ApachePath>
+```
+<!-- docs-evals:python-entrypoint:end -->
+
 Показывает состояние Apache HTTP Server, список опубликованных баз и последние ошибки.
 
 ## Usage
@@ -23,6 +39,18 @@ allowed-tools:
 По умолчанию `tools/apache24` от корня проекта.
 
 ## Команда
+
+Ubuntu:
+
+```bash
+python3 <skills-root>/web-info/scripts/web-info.py
+```
+
+Показываются только публикации, которыми управляют файлы
+`/etc/apache2/conf-available/1c-skills-publication-*.conf`, состояние
+`apache2.service` и реальный результат `apache2ctl configtest`.
+
+Windows:
 
 ```powershell
 powershell.exe -NoProfile -File <skills-root>/web-info/scripts/web-info.ps1 <параметры>

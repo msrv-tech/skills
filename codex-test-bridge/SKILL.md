@@ -36,6 +36,9 @@ allowed-tools:
 - `UI_WORKER.md` - контракт управляющей обработки и backends
 - `BRIDGE.md` - подробная спецификация endpoints и команд
 - `scripts/build_cfe_linux.sh` - сборка CFE на Linux через `ibcmd`
+- `scripts/install_cfe_linux.sh` - строгая установка CFE в файловую ИБ
+- `scripts/enable_vrd_linux.py` - атомарное включение bridge в существующем VRD
+- `scripts/linux_flow.sh` - Linux doctor и полный smoke от сборки до Xvfb
 - `scripts/build_cfe_windows.ps1` - сборка CFE на Windows через `ibcmd`
 - `scripts/build_legacy_cfe_windows.ps1` - сборка server-only legacy CFE
 - `scripts/run_cross_db_ui_with_bootstrap.py` - UI старой ИБ через отдельный
@@ -55,9 +58,9 @@ store CI. Локальные `*.local.json`, `.env`, отчёты, fixture-фа�
 
 Перед передачей или коммитом скилла выполни:
 
-```powershell
-python .\scripts\check_repository_hygiene.py
-python -m unittest discover -s tests
+```bash
+python3 ./scripts/check_repository_hygiene.py
+python3 -m unittest discover -s tests
 ```
 
 UI-worker всегда маскирует `/P`, `/N`, `/S`, `/F` и соответствующие длинные
@@ -147,6 +150,21 @@ python (Join-Path $skillsRoot 'codex-test-bridge\scripts\update_all_test_databas
 & $env:CODEX_IBCMD config --data $env:CODEX_1C_BUILD_DATA --database-path $env:CODEX_1C_DATABASE_PATH apply --extension CodexTestBridge --force --dynamic=disable --session-terminate=force
 ```
 
+На Linux используй строгий install helper. `CODEX_IBCMD` должен указывать на
+исполняемый файл `ibcmd` либо на каталог версии платформы 8.5. Для каталога
+поддерживаются `<version>/ibcmd` и `<version>/bin/ibcmd`; если существуют оба,
+нужно указать точный executable. Автоматического перехода на Designer нет:
+
+```bash
+IBCMD="$CODEX_IBCMD" \
+IB_PATH="$CODEX_1C_DATABASE_PATH" \
+IB_USER="$CODEX_1C_USERNAME" \
+IB_PASSWORD="${CODEX_1C_PASSWORD:-}" \
+CFE=./codex-test-bridge.cfe \
+DATA="$CODEX_1C_BUILD_DATA" \
+./scripts/install_cfe_linux.sh
+```
+
 Учётные данные и параметры подключения получай из защищённых переменных среды
 или secret store CI. Не записывай их в файлы скилла, команды документации,
 отчёты и логи.
@@ -169,6 +187,19 @@ Bridge доступен только если опубликованы HTTP-се
 ```powershell
 .\scripts\enable_vrd_windows.ps1 -VrdPath $env:CODEX_1C_VRD_PATH
 ```
+
+Linux:
+
+```bash
+python3 ./scripts/enable_vrd_linux.py "$CODEX_1C_VRD_PATH"
+apache2ctl configtest
+systemctl reload apache2
+```
+
+Linux helper атомарно изменяет только указанный VRD и сохраняет остальные
+HTTP-сервисы. Сам helper и полный flow не вызывают `sudo`: пользователь,
+запускающий их, уже должен иметь права на VRD и reload Apache. Ошибка прав
+завершает flow, а не скрывается.
 
 Базовые URL:
 
@@ -233,8 +264,12 @@ python .\client.py --base-url $bridgeUrl run-suite .\examples --report .\artifac
 python .\client.py run-ui .\server.example.invalid.json .\examples\native-ui-smoke.ui.json --artifact-dir .\artifacts\smoke --report .\artifacts\smoke\worker.json
 ```
 
-На Windows backend `auto` создаёт невидимый Win32 desktop, на Linux запускает
-Xvfb. Обычные формы открывай без меню действием `openForm`: передай
+На Windows backend `auto` создаёт невидимый Win32 desktop; только этот backend
+поддерживает UIA и `uiaBeforeSteps`. На Linux backend запускает Xvfb и работает
+через штатные TestClient/TestManager: UIA bootstrap недоступен и не
+эмулируется. Ошибка выбранного backend должна завершать запуск без
+автоматического переключения. Обычные формы открывай без меню действием
+`openForm`: передай
 `metadataKind` (`catalog`, `document`, `task`, `dataProcessor`, `report`, `commonForm`),
 `metadataName`, `formName` и обязательный `targetForm`. Для обработки есть
 короткая форма `openDataProcessor`. Эти действия выполняют штатный клиентский
@@ -299,8 +334,42 @@ Windows:
 Linux:
 
 ```bash
-IBCMD="$CODEX_IBCMD" sh ./scripts/build_cfe_linux.sh
+IBCMD="$CODEX_IBCMD" ./scripts/build_cfe_linux.sh
 ```
+
+Для платформы 8.5 можно передать точный путь к `ibcmd` или каталог версии.
+Скрипт строго поддерживает оба известных Linux layout:
+`<version>/ibcmd` и `<version>/bin/ibcmd`. При наличии обоих кандидатов он не
+выбирает неявно и требует точный путь. Сборка использует отдельный `--data`,
+проверяет ненулевой CFE и не использует Designer как запасной путь.
+
+## Полный Linux Smoke
+
+`linux_flow.sh` связывает реальную цепочку: `ibcmd build` → install в файловую
+ИБ → изменение существующего VRD → `apache2ctl configtest` → reload Apache →
+оба HTTP health-маршрута → doctor → нативный `TestClient/TestManager` в Xvfb.
+Он ничего не устанавливает и явно падает при отсутствии 1С, `ibcmd`, Apache,
+systemd, Python или Xvfb.
+
+Сначала заполни перечисленные в `./scripts/linux_flow.sh --help` переменные
+окружения. Для layout официальных пакетов на текущем Linux-хосте:
+
+```bash
+if [ -r /opt/1cv8/env ]; then
+  . /opt/1cv8/env
+fi
+export CODEX_IBCMD=/opt/1cv8/x86_64/8.5.1.1529/ibcmd
+export CODEX_1C_EXECUTABLE=/opt/1cv8/x86_64/8.5.1.1529/1cv8
+./scripts/linux_flow.sh doctor
+./scripts/linux_flow.sh run
+```
+
+`/opt/1cv8/env` является только optional environment helper: его отсутствие
+не считается отсутствием платформы.
+
+`doctor` ничего не изменяет: проверяет зависимости, Apache, оба health-маршрута
+и worker config. `run` изменяет только явно указанную тестовую ИБ, её VRD,
+состояние расширения и каталог артефактов; при любой ошибке останавливается.
 
 ## Основные Команды API
 

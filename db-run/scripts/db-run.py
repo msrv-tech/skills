@@ -3,28 +3,12 @@
 # Source: https://github.com/Desko77/claude-code-skills-1c
 
 import argparse
-import glob
 import os
 import subprocess
 import sys
 
-
-def resolve_v8path(v8path):
-    """Resolve path to 1cv8.exe."""
-    if not v8path:
-        found = sorted(glob.glob(r"C:\Program Files\1cv8\*\bin\1cv8.exe"))
-        if found:
-            return found[-1]
-        else:
-            print("Error: 1cv8.exe not found. Specify -V8Path", file=sys.stderr)
-            sys.exit(1)
-    elif os.path.isdir(v8path):
-        v8path = os.path.join(v8path, "1cv8.exe")
-
-    if not os.path.isfile(v8path):
-        print(f"Error: 1cv8.exe not found at {v8path}", file=sys.stderr)
-        sys.exit(1)
-    return v8path
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+from common.onec_runtime import mask_sensitive_arguments, onec_process_env, resolve_1cv8_cli as resolve_v8path
 
 
 def main():
@@ -85,8 +69,8 @@ def main():
     arguments.append("/DisableStartupDialogs")
 
     # --- Execute (background, no wait) ---
-    print(f"Running: 1cv8.exe {' '.join(arguments)}")
-    subprocess.Popen([v8path] + arguments)
+    print(f"Running: {os.path.basename(v8path)} {' '.join(mask_sensitive_arguments(arguments))}")
+    subprocess.Popen([v8path] + arguments, env=onec_process_env())
     print("1C:Enterprise launched")
 
 

@@ -9,6 +9,22 @@ allowed-tools:
 
 # /cfe-patch-method — Генерация перехватчика метода
 
+<!-- docs-evals:python-entrypoint:start -->
+## Запуск скрипта
+
+Основной запуск на Linux выполняется Python 3 с аргументами CLI скрипта:
+
+```bash
+python3 "<skills-root>/cfe-patch-method/scripts/cfe-patch-method.py" -ExtensionPath <project-root>/extension
+```
+
+Windows PowerShell остаётся отдельным вариантом запуска:
+
+```powershell
+powershell.exe -NoProfile -File "<skills-root>/cfe-patch-method/scripts/cfe-patch-method.ps1" -ExtensionPath <project-root>/extension
+```
+<!-- docs-evals:python-entrypoint:end -->
+
 Генерирует `.bsl` файл с декоратором перехвата для заимствованного объекта расширения. Создаёт файл или дописывает в существующий.
 
 ## Предусловие

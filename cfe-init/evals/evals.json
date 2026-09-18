@@ -6,23 +6,25 @@
       "prompt": "Создай расширение-исправление Расш1 для ERP с совместимостью Version8_3_17. Выходная папка src/.",
       "expected_output": "В папке src/ созданы файлы: Configuration.xml (Purpose=Patch, CompatibilityMode=Version8_3_17), Languages/Русский.xml, Roles/Расш1_ОсновнаяРоль.xml.",
       "expectations": [
-        "Скрипт cfe-init.ps1 вызван с параметром -Name Расш1",
-        "Скрипт cfe-init.ps1 вызван с параметром -Purpose Patch",
-        "Скрипт cfe-init.ps1 вызван с параметром -CompatibilityMode Version8_3_17",
+        "Скрипт python3 <skills-root>/cfe-init/scripts/cfe-init.py на Linux или powershell.exe -NoProfile -File <skills-root>/cfe-init/scripts/cfe-init.ps1 на Windows вызван с параметром -Name Расш1",
+        "Скрипт python3 <skills-root>/cfe-init/scripts/cfe-init.py на Linux или powershell.exe -NoProfile -File <skills-root>/cfe-init/scripts/cfe-init.ps1 на Windows вызван с параметром -Purpose Patch",
+        "Скрипт python3 <skills-root>/cfe-init/scripts/cfe-init.py на Linux или powershell.exe -NoProfile -File <skills-root>/cfe-init/scripts/cfe-init.ps1 на Windows вызван с параметром -CompatibilityMode Version8_3_17",
         "Создан файл src/Configuration.xml с корректным Purpose=Patch",
-        "Создан файл src/Languages/Русский.xml"
+        "Создан файл src/Languages/Русский.xml",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/cfe-init/scripts/cfe-init.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/cfe-init/scripts/cfe-init.ps1"
       ]
     },
     {
       "id": 2,
-      "prompt": "Создай расширение МоёРасширение версии 1.0.0.1, поставщик ООО Рога. Без основной роли. OutputDir = C:\\ext\\output.",
-      "expected_output": "Создан scaffold расширения в C:\\ext\\output: Configuration.xml (Version=1.0.0.1, Vendor=ООО Рога), Languages/Русский.xml. Папка Roles/ не создана.",
+      "prompt": "Создай расширение МоёРасширение версии 1.0.0.1, поставщик ООО Рога. Без основной роли. OutputDir = <project-root>/ext/output.",
+      "expected_output": "Создан scaffold расширения в <project-root>/ext/output: Configuration.xml (Version=1.0.0.1, Vendor=ООО Рога), Languages/Русский.xml. Папка Roles/ не создана.",
       "expectations": [
-        "Скрипт cfe-init.ps1 вызван с параметром -Name МоёРасширение",
-        "Скрипт cfe-init.ps1 вызван с параметром -Version \"1.0.0.1\"",
-        "Скрипт cfe-init.ps1 вызван с параметром -NoRole",
-        "Скрипт cfe-init.ps1 вызван с параметром -OutputDir C:\\ext\\output",
-        "Папка Roles/ не создана (параметр -NoRole)"
+        "Скрипт python3 <skills-root>/cfe-init/scripts/cfe-init.py на Linux или powershell.exe -NoProfile -File <skills-root>/cfe-init/scripts/cfe-init.ps1 на Windows вызван с параметром -Name МоёРасширение",
+        "Скрипт python3 <skills-root>/cfe-init/scripts/cfe-init.py на Linux или powershell.exe -NoProfile -File <skills-root>/cfe-init/scripts/cfe-init.ps1 на Windows вызван с параметром -Version \"1.0.0.1\"",
+        "Скрипт python3 <skills-root>/cfe-init/scripts/cfe-init.py на Linux или powershell.exe -NoProfile -File <skills-root>/cfe-init/scripts/cfe-init.ps1 на Windows вызван с параметром -NoRole",
+        "Скрипт python3 <skills-root>/cfe-init/scripts/cfe-init.py на Linux или powershell.exe -NoProfile -File <skills-root>/cfe-init/scripts/cfe-init.ps1 на Windows вызван с параметром -OutputDir <project-root>/ext/output",
+        "Папка Roles/ не создана (параметр -NoRole)",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/cfe-init/scripts/cfe-init.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/cfe-init/scripts/cfe-init.ps1"
       ]
     },
     {
@@ -30,11 +32,12 @@
       "prompt": "Нужно расширение-доработка с явным префиксом объектов ДРП_. Имя расширения ДоработкаРП, совместимость Version8_3_24.",
       "expected_output": "Создан scaffold расширения: Configuration.xml с NamePrefix=ДРП_, Purpose=Customization, CompatibilityMode=Version8_3_24.",
       "expectations": [
-        "Скрипт cfe-init.ps1 вызван с параметром -Name ДоработкаРП",
-        "Скрипт cfe-init.ps1 вызван с параметром -NamePrefix ДРП_",
-        "Скрипт cfe-init.ps1 вызван с параметром -Purpose Customization",
+        "Скрипт python3 <skills-root>/cfe-init/scripts/cfe-init.py на Linux или powershell.exe -NoProfile -File <skills-root>/cfe-init/scripts/cfe-init.ps1 на Windows вызван с параметром -Name ДоработкаРП",
+        "Скрипт python3 <skills-root>/cfe-init/scripts/cfe-init.py на Linux или powershell.exe -NoProfile -File <skills-root>/cfe-init/scripts/cfe-init.ps1 на Windows вызван с параметром -NamePrefix ДРП_",
+        "Скрипт python3 <skills-root>/cfe-init/scripts/cfe-init.py на Linux или powershell.exe -NoProfile -File <skills-root>/cfe-init/scripts/cfe-init.ps1 на Windows вызван с параметром -Purpose Customization",
         "Configuration.xml содержит значение NamePrefix равное ДРП_",
-        "Configuration.xml содержит Purpose=Customization"
+        "Configuration.xml содержит Purpose=Customization",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/cfe-init/scripts/cfe-init.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/cfe-init/scripts/cfe-init.ps1"
       ]
     }
   ]

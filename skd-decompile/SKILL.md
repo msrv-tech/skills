@@ -10,6 +10,22 @@ allowed-tools:
 
 # /skd-decompile — JSON-черновик из Template.xml СКД
 
+<!-- docs-evals:python-entrypoint:start -->
+## Запуск скрипта
+
+Основной запуск на Linux выполняется Python 3 с аргументами CLI скрипта:
+
+```bash
+python3 "<skills-root>/skd-decompile/scripts/skd-decompile.py" -TemplatePath <project-root>/Template.xml
+```
+
+Windows PowerShell остаётся отдельным вариантом запуска:
+
+```powershell
+powershell.exe -NoProfile -File "<skills-root>/skd-decompile/scripts/skd-decompile.ps1" -TemplatePath <project-root>/Template.xml
+```
+<!-- docs-evals:python-entrypoint:end -->
+
 Читает Template.xml и эмитит JSON в формате `skd-compile`. **Результат — черновик**, а не обратимое представление: см. раздел «Что получаешь».
 
 ## Когда использовать

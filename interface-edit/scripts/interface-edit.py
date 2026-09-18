@@ -504,7 +504,16 @@ def main():
         if os.path.isfile(validate_script):
             print()
             print("--- Running interface-validate ---")
-            subprocess.run([sys.executable, validate_script, "-CIPath", resolved_path])
+            validation = subprocess.run(
+                [sys.executable, validate_script, "-CIPath", resolved_path],
+                check=False,
+            )
+            if validation.returncode != 0:
+                print(
+                    f"interface-validate failed with code {validation.returncode}",
+                    file=sys.stderr,
+                )
+                sys.exit(validation.returncode)
 
     # --- Summary ---
     print()

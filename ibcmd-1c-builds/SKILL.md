@@ -11,11 +11,13 @@ Prefer `ibcmd` for headless 1C configuration work when the user asks for builds,
 
 For file infobases, always use a dedicated `--data` directory per operation or per workflow:
 
-```powershell
---data "D:\path\project\.runtime\ibcmd-<operation>"
+```text
+--data "<project-root>/.runtime/ibcmd-<operation>"
 ```
 
-This avoids conflicts with the default standalone runtime at `%LOCALAPPDATA%\1C\1cv8\standalone-server`.
+This avoids conflicts between standalone runtime operations. On Windows its
+default state is under `%LOCALAPPDATA%\1C\1cv8\standalone-server`; on Linux use
+an explicit writable `--data` directory and do not depend on a profile default.
 
 Do not run multiple `ibcmd` operations against the same file infobase in parallel. File bases need exclusive locks for most config operations.
 
@@ -23,27 +25,60 @@ If the infobase user has no password, pass only `--user "ИмяПользова�
 
 ## Preflight
 
-Before mutating a base:
+Before mutating a base, select the backend explicitly. Windows uses
+`<platform>/bin/ibcmd.exe`; Linux support requires 1С 8.5 `ibcmd` and uses
+either `/opt/1cv8/x86_64/<version>/ibcmd` or
+`/opt/1cv8/x86_64/<version>/bin/ibcmd`, depending on the package layout.
+An exact executable path is always valid. When resolving a version directory,
+accept exactly one of those candidates; if both exist, stop and require an
+exact path. If `/opt/1cv8/env` exists and is readable, it may be sourced, but
+8.5 packages are not required to create it.
 
 1. Identify platform versions:
+
+Linux:
+
+```bash
+if [ -r /opt/1cv8/env ]; then
+  . /opt/1cv8/env
+fi
+export ONEC_IBCMD_PATH=/opt/1cv8/x86_64/<version>/ibcmd
+"$ONEC_IBCMD_PATH" --version
+```
+
+Windows:
 
 ```powershell
 & "C:\Program Files\1cv8\8.5.1.1150\bin\ibcmd.exe" --version
 ```
 
-2. Stop only leftover local client/tool processes from previous attempts when safe:
+2. Check for leftover local client/tool processes from previous attempts. Do
+not terminate them without explicit user approval:
 
 ```powershell
 Get-Process 1cv8,1cv8c,ibcmd -ErrorAction SilentlyContinue
 ```
 
-3. If the user confirms nobody is in the file base, remove stale `.cfl` lock files:
+Linux:
 
-```powershell
-Get-ChildItem -LiteralPath "D:\bd\BaseName" -Force -Filter "*.cfl" | Remove-Item -Force
+```bash
+pgrep -a -f '(^|/)(1cv8|1cv8c|ibcmd)( |$)' || true
 ```
 
-4. Probe access with `generation-id` before load/import:
+3. If a lock remains, report it. Remove stale `.cfl` files only after the user
+confirms that nobody is using the file base.
+
+4. Probe access with `generation-id` before load/import. Linux:
+
+```bash
+"$ONEC_IBCMD_PATH" config \
+  --data "<project-root>/.runtime/ibcmd-probe" \
+  --database-path "<test-infobase-path>" \
+  --user "<test-user>" \
+  generation-id
+```
+
+Windows:
 
 ```powershell
 $data = "D:\repo\.runtime\ibcmd-probe"
@@ -145,8 +180,13 @@ Remove-Item "$env:LOCALAPPDATA\1C\1cv8\standalone-server\*" -Recurse -Force
 
 `ibcmd --database-path` for a file base starts/uses a 1C standalone runtime. This is separate from a normal 1C server cluster. The base remains a file base; `--data` is only the standalone runtime work directory.
 
-## Designer Fallback
+## Backend Boundaries
 
-If `ibcmd` cannot authenticate or import but the user wants progress, use Designer `/F` as fallback. For passwordless users, pass `/N "Name"` and omit `/P`.
+`ibcmd` and Designer are separate backends. Do not switch between them
+automatically. If `ibcmd` cannot authenticate, import, check, apply, or save,
+stop and report the exact error. Use Designer only when the user explicitly
+requests the Designer backend.
 
-Prefer `ibcmd` again for final `check`, `apply`, `save`, and verification when it works.
+Win32 desktop isolation and UIA are Windows-only and are not part of this
+skill. Linux headless UI uses the `codex-test-bridge` Xvfb
+TestClient/TestManager backend.

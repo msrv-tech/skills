@@ -16,6 +16,16 @@ import sys
 import psutil
 
 
+def linux_main():
+    """Dispatch to the system-Apache implementation on Linux."""
+    skills_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    if skills_root not in sys.path:
+        sys.path.insert(0, skills_root)
+    from common.apache_linux import cli, linux_info
+
+    cli(linux_info)
+
+
 def get_httpd_by_exe(httpd_exe_norm):
     """Get httpd processes matching our exe path."""
     ours = []
@@ -35,6 +45,9 @@ def get_httpd_by_exe(httpd_exe_norm):
 def main():
     sys.stdout.reconfigure(encoding="utf-8")
     sys.stderr.reconfigure(encoding="utf-8")
+    if os.name != "nt":
+        linux_main()
+        return
     parser = argparse.ArgumentParser(description='Apache & 1C publication status', allow_abbrev=False)
     parser.add_argument('-ApachePath', type=str, default='', help='Apache root (default: tools\\apache24)')
     args = parser.parse_args()

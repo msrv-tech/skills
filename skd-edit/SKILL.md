@@ -10,6 +10,22 @@ allowed-tools:
 
 # /skd-edit — точечное редактирование СКД (Template.xml)
 
+<!-- docs-evals:python-entrypoint:start -->
+## Запуск скрипта
+
+Основной запуск на Linux выполняется Python 3 с аргументами CLI скрипта:
+
+```bash
+python3 "<skills-root>/skd-edit/scripts/skd-edit.py" -TemplatePath <project-root>/Template.xml
+```
+
+Windows PowerShell остаётся отдельным вариантом запуска:
+
+```powershell
+powershell.exe -NoProfile -File "<skills-root>/skd-edit/scripts/skd-edit.ps1" -TemplatePath <project-root>/Template.xml
+```
+<!-- docs-evals:python-entrypoint:end -->
+
 Атомарные операции модификации существующей схемы компоновки данных: добавление, удаление и модификация полей, итогов, фильтров, параметров, настроек варианта, управление структурой, замена запроса.
 
 ## Параметры и команда

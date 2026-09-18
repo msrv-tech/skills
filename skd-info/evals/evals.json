@@ -3,36 +3,39 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "Покажи обзор СКД отчёта ОстаткиТоваров: C:/Reports/ОстаткиТоваров/Ext/Template.xml. Хочу понять структуру — какие наборы данных, параметры, варианты настроек.",
+      "prompt": "Покажи обзор СКД отчёта ОстаткиТоваров: <project-root>/Reports/ОстаткиТоваров/Ext/Template.xml. Хочу понять структуру — какие наборы данных, параметры, варианты настроек.",
       "expected_output": "Навигационная карта схемы: количество наборов данных, список параметров, список вариантов настроек, подсказки какой режим использовать для детального изучения.",
       "expectations": [
-        "Скрипт skd-info.ps1 вызван с параметром -TemplatePath (без указания -Mode, то есть режим overview)",
+        "Скрипт python3 <skills-root>/skd-info/scripts/skd-info.py на Linux или powershell.exe -NoProfile -File <skills-root>/skd-info/scripts/skd-info.ps1 на Windows вызван с параметром -TemplatePath (без указания -Mode, то есть режим overview)",
         "Параметр -OutFile использован, результат прочитан через Read tool",
         "Вывод содержит информацию о количестве наборов данных (DataSets) и их именах",
         "Вывод содержит список параметров схемы с их типами",
-        "Вывод содержит список вариантов настроек (settingsVariants)"
+        "Вывод содержит список вариантов настроек (settingsVariants)",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/skd-info/scripts/skd-info.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/skd-info/scripts/skd-info.ps1"
       ]
     },
     {
       "id": 2,
-      "prompt": "В СКД D:/1C/ERP/src/Reports/АнализПродаж/Ext/Template.xml есть колонка СуммаНалога — непонятно как она считается. Трассируй это поле от заголовка до запроса.",
+      "prompt": "В СКД <project-root>/1C/ERP/src/Reports/АнализПродаж/Ext/Template.xml есть колонка СуммаНалога — непонятно как она считается. Трассируй это поле от заголовка до запроса.",
       "expected_output": "Полная цепочка вычисления поля СуммаНалога: из какого набора данных берётся, есть ли вычисляемое поле или ресурс, итоговая формула.",
       "expectations": [
-        "Скрипт skd-info.ps1 вызван с параметрами -Mode trace -Name СуммаНалога",
+        "Скрипт python3 <skills-root>/skd-info/scripts/skd-info.py на Linux или powershell.exe -NoProfile -File <skills-root>/skd-info/scripts/skd-info.ps1 на Windows вызван с параметрами -Mode trace -Name СуммаНалога",
         "Вывод содержит цепочку: набор данных → вычисляемое поле (если есть) → ресурс/итог",
         "Вывод показывает тип поля и откуда берётся значение (из запроса или вычисляется)",
-        "Результат выведен через -OutFile и прочитан через Read tool во избежание проблем с кириллицей"
+        "Результат выведен через -OutFile и прочитан через Read tool во избежание проблем с кириллицей",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/skd-info/scripts/skd-info.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/skd-info/scripts/skd-info.ps1"
       ]
     },
     {
       "id": 3,
-      "prompt": "Покажи текст запроса второго набора данных в СКД E:/EDT/ZUP/src/Reports/НачисленияЗП/Ext/Template.xml. Набор называется ДанныеНачислений.",
+      "prompt": "Покажи текст запроса второго набора данных в СКД <project-root>/EDT/ZUP/src/Reports/НачисленияЗП/Ext/Template.xml. Набор называется ДанныеНачислений.",
       "expected_output": "Текст SQL-запроса из набора данных ДанныеНачислений. Если запрос многопакетный — показано оглавление пакетов.",
       "expectations": [
-        "Скрипт skd-info.ps1 вызван с параметрами -Mode query -Name ДанныеНачислений",
+        "Скрипт python3 <skills-root>/skd-info/scripts/skd-info.py на Linux или powershell.exe -NoProfile -File <skills-root>/skd-info/scripts/skd-info.ps1 на Windows вызван с параметрами -Mode query -Name ДанныеНачислений",
         "Вывод содержит текст запроса набора данных ДанныеНачислений",
         "Если запрос содержит несколько пакетов — вывод содержит оглавление пакетов с номерами",
-        "Для пагинации большого вывода доступны параметры -Limit и -Offset"
+        "Для пагинации большого вывода доступны параметры -Limit и -Offset",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/skd-info/scripts/skd-info.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/skd-info/scripts/skd-info.ps1"
       ]
     }
   ]

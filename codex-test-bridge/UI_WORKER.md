@@ -22,6 +22,11 @@ Full-сборка не назначает `DefaultRoles`, поскольку т�
   графические приложения в этом режиме не изолированы.
 - `auto` — `windowsDesktop` на Windows, `xvfb` на Linux.
 
+UIA (`uiaSteps`, `uiaBeforeSteps`, `clickMode: "uia"`) реализован только в
+`windowsDesktop` на Windows. Backend `xvfb` не эмулирует UIA и не переключается
+на него: используй штатные действия TestClient/TestManager, а при
+неподдерживаемом действии заверши тест с ошибкой.
+
 Процессы test client и test manager запускаются в одном desktop/display. Worker:
 
 1. запускает `clientCommand`;
@@ -529,7 +534,7 @@ Bridge сам активирует `Товары` (это одновременн
 }
 ```
 
-### UI Automation fallback
+### Windows-only UI Automation
 
 Если рабочая форма 1С не публикует дерево `ТестируемаяФорма`, сценарий может
 содержать `uiaSteps`. Worker выполняет их после штатных шагов `/TestManager` на
@@ -538,6 +543,9 @@ Bridge сам активирует `Товары` (это одновременн
 TestManager. Используй `uiaBeforeSteps` только для безопасного bootstrap
 окружения; в конфигурациях БСП вмешательство до подключения TestManager может
 нарушить рукопожатие `/TestClient`.
+
+На Linux эти поля не поддерживаются. Не обещай их выполнение через Xvfb и не
+заменяй ими ошибку штатного сценария.
 
 Поддерживаются `inspect`, `wait`, `invoke`, `click`, `clickWindow`, `setValue`,
 `typeText`, `typeTextWindow`, `pasteTextWindow`, `pressKey`, `pressKeyWindow`,

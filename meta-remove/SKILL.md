@@ -10,6 +10,22 @@ allowed-tools:
 
 # /meta-remove — удаление объекта метаданных
 
+<!-- docs-evals:python-entrypoint:start -->
+## Запуск скрипта
+
+Основной запуск на Linux выполняется Python 3 с аргументами CLI скрипта:
+
+```bash
+python3 "<skills-root>/meta-remove/scripts/meta-remove.py" -ConfigDir <project-root>/src -Object <Object>
+```
+
+Windows PowerShell остаётся отдельным вариантом запуска:
+
+```powershell
+powershell.exe -NoProfile -File "<skills-root>/meta-remove/scripts/meta-remove.ps1" -ConfigDir <project-root>/src -Object <Object>
+```
+<!-- docs-evals:python-entrypoint:end -->
+
 Безопасно удаляет объект из XML-выгрузки конфигурации. Перед удалением проверяет ссылки на объект в реквизитах, коде и других метаданных. Если ссылки найдены — удаление блокируется.
 
 ## Использование

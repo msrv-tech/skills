@@ -24,6 +24,16 @@ import zipfile
 import psutil
 
 
+def linux_main():
+    """Dispatch to the system-Apache implementation on Linux."""
+    skills_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    if skills_root not in sys.path:
+        sys.path.insert(0, skills_root)
+    from common.apache_linux import cli, linux_publish
+
+    cli(linux_publish)
+
+
 def get_our_httpd(httpd_exe_norm):
     """Filter httpd processes by our ApachePath."""
     result = []
@@ -62,6 +72,9 @@ def check_port_in_use(port):
 def main():
     sys.stdout.reconfigure(encoding="utf-8")
     sys.stderr.reconfigure(encoding="utf-8")
+    if os.name != "nt":
+        linux_main()
+        return
     parser = argparse.ArgumentParser(description='Publish 1C infobase via Apache', allow_abbrev=False)
     parser.add_argument('-V8Path', type=str, default='', help='Path to 1C platform bin directory (for wsap24.dll)')
     parser.add_argument('-InfoBasePath', type=str, default='', help='Path to file infobase')

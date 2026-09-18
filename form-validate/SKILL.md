@@ -9,6 +9,22 @@ allowed-tools:
 
 # /form-validate — валидация управляемой формы 1С
 
+<!-- docs-evals:python-entrypoint:start -->
+## Запуск скрипта
+
+Основной запуск на Linux выполняется Python 3 с аргументами CLI скрипта:
+
+```bash
+python3 "<skills-root>/form-validate/scripts/form-validate.py" -FormPath <project-root>/Form.xml
+```
+
+Windows PowerShell остаётся отдельным вариантом запуска:
+
+```powershell
+powershell.exe -NoProfile -File "<skills-root>/form-validate/scripts/form-validate.ps1" -FormPath <project-root>/Form.xml
+```
+<!-- docs-evals:python-entrypoint:end -->
+
 Проверяет Form.xml на структурные ошибки: уникальность ID, наличие companion-элементов, корректность ссылок DataPath и команд.
 
 ## Параметры

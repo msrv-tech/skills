@@ -10,6 +10,22 @@ allowed-tools:
 
 # /db-load-cf — Загрузка конфигурации из CF-файла
 
+<!-- docs-evals:python-entrypoint:start -->
+## Запуск скрипта
+
+Основной запуск на Linux выполняется Python 3 с аргументами CLI скрипта:
+
+```bash
+python3 "<skills-root>/db-load-cf/scripts/db-load-cf.py" -InfoBasePath <test-infobase-path>
+```
+
+Windows PowerShell остаётся отдельным вариантом запуска:
+
+```powershell
+powershell.exe -NoProfile -File "<skills-root>/db-load-cf/scripts/db-load-cf.ps1" -InfoBasePath <test-infobase-path>
+```
+<!-- docs-evals:python-entrypoint:end -->
+
 Загружает конфигурацию из бинарного CF-файла в информационную базу.
 
 ## Usage
@@ -23,7 +39,7 @@ allowed-tools:
 
 ## Параметры подключения
 
-Перед обращением к ИБ обязательно примени `test-databases`: запусти `scripts/resolve-registry.ps1` из каталога этого skill и выбери разрешённую запись по его правилам. Параметры подключения, пользователя и пароль передавай только из выбранной записи.
+Перед обращением к ИБ обязательно примени `test-databases`: на Linux запусти `python3 <skills-root>/test-databases/scripts/resolve-registry.py`, а на Windows — `resolve-registry.ps1` через PowerShell; затем выбери разрешённую запись по его правилам. Параметры подключения, пользователя и пароль передавай только из выбранной записи.
 
 Не принимай произвольный путь, сервер или строку подключения как замену реестру. `.v8-project.json` разрешён только для вспомогательных полей вроде `v8path`, `configSrc` или `webUrl`. Если подходящей записи нет или выбор неоднозначен, остановись и запроси уточнение.
 ## Команда

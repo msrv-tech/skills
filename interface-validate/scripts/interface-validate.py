@@ -28,6 +28,54 @@ COMMON_CMD_PATTERN = re.compile(r'^CommonCommand\.\w+$')
 UUID_CMD_PATTERN   = re.compile(
     r'^0:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
 )
+BUILTIN_COMMAND_GROUPS = {
+    'NavigationPanelImportant',
+    'NavigationPanelOrdinary',
+    'NavigationPanelSeeAlso',
+    'ActionsPanelCreate',
+    'ActionsPanelImportant',
+    'ActionsPanelTools',
+    'ActionsPanelReports',
+}
+CUSTOM_GROUP_PATTERN = re.compile(r'^CommandGroup\.([^\s.]+)$')
+
+
+def find_configuration(path):
+    current = os.path.dirname(os.path.abspath(path))
+    while True:
+        candidate = os.path.join(current, 'Configuration.xml')
+        if os.path.isfile(candidate):
+            return candidate
+        parent = os.path.dirname(current)
+        if parent == current:
+            return None
+        current = parent
+
+
+def load_custom_command_groups(ci_path):
+    config_path = find_configuration(ci_path)
+    if config_path is None:
+        return None
+    try:
+        config = etree.parse(config_path)
+    except (OSError, etree.XMLSyntaxError):
+        return set()
+    return {
+        (node.text or '').strip()
+        for node in config.xpath(
+            '//*[local-name()="ChildObjects"]/*[local-name()="CommandGroup"]'
+        )
+        if (node.text or '').strip()
+    }
+
+
+def valid_command_group(value, custom_groups):
+    if value in BUILTIN_COMMAND_GROUPS:
+        return True
+    match = CUSTOM_GROUP_PATTERN.match(value)
+    if not match:
+        return False
+    return custom_groups is None or match.group(1) in custom_groups
 
 
 class Reporter:
@@ -122,6 +170,7 @@ def main():
 
     r = Reporter(max_errors, detailed)
     all_command_names = []
+    custom_command_groups = load_custom_command_groups(resolved_path)
 
     r.out(f'=== Validation: CommandInterface ({context_name}) ===')
     r.out('')
@@ -259,6 +308,14 @@ def main():
                     r.error(f'7. CommandsPlacement[{cmd_name}]: missing or empty <CommandGroup>')
                     plc_ok = False
                     continue
+                group_name = (grp_el.text or '').strip()
+                if not valid_command_group(group_name, custom_command_groups):
+                    r.error(
+                        f"7. CommandsPlacement[{cmd_name}]: unknown command group "
+                        f"'{group_name}'"
+                    )
+                    plc_ok = False
+                    continue
                 placement_el = cmd.find(f'{{{NS_CI}}}Placement')
                 if placement_el is None:
                     r.error(f'7. CommandsPlacement[{cmd_name}]: missing <Placement>')
@@ -288,6 +345,14 @@ def main():
                 grp_el = cmd.find(f'{{{NS_CI}}}CommandGroup')
                 if grp_el is None or not (grp_el.text or '').strip():
                     r.error(f'8. CommandsOrder[{cmd_name}]: missing or empty <CommandGroup>')
+                    ord_ok = False
+                elif not valid_command_group(
+                    (grp_el.text or '').strip(), custom_command_groups
+                ):
+                    r.error(
+                        f"8. CommandsOrder[{cmd_name}]: unknown command group "
+                        f"'{(grp_el.text or '').strip()}'"
+                    )
                     ord_ok = False
             if ord_ok:
                 r.ok(f'8. CommandsOrder: {ord_count} entries, all valid')
@@ -340,6 +405,9 @@ def main():
                 grp_names.append(text)
                 if not text:
                     r.error('11. GroupsOrder: empty <Group> element')
+                    grp_ok = False
+                elif not valid_command_group(text, custom_command_groups):
+                    r.error(f"11. GroupsOrder: unknown command group '{text}'")
                     grp_ok = False
             if grp_ok:
                 r.ok(f'11. GroupsOrder: {grp_count} entries, all valid')

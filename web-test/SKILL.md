@@ -19,8 +19,12 @@ Automates user interactions with 1C:Enterprise web client via Playwright — nav
 ## Граница применения
 
 - Этот skill сохранён для сценариев, где нужен именно браузерный веб-клиент.
+- Backend — Playwright + Chromium на Linux и Windows. Это не Win32 UIA и не
+  нативный TestClient/TestManager backend.
 - Для нативного TestClient, headless UI worker, открытия форм по навигационной ссылке и UI-снимков используй `codex-test-bridge`.
 - Не подменяй bridge браузером автоматически: веб-публикация и клиентские лицензии могут отсутствовать.
+- При ошибке запуска браузера, публикации или лицензии остановись и сообщи
+  ошибку; не переключайся автоматически на другой UI backend.
 
 ## Quick start
 
@@ -43,10 +47,20 @@ SCRIPT
 ## Setup (first time)
 
 ```bash
-cd <skills-root>/web-test/scripts && npm install
+cd <skills-root>/web-test/scripts && npm ci
+npx playwright install chromium
 ```
 
-Requires Node.js 18+. `npm install` downloads Playwright and Chromium.
+Requires Node.js 18+. `npm ci` устанавливает зафиксированные зависимости,
+а `playwright install` — Chromium.
+
+Если Playwright явно не поддерживает установленный дистрибутив Linux, укажи
+существующий браузер точным путём. Автоматического переключения нет:
+
+```bash
+PLAYWRIGHT_EXECUTABLE_PATH=/usr/bin/google-chrome \
+  node $RUN run <url> script.js
+```
 
 ## URL resolution
 
@@ -403,4 +417,10 @@ If `.v8-project.json` has `tts` config, pass it to `addNarration()` (provider, v
 
 ## Реестр тестовых баз
 
-Перед любой операцией с ИБ используй скил `test-databases`: запусти его bundled-скрипт `scripts/resolve-registry.ps1`, затем выбери запись по правилам этого скила. Не определяй путь к реестру самостоятельно, не дублируй его структуру и не подключайся к базе вне реестра. `.v8-project.json` используй только для вспомогательных полей, которых нет в выбранной записи.
+Перед любой операцией с ИБ используй скил `test-databases`: на Linux запусти
+`python3 <skills-root>/test-databases/scripts/resolve-registry.py`, а на Windows
+— `<skills-root>/test-databases/scripts/resolve-registry.ps1` через PowerShell.
+Затем выбери запись по правилам этого скила. Не определяй путь к реестру
+самостоятельно, не дублируй его структуру и не подключайся к базе вне реестра.
+`.v8-project.json` используй только для вспомогательных полей, которых нет в
+выбранной записи.

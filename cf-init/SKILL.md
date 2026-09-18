@@ -9,6 +9,22 @@ allowed-tools:
 
 # /cf-init — Создание пустой конфигурации 1С
 
+<!-- docs-evals:python-entrypoint:start -->
+## Запуск скрипта
+
+Основной запуск на Linux выполняется Python 3 с аргументами CLI скрипта:
+
+```bash
+python3 "<skills-root>/cf-init/scripts/cf-init.py" -Name <Name> -Synonym <Synonym>
+```
+
+Windows PowerShell остаётся отдельным вариантом запуска:
+
+```powershell
+powershell.exe -NoProfile -File "<skills-root>/cf-init/scripts/cf-init.ps1" -Name <Name> -Synonym <Synonym>
+```
+<!-- docs-evals:python-entrypoint:end -->
+
 Создаёт scaffold исходников пустой конфигурации 1С: `Configuration.xml`, `Languages/Русский.xml`.
 
 ## Параметры и команда

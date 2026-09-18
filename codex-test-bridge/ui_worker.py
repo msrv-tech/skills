@@ -27,6 +27,8 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from common.onec_runtime import onec_process_env
 from hidden_desktop_capture import capture_window
 from uia_runner import run_uia_steps
 from agent_ui import diagnose_ui_failure, normalize_ui_report
@@ -633,15 +635,19 @@ class WindowsHiddenDesktopBackend:
             self.desktop = None
 
 
+def xvfb_process_environment(environment: dict[str, str], display: int) -> dict[str, str]:
+    env = dict(environment)
+    env["DISPLAY"] = f":{display}"
+    return onec_process_env(env)
+
+
 class XvfbBackend(ProcessBackend):
     name = "xvfb"
 
     def __init__(self, environment: dict[str, str], working_directory: str | None, display: int):
         if os.name == "nt":
             raise UiWorkerError("xvfb backend is available only on Unix-like systems")
-        env = dict(environment)
-        env["DISPLAY"] = f":{display}"
-        super().__init__(env, working_directory)
+        super().__init__(xvfb_process_environment(environment, display), working_directory)
         self.xvfb = subprocess.Popen(
             ["Xvfb", f":{display}", "-screen", "0", "1280x1024x24", "-nolisten", "tcp"],
             stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
@@ -800,6 +806,32 @@ def is_scenario_result(value: Any) -> bool:
     if status in {"running", "uia-request", "uia-response"}:
         return False
     return "ok" in value or isinstance(value.get("steps"), list)
+
+
+def manager_failure_error(
+    manager_result: dict[str, Any],
+    manager_exit_code: int | None,
+) -> dict[str, str]:
+    failed_steps = [
+        step
+        for step in manager_result.get("steps", [])
+        if isinstance(step, dict) and step.get("status") == "failed"
+    ]
+    if failed_steps:
+        return {
+            "type": "ScenarioFailure",
+            "message": str(failed_steps[-1].get("error", "UI step failed")),
+        }
+    manager_error = manager_result.get("error")
+    if isinstance(manager_error, dict):
+        message = manager_error.get("message") or json.dumps(
+            manager_error, ensure_ascii=False
+        )
+    elif manager_error:
+        message = str(manager_error)
+    else:
+        message = f"Test manager exit code: {manager_exit_code}"
+    return {"type": "ManagerFailure", "message": message}
 
 
 def create_backend(config: dict[str, Any], run_id: str) -> ProcessBackend | WindowsHiddenDesktopBackend | XvfbBackend:
@@ -1360,11 +1392,7 @@ def run_ui_worker(config: dict[str, Any], scenario_path: str | Path, artifact_di
                     target = f"result file: {result_file}"
                 error = {"type": "MissingResult", "message": f"Test manager did not create a result in {target}"}
             else:
-                failed_steps = [step for step in manager_result.get("steps", []) if step.get("status") == "failed"]
-                if failed_steps:
-                    error = {"type": "ScenarioFailure", "message": str(failed_steps[-1].get("error", "UI step failed"))}
-                else:
-                    error = {"type": "ManagerFailure", "message": f"Test manager exit code: {manager_exit_code}"}
+                error = manager_failure_error(manager_result, manager_exit_code)
 
         post_manager_delay = float(config.get("postManagerDelaySeconds", 0))
         if post_manager_delay > 0 and client is not None:

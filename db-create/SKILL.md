@@ -11,6 +11,22 @@ allowed-tools:
 
 # /db-create — Создание информационной базы
 
+<!-- docs-evals:python-entrypoint:start -->
+## Запуск скрипта
+
+Основной запуск на Linux выполняется Python 3 с аргументами CLI скрипта:
+
+```bash
+python3 "<skills-root>/db-create/scripts/db-create.py" -InfoBasePath <test-infobase-path>
+```
+
+Windows PowerShell остаётся отдельным вариантом запуска:
+
+```powershell
+powershell.exe -NoProfile -File "<skills-root>/db-create/scripts/db-create.ps1" -InfoBasePath <test-infobase-path>
+```
+<!-- docs-evals:python-entrypoint:end -->
+
 Создаёт новую информационную базу 1С (файловую или серверную) и предлагает зарегистрировать в `.v8-project.json`.
 
 ## Usage

@@ -3,25 +3,27 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "Покажи структуру документа АвансовыйОтчет: реквизиты, табличные части и движения. Выгрузка в папке D:/Config/src/.",
+      "prompt": "Покажи структуру документа АвансовыйОтчет: реквизиты, табличные части и движения. Выгрузка в папке <project-root>/Config/src/.",
       "expected_output": "Вывод содержит компактное описание структуры документа АвансовыйОтчет: заголовок, реквизиты, список табличных частей с колонками, список регистров-движений и формы.",
       "expectations": [
-        "Скрипт meta-info.ps1 вызван с параметром -ObjectPath, указывающим на Documents/АвансовыйОтчет/АвансовыйОтчет.xml",
+        "Скрипт python3 <skills-root>/meta-info/scripts/meta-info.py на Linux или powershell.exe -NoProfile -File <skills-root>/meta-info/scripts/meta-info.ps1 на Windows вызван с параметром -ObjectPath, указывающим на Documents/АвансовыйОтчет/АвансовыйОтчет.xml",
         "Вывод содержит перечень реквизитов шапки документа",
         "Вывод содержит список табличных частей с их колонками (режим full или drill-down по ТЧ)",
         "Вывод содержит информацию о движениях документа по регистрам",
-        "Вывод содержит список форм объекта"
+        "Вывод содержит список форм объекта",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/meta-info/scripts/meta-info.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/meta-info/scripts/meta-info.ps1"
       ]
     },
     {
       "id": 2,
-      "prompt": "Хочу посмотреть краткую сводку по регистру сведений КурсыВалют — только имена измерений и ресурсов. Конфигурация в C:/Projects/Acc/src/.",
+      "prompt": "Хочу посмотреть краткую сводку по регистру сведений КурсыВалют — только имена измерений и ресурсов. Конфигурация в <project-root>/Projects/Acc/src/.",
       "expected_output": "Краткий вывод (режим brief) по регистру сведений КурсыВалют: имена измерений и ресурсов одной-двумя строками.",
       "expectations": [
-        "Скрипт meta-info.ps1 вызван с параметром -Mode brief",
+        "Скрипт python3 <skills-root>/meta-info/scripts/meta-info.py на Linux или powershell.exe -NoProfile -File <skills-root>/meta-info/scripts/meta-info.ps1 на Windows вызван с параметром -Mode brief",
         "Параметр -ObjectPath указывает на InformationRegisters/КурсыВалют/КурсыВалют.xml",
         "Вывод содержит имена измерений регистра",
-        "Вывод содержит имена ресурсов регистра"
+        "Вывод содержит имена ресурсов регистра",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/meta-info/scripts/meta-info.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/meta-info/scripts/meta-info.ps1"
       ]
     },
     {
@@ -29,10 +31,11 @@
       "prompt": "Раскрой табличную часть Товары документа ЗаказКлиента — покажи все колонки с типами. Выгрузка в src/.",
       "expected_output": "Drill-down по табличной части Товары: список колонок с типами данных.",
       "expectations": [
-        "Скрипт meta-info.ps1 вызван с параметром -Name Товары",
+        "Скрипт python3 <skills-root>/meta-info/scripts/meta-info.py на Linux или powershell.exe -NoProfile -File <skills-root>/meta-info/scripts/meta-info.ps1 на Windows вызван с параметром -Name Товары",
         "Параметр -ObjectPath указывает на Documents/ЗаказКлиента",
         "Вывод содержит список колонок табличной части Товары",
-        "Для каждой колонки указан тип данных"
+        "Для каждой колонки указан тип данных",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/meta-info/scripts/meta-info.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/meta-info/scripts/meta-info.ps1"
       ]
     }
   ]

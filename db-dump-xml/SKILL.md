@@ -10,6 +10,22 @@ allowed-tools:
 
 # /db-dump-xml — Выгрузка конфигурации в XML
 
+<!-- docs-evals:python-entrypoint:start -->
+## Запуск скрипта
+
+Основной запуск на Linux выполняется Python 3 с аргументами CLI скрипта:
+
+```bash
+python3 "<skills-root>/db-dump-xml/scripts/db-dump-xml.py" -InfoBasePath <test-infobase-path>
+```
+
+Windows PowerShell остаётся отдельным вариантом запуска:
+
+```powershell
+powershell.exe -NoProfile -File "<skills-root>/db-dump-xml/scripts/db-dump-xml.ps1" -InfoBasePath <test-infobase-path>
+```
+<!-- docs-evals:python-entrypoint:end -->
+
 Выгружает конфигурацию информационной базы в XML-файлы (исходники). Поддерживает полную, инкрементальную, частичную выгрузку и обновление ConfigDumpInfo.
 
 > **EDT MCP**: Если проект открыт в EDT и доступен EDT MCP-сервер - этот скил не нужен. EDT работает напрямую с XML-исходниками, выгрузка из БД не требуется. Используй этот скил только если пользователь явно просит выгрузку через конфигуратор.
@@ -25,7 +41,7 @@ allowed-tools:
 
 ## Параметры подключения
 
-Перед обращением к ИБ обязательно примени `test-databases`: запусти `scripts/resolve-registry.ps1` из каталога этого skill и выбери разрешённую запись по его правилам. Параметры подключения, пользователя и пароль передавай только из выбранной записи.
+Перед обращением к ИБ обязательно примени `test-databases`: на Linux запусти `python3 <skills-root>/test-databases/scripts/resolve-registry.py`, а на Windows — `resolve-registry.ps1` через PowerShell; затем выбери разрешённую запись по его правилам. Параметры подключения, пользователя и пароль передавай только из выбранной записи.
 
 Не принимай произвольный путь, сервер или строку подключения как замену реестру. `.v8-project.json` разрешён только для вспомогательных полей вроде `v8path`, `configSrc` или `webUrl`. Если подходящей записи нет или выбор неоднозначен, остановись и запроси уточнение.
 ## Команда

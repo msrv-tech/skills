@@ -48,7 +48,7 @@ KNOWN_RIGHTS = {
         'EditDataHistoryVersionComment', 'SwitchToDataHistoryVersion',
     ],
     'InformationRegister': [
-        'Read', 'Update', 'View', 'Edit', 'TotalsControl',
+        'Read', 'Insert', 'Update', 'Delete', 'View', 'Edit', 'TotalsControl',
         'ReadDataHistory', 'ViewDataHistory', 'UpdateDataHistory',
         'UpdateDataHistoryOfMissingData', 'ReadDataHistoryOfMissingData',
         'UpdateDataHistorySettings', 'UpdateDataHistoryVersionComment',

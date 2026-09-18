@@ -1,6 +1,6 @@
 ---
 name: cf-add-object
-description: "Добавить объект метаданных в конфигурацию 1С с формой, подсистемой и валидацией. Workflow: meta-compile → cf-edit → subsystem-edit → form-add → form-compile → validate."
+description: "Добавить объект метаданных в конфигурацию 1С с формой, подсистемой и валидацией. Workflow: meta-compile → subsystem-edit → form-add → form-compile → validate."
 allowed-tools:
   - Bash
   - Read
@@ -18,9 +18,7 @@ Workflow-скил: оркестрирует цепочку навыков для
 ## Цепочка навыков
 
 ```
-/meta-compile  → создать XML-исходники объекта (реквизиты, ТЧ, типы)
-      ↓
-/cf-edit       → добавить объект в состав конфигурации (Configuration.xml)
+/meta-compile  → создать XML-исходники объекта и зарегистрировать в Configuration.xml
       ↓
 /subsystem-edit → добавить объект в подсистему (видимость в интерфейсе)
       ↓
@@ -35,12 +33,11 @@ Workflow-скил: оркестрирует цепочку навыков для
 ## Алгоритм
 
 1. **Определить параметры**: тип объекта, имя, реквизиты, табличные части, подсистема
-2. **Создать объект** (`/meta-compile`): передать JSON с описанием реквизитов и ТЧ
-3. **Добавить в конфигурацию** (`/cf-edit`): `-Action AddObject -ObjectType <type> -ObjectName <name>`
-4. **Добавить в подсистему** (`/subsystem-edit`): `-Action AddObject -Object "<Type>.<Name>"`
-5. **Создать форму** (`/form-add`): scaffold управляемой формы
-6. **Скомпилировать форму** (`/form-compile`): JSON DSL с элементами
-7. **Валидация** (`/meta-validate`, `/cf-validate`): проверить корректность
+2. **Создать объект** (`/meta-compile`): передать JSON с описанием реквизитов и ТЧ; скрипт сам регистрирует объект в `Configuration.xml`
+3. **Добавить в подсистему** (`/subsystem-edit`): `-Operation add-content -Value "<Type>.<Name>"`
+4. **Создать форму** (`/form-add`): scaffold управляемой формы
+5. **Скомпилировать форму** (`/form-compile`): JSON DSL с элементами
+6. **Валидация** (`/meta-validate`, `/cf-validate`): проверить корректность
 
 ## Пример использования
 

@@ -9,6 +9,22 @@ allowed-tools:
 
 # /cf-info — Структура конфигурации 1С
 
+<!-- docs-evals:python-entrypoint:start -->
+## Запуск скрипта
+
+Основной запуск на Linux выполняется Python 3 с аргументами CLI скрипта:
+
+```bash
+python3 "<skills-root>/cf-info/scripts/cf-info.py" -ConfigPath <project-root>/src
+```
+
+Windows PowerShell остаётся отдельным вариантом запуска:
+
+```powershell
+powershell.exe -NoProfile -File "<skills-root>/cf-info/scripts/cf-info.ps1" -ConfigPath <project-root>/src
+```
+<!-- docs-evals:python-entrypoint:end -->
+
 Читает Configuration.xml из выгрузки конфигурации и выводит компактное описание структуры.
 
 ## Параметры и команда

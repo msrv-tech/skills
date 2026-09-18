@@ -2,6 +2,15 @@
 
 Для сложных и комбинированных операций используйте JSON-файл вместо inline-режима.
 
+Linux:
+
+```bash
+python3 <skills-root>/meta-edit/scripts/meta-edit.py \
+  -DefinitionFile "<json>" -ObjectPath "<path>"
+```
+
+Windows:
+
 ```powershell
 powershell.exe -NoProfile -File <skills-root>/meta-edit/scripts/meta-edit.ps1 -DefinitionFile "<json>" -ObjectPath "<path>"
 ```

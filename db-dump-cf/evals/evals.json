@@ -3,35 +3,38 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "Выгрузи конфигурацию базы C:\\Bases\\MyDB в CF-файл C:\\backup\\config.cf. Пользователь Admin, пароль не нужен.",
-      "expected_output": "Скрипт db-dump-cf.ps1 запущен с параметрами -InfoBasePath C:\\Bases\\MyDB, -UserName Admin, -OutputFile C:\\backup\\config.cf. Лог показан пользователю.",
+      "prompt": "Выгрузи конфигурацию базы <project-root>/Bases/MyDB в CF-файл <project-root>/backup/config.cf. Пользователь Admin, пароль не нужен.",
+      "expected_output": "Скрипт python3 <skills-root>/db-dump-cf/scripts/db-dump-cf.py на Linux или powershell.exe -NoProfile -File <skills-root>/db-dump-cf/scripts/db-dump-cf.ps1 на Windows запущен с параметрами -InfoBasePath <project-root>/Bases/MyDB, -UserName Admin, -OutputFile <project-root>/backup/config.cf. Лог показан пользователю.",
       "expectations": [
-        "Скрипт db-dump-cf.ps1 вызван с параметром -InfoBasePath C:\\Bases\\MyDB",
-        "Скрипт db-dump-cf.ps1 вызван с параметром -UserName Admin",
-        "Скрипт db-dump-cf.ps1 вызван с параметром -OutputFile C:\\backup\\config.cf",
-        "Лог-файл прочитан и результат показан пользователю после выполнения"
+        "Скрипт python3 <skills-root>/db-dump-cf/scripts/db-dump-cf.py на Linux или powershell.exe -NoProfile -File <skills-root>/db-dump-cf/scripts/db-dump-cf.ps1 на Windows вызван с параметром -InfoBasePath <project-root>/Bases/MyDB",
+        "Скрипт python3 <skills-root>/db-dump-cf/scripts/db-dump-cf.py на Linux или powershell.exe -NoProfile -File <skills-root>/db-dump-cf/scripts/db-dump-cf.ps1 на Windows вызван с параметром -UserName Admin",
+        "Скрипт python3 <skills-root>/db-dump-cf/scripts/db-dump-cf.py на Linux или powershell.exe -NoProfile -File <skills-root>/db-dump-cf/scripts/db-dump-cf.ps1 на Windows вызван с параметром -OutputFile <project-root>/backup/config.cf",
+        "Лог-файл прочитан и результат показан пользователю после выполнения",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/db-dump-cf/scripts/db-dump-cf.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/db-dump-cf/scripts/db-dump-cf.ps1"
       ]
     },
     {
       "id": 2,
       "prompt": "Сделай бэкап конфигурации серверной базы MyApp_Dev на сервере srv01. Логин Admin, пароль secret. Сохранить в config.cf.",
-      "expected_output": "Скрипт db-dump-cf.ps1 запущен с параметрами -InfoBaseServer srv01, -InfoBaseRef MyApp_Dev, -UserName Admin, -Password secret, -OutputFile config.cf.",
+      "expected_output": "Скрипт python3 <skills-root>/db-dump-cf/scripts/db-dump-cf.py на Linux или powershell.exe -NoProfile -File <skills-root>/db-dump-cf/scripts/db-dump-cf.ps1 на Windows запущен с параметрами -InfoBaseServer srv01, -InfoBaseRef MyApp_Dev, -UserName Admin, -Password secret, -OutputFile config.cf.",
       "expectations": [
-        "Скрипт db-dump-cf.ps1 вызван с параметром -InfoBaseServer srv01",
-        "Скрипт db-dump-cf.ps1 вызван с параметром -InfoBaseRef MyApp_Dev",
-        "Скрипт db-dump-cf.ps1 вызван с параметром -OutputFile config.cf",
-        "Лог-файл прочитан, при наличии ошибок — содержимое лога показано пользователю"
+        "Скрипт python3 <skills-root>/db-dump-cf/scripts/db-dump-cf.py на Linux или powershell.exe -NoProfile -File <skills-root>/db-dump-cf/scripts/db-dump-cf.ps1 на Windows вызван с параметром -InfoBaseServer srv01",
+        "Скрипт python3 <skills-root>/db-dump-cf/scripts/db-dump-cf.py на Linux или powershell.exe -NoProfile -File <skills-root>/db-dump-cf/scripts/db-dump-cf.ps1 на Windows вызван с параметром -InfoBaseRef MyApp_Dev",
+        "Скрипт python3 <skills-root>/db-dump-cf/scripts/db-dump-cf.py на Linux или powershell.exe -NoProfile -File <skills-root>/db-dump-cf/scripts/db-dump-cf.ps1 на Windows вызван с параметром -OutputFile config.cf",
+        "Лог-файл прочитан, при наличии ошибок — содержимое лога показано пользователю",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/db-dump-cf/scripts/db-dump-cf.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/db-dump-cf/scripts/db-dump-cf.ps1"
       ]
     },
     {
       "id": 3,
-      "prompt": "Выгрузи расширение МоёРасширение из базы C:\\Bases\\DevDB в файл ext.cfe. Пользователь Admin.",
-      "expected_output": "Скрипт db-dump-cf.ps1 запущен с параметрами -InfoBasePath C:\\Bases\\DevDB, -UserName Admin, -OutputFile ext.cfe, -Extension МоёРасширение.",
+      "prompt": "Выгрузи расширение МоёРасширение из базы <project-root>/Bases/DevDB в файл ext.cfe. Пользователь Admin.",
+      "expected_output": "Скрипт python3 <skills-root>/db-dump-cf/scripts/db-dump-cf.py на Linux или powershell.exe -NoProfile -File <skills-root>/db-dump-cf/scripts/db-dump-cf.ps1 на Windows запущен с параметрами -InfoBasePath <project-root>/Bases/DevDB, -UserName Admin, -OutputFile ext.cfe, -Extension МоёРасширение.",
       "expectations": [
-        "Скрипт db-dump-cf.ps1 вызван с параметром -Extension МоёРасширение",
-        "Скрипт db-dump-cf.ps1 вызван с параметром -InfoBasePath C:\\Bases\\DevDB",
-        "Скрипт db-dump-cf.ps1 вызван с параметром -OutputFile ext.cfe",
-        "Лог-файл прочитан и результат выгрузки расширения показан пользователю"
+        "Скрипт python3 <skills-root>/db-dump-cf/scripts/db-dump-cf.py на Linux или powershell.exe -NoProfile -File <skills-root>/db-dump-cf/scripts/db-dump-cf.ps1 на Windows вызван с параметром -Extension МоёРасширение",
+        "Скрипт python3 <skills-root>/db-dump-cf/scripts/db-dump-cf.py на Linux или powershell.exe -NoProfile -File <skills-root>/db-dump-cf/scripts/db-dump-cf.ps1 на Windows вызван с параметром -InfoBasePath <project-root>/Bases/DevDB",
+        "Скрипт python3 <skills-root>/db-dump-cf/scripts/db-dump-cf.py на Linux или powershell.exe -NoProfile -File <skills-root>/db-dump-cf/scripts/db-dump-cf.ps1 на Windows вызван с параметром -OutputFile ext.cfe",
+        "Лог-файл прочитан и результат выгрузки расширения показан пользователю",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/db-dump-cf/scripts/db-dump-cf.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/db-dump-cf/scripts/db-dump-cf.ps1"
       ]
     }
   ]

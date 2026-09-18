@@ -12,6 +12,22 @@ allowed-tools:
 
 # /template-add — Добавление макета
 
+<!-- docs-evals:python-entrypoint:start -->
+## Запуск скрипта
+
+Основной запуск на Linux выполняется Python 3 с аргументами CLI скрипта:
+
+```bash
+python3 "<skills-root>/template-add/scripts/add-template.py" -ObjectName <ObjectName> -TemplateName <TemplateName> -TemplateType <TemplateType>
+```
+
+Windows PowerShell остаётся отдельным вариантом запуска:
+
+```powershell
+powershell.exe -NoProfile -File "<skills-root>/template-add/scripts/add-template.ps1" -ObjectName <ObjectName> -TemplateName <TemplateName> -TemplateType <TemplateType>
+```
+<!-- docs-evals:python-entrypoint:end -->
+
 Создаёт макет указанного типа и регистрирует его в корневом XML объекта.
 
 ## Usage
@@ -49,8 +65,8 @@ powershell.exe -NoProfile -File <skills-root>/template-add/scripts/add-template.
 
 | Пользователь пишет                          | TemplateType        | Расширение | Содержимое              |
 |---------------------------------------------|---------------------|------------|-------------------------|
-| HTML                                        | HTMLDocument        | `.html`    | Пустой HTML-документ    |
-| Text, текстовый документ, текст             | TextDocument        | `.txt`     | Пустой файл             |
+| HTML                                        | HTML                | `.html`    | Пустой HTML-документ    |
+| Text, текстовый документ, текст             | Text                | `.txt`     | Пустой файл             |
 | SpreadsheetDocument, табличный документ, MXL | SpreadsheetDocument | `.xml`     | Минимальный spreadsheet |
 | BinaryData, двоичные данные                 | BinaryData          | `.bin`     | Пустой файл             |
 | DataCompositionSchema, СКД, схема компоновки | DataCompositionSchema | `.xml`   | Минимальная DCS-схема   |

@@ -2,6 +2,11 @@
 
 Подробный справочник операций `add-*` / `remove-*` / `modify-*` для дочерних элементов объекта метаданных.
 
+Примеры ниже показывают аргументы, одинаковые для обоих entrypoint:
+`python3 <skills-root>/meta-edit/scripts/meta-edit.py` на Linux и
+`powershell.exe -NoProfile -File <skills-root>/meta-edit/scripts/meta-edit.ps1`
+на Windows.
+
 ## Общие правила
 
 **Batch-режим** — несколько элементов через `;;`:

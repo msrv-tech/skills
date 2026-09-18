@@ -12,6 +12,22 @@ allowed-tools:
 
 # /template-remove — Удаление макета
 
+<!-- docs-evals:python-entrypoint:start -->
+## Запуск скрипта
+
+Основной запуск на Linux выполняется Python 3 с аргументами CLI скрипта:
+
+```bash
+python3 "<skills-root>/template-remove/scripts/remove-template.py" -ObjectName <ObjectName> -TemplateName <TemplateName>
+```
+
+Windows PowerShell остаётся отдельным вариантом запуска:
+
+```powershell
+powershell.exe -NoProfile -File "<skills-root>/template-remove/scripts/remove-template.ps1" -ObjectName <ObjectName> -TemplateName <TemplateName>
+```
+<!-- docs-evals:python-entrypoint:end -->
+
 Удаляет макет и убирает его регистрацию из корневого XML объекта.
 
 ## Usage

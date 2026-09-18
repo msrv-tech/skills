@@ -4,35 +4,38 @@
     {
       "id": 1,
       "prompt": "Создай пустую конфигурацию с именем УчётЗаявок, синоним «Учёт заявок». Исходники сложи в src/.",
-      "expected_output": "Скрипт cf-init.ps1 создал файлы src/Configuration.xml и src/Languages/Русский.xml. Configuration.xml содержит имя УчётЗаявок и синоним «Учёт заявок».",
+      "expected_output": "Скрипт python3 <skills-root>/cf-init/scripts/cf-init.py на Linux или powershell.exe -NoProfile -File <skills-root>/cf-init/scripts/cf-init.ps1 на Windows создал файлы src/Configuration.xml и src/Languages/Русский.xml. Configuration.xml содержит имя УчётЗаявок и синоним «Учёт заявок».",
       "expectations": [
-        "Скрипт cf-init.ps1 вызван с параметром -Name УчётЗаявок",
-        "Скрипт cf-init.ps1 вызван с параметром -Synonym «Учёт заявок»",
+        "Скрипт python3 <skills-root>/cf-init/scripts/cf-init.py на Linux или powershell.exe -NoProfile -File <skills-root>/cf-init/scripts/cf-init.ps1 на Windows вызван с параметром -Name УчётЗаявок",
+        "Скрипт python3 <skills-root>/cf-init/scripts/cf-init.py на Linux или powershell.exe -NoProfile -File <skills-root>/cf-init/scripts/cf-init.ps1 на Windows вызван с параметром -Synonym «Учёт заявок»",
         "Файл src/Configuration.xml создан",
-        "Файл src/Languages/Русский.xml создан"
+        "Файл src/Languages/Русский.xml создан",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/cf-init/scripts/cf-init.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/cf-init/scripts/cf-init.ps1"
       ]
     },
     {
       "id": 2,
-      "prompt": "Создай новую конфигурацию МоёРешение версии 1.0.0.1, поставщик «ООО Разработчик». Каталог вывода: D:/Projects/MySolution/src/.",
-      "expected_output": "Скрипт cf-init.ps1 создал Configuration.xml со свойствами Version=1.0.0.1 и Vendor=ООО Разработчик в каталоге D:/Projects/MySolution/src/.",
+      "prompt": "Создай новую конфигурацию МоёРешение версии 1.0.0.1, поставщик «ООО Разработчик». Каталог вывода: <project-root>/Projects/MySolution/src/.",
+      "expected_output": "Скрипт python3 <skills-root>/cf-init/scripts/cf-init.py на Linux или powershell.exe -NoProfile -File <skills-root>/cf-init/scripts/cf-init.ps1 на Windows создал Configuration.xml со свойствами Version=1.0.0.1 и Vendor=ООО Разработчик в каталоге <project-root>/Projects/MySolution/src/.",
       "expectations": [
-        "Скрипт cf-init.ps1 вызван с параметром -Name МоёРешение",
-        "Скрипт cf-init.ps1 вызван с параметром -Version 1.0.0.1",
-        "Скрипт cf-init.ps1 вызван с параметром -Vendor «ООО Разработчик»",
-        "Скрипт cf-init.ps1 вызван с параметром -OutputDir D:/Projects/MySolution/src/"
+        "Скрипт python3 <skills-root>/cf-init/scripts/cf-init.py на Linux или powershell.exe -NoProfile -File <skills-root>/cf-init/scripts/cf-init.ps1 на Windows вызван с параметром -Name МоёРешение",
+        "Скрипт python3 <skills-root>/cf-init/scripts/cf-init.py на Linux или powershell.exe -NoProfile -File <skills-root>/cf-init/scripts/cf-init.ps1 на Windows вызван с параметром -Version 1.0.0.1",
+        "Скрипт python3 <skills-root>/cf-init/scripts/cf-init.py на Linux или powershell.exe -NoProfile -File <skills-root>/cf-init/scripts/cf-init.ps1 на Windows вызван с параметром -Vendor «ООО Разработчик»",
+        "Скрипт python3 <skills-root>/cf-init/scripts/cf-init.py на Linux или powershell.exe -NoProfile -File <skills-root>/cf-init/scripts/cf-init.ps1 на Windows вызван с параметром -OutputDir <project-root>/Projects/MySolution/src/",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/cf-init/scripts/cf-init.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/cf-init/scripts/cf-init.ps1"
       ]
     },
     {
       "id": 3,
       "prompt": "Создай конфигурацию TestConfig с режимом совместимости Version8_3_27 в папке test-tmp/cf3.",
-      "expected_output": "Скрипт cf-init.ps1 создал Configuration.xml с CompatibilityMode=Version8_3_27 в каталоге test-tmp/cf3.",
+      "expected_output": "Скрипт python3 <skills-root>/cf-init/scripts/cf-init.py на Linux или powershell.exe -NoProfile -File <skills-root>/cf-init/scripts/cf-init.ps1 на Windows создал Configuration.xml с CompatibilityMode=Version8_3_27 в каталоге test-tmp/cf3.",
       "expectations": [
-        "Скрипт cf-init.ps1 вызван с параметром -Name TestConfig",
-        "Скрипт cf-init.ps1 вызван с параметром -CompatibilityMode Version8_3_27",
-        "Скрипт cf-init.ps1 вызван с параметром -OutputDir test-tmp/cf3",
+        "Скрипт python3 <skills-root>/cf-init/scripts/cf-init.py на Linux или powershell.exe -NoProfile -File <skills-root>/cf-init/scripts/cf-init.ps1 на Windows вызван с параметром -Name TestConfig",
+        "Скрипт python3 <skills-root>/cf-init/scripts/cf-init.py на Linux или powershell.exe -NoProfile -File <skills-root>/cf-init/scripts/cf-init.ps1 на Windows вызван с параметром -CompatibilityMode Version8_3_27",
+        "Скрипт python3 <skills-root>/cf-init/scripts/cf-init.py на Linux или powershell.exe -NoProfile -File <skills-root>/cf-init/scripts/cf-init.ps1 на Windows вызван с параметром -OutputDir test-tmp/cf3",
         "Файл test-tmp/cf3/Configuration.xml создан",
-        "Файл test-tmp/cf3/Languages/Русский.xml создан"
+        "Файл test-tmp/cf3/Languages/Русский.xml создан",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/cf-init/scripts/cf-init.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/cf-init/scripts/cf-init.ps1"
       ]
     }
   ]

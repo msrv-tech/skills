@@ -85,11 +85,24 @@ def main():
             parent.remove(node)
             break
 
-    # Clear DefaultForm if it pointed to removed form
-    default_form = root.find(".//md:DefaultForm", NSMAP)
-    if default_form is not None and default_form.text:
-        if re.search(rf"Form\.{re.escape(form_name)}$", default_form.text):
-            default_form.text = ""
+    # Clear every object-specific default form property that points to the
+    # removed form. Catalogs and documents use specialized property names,
+    # while processors and reports use DefaultForm.
+    default_form_properties = (
+        "DefaultForm",
+        "DefaultObjectForm",
+        "DefaultFolderForm",
+        "DefaultListForm",
+        "DefaultChoiceForm",
+        "DefaultFolderChoiceForm",
+        "DefaultRecordForm",
+    )
+    for property_name in default_form_properties:
+        default_form = root.find(f".//md:{property_name}", NSMAP)
+        if default_form is not None and default_form.text:
+            if re.search(rf"Form\.{re.escape(form_name)}$", default_form.text):
+                default_form.text = ""
+                print(f"[OK] Очищён {property_name}")
 
     # Save with BOM
     save_xml_with_bom(tree, root_xml_full)

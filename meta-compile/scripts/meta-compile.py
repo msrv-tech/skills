@@ -29,6 +29,21 @@ def write_utf8_bom(path, content):
     with open(path, 'w', encoding='utf-8-sig', newline='') as f:
         f.write(content)
 
+CONFIGURATION_CHILD_TYPE_ORDER = [
+    "Language", "Subsystem", "StyleItem", "Style",
+    "CommonPicture", "SessionParameter", "Role", "CommonTemplate",
+    "FilterCriterion", "CommonModule", "CommonAttribute", "ExchangePlan",
+    "XDTOPackage", "WebService", "HTTPService", "WSReference",
+    "EventSubscription", "ScheduledJob", "SettingsStorage", "FunctionalOption",
+    "FunctionalOptionsParameter", "DefinedType", "CommonCommand", "CommandGroup",
+    "Constant", "CommonForm", "Catalog", "Document",
+    "DocumentNumerator", "Sequence", "DocumentJournal", "Enum",
+    "Report", "DataProcessor", "InformationRegister", "AccumulationRegister",
+    "ChartOfCharacteristicTypes", "ChartOfAccounts", "AccountingRegister",
+    "ChartOfCalculationTypes", "CalculationRegister",
+    "BusinessProcess", "Task", "IntegrationService",
+]
+
 # ---------------------------------------------------------------------------
 # XML builder (lines list)
 # ---------------------------------------------------------------------------
@@ -2650,6 +2665,16 @@ if os.path.isfile(config_xml_path):
                 idx = all_children.index(last_elem)
                 child_objects.remove(new_elem)
                 child_objects.insert(idx + 1, new_elem)
+            elif child_tag in CONFIGURATION_CHILD_TYPE_ORDER:
+                new_type_index = CONFIGURATION_CHILD_TYPE_ORDER.index(child_tag)
+                for idx, current in enumerate(list(child_objects)):
+                    current_tag = current.tag.rsplit('}', 1)[-1]
+                    if current_tag not in CONFIGURATION_CHILD_TYPE_ORDER:
+                        continue
+                    if CONFIGURATION_CHILD_TYPE_ORDER.index(current_tag) > new_type_index:
+                        child_objects.remove(new_elem)
+                        child_objects.insert(idx, new_elem)
+                        break
 
             # Write back preserving BOM
             tree.write(config_xml_path, encoding='utf-8', xml_declaration=True)

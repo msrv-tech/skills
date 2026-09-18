@@ -10,6 +10,22 @@ allowed-tools:
 
 # /subsystem-compile — генерация подсистемы из JSON
 
+<!-- docs-evals:python-entrypoint:start -->
+## Запуск скрипта
+
+Основной запуск на Linux выполняется Python 3 с аргументами CLI скрипта:
+
+```bash
+python3 "<skills-root>/subsystem-compile/scripts/subsystem-compile.py" -DefinitionFile <project-root>/definition.json -Value <Value>
+```
+
+Windows PowerShell остаётся отдельным вариантом запуска:
+
+```powershell
+powershell.exe -NoProfile -File "<skills-root>/subsystem-compile/scripts/subsystem-compile.ps1" -DefinitionFile <project-root>/definition.json -Value <Value>
+```
+<!-- docs-evals:python-entrypoint:end -->
+
 Принимает JSON-определение подсистемы → генерирует XML + файловую структуру + регистрирует в родителе (Configuration.xml или родительская подсистема).
 
 ## Параметры и команда

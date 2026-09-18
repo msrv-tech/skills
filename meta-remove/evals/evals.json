@@ -3,25 +3,27 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "Удали справочник УстаревшийКонтрагент из конфигурации. Выгрузка в D:/Config/src/.",
+      "prompt": "Удали справочник УстаревшийКонтрагент из конфигурации. Выгрузка в <project-root>/Config/src/.",
       "expected_output": "Справочник УстаревшийКонтрагент удалён: файлы удалены, запись убрана из Configuration.xml и подсистем.",
       "expectations": [
-        "Скрипт meta-remove.ps1 вызван с параметрами -ConfigDir и -Object \"Catalog.УстаревшийКонтрагент\"",
+        "Скрипт python3 <skills-root>/meta-remove/scripts/meta-remove.py на Linux или powershell.exe -NoProfile -File <skills-root>/meta-remove/scripts/meta-remove.ps1 на Windows вызван с параметрами -ConfigDir и -Object \"Catalog.УстаревшийКонтрагент\"",
         "Вывод содержит результат проверки ссылок на объект",
         "Вывод содержит подтверждение удаления из Configuration.xml (строка с Removed from ChildObjects)",
         "Вывод содержит информацию об удалении файлов объекта",
-        "Код возврата скрипта равен 0 (успешно)"
+        "Код возврата скрипта равен 0 (успешно)",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/meta-remove/scripts/meta-remove.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/meta-remove/scripts/meta-remove.ps1"
       ]
     },
     {
       "id": 2,
-      "prompt": "Хочу удалить документ СтарыйАкт, но сначала проверь, нет ли на него ссылок — используй dry run. Конфигурация в C:/WS/cfsrc/.",
+      "prompt": "Хочу удалить документ СтарыйАкт, но сначала проверь, нет ли на него ссылок — используй dry run. Конфигурация в <project-root>/WS/cfsrc/.",
       "expected_output": "Dry run выполнен: показано что будет удалено и список найденных ссылок (если есть), без фактического удаления файлов.",
       "expectations": [
-        "Скрипт meta-remove.ps1 вызван с флагом -DryRun",
+        "Скрипт python3 <skills-root>/meta-remove/scripts/meta-remove.py на Linux или powershell.exe -NoProfile -File <skills-root>/meta-remove/scripts/meta-remove.ps1 на Windows вызван с флагом -DryRun",
         "Параметр -Object содержит \"Document.СтарыйАкт\"",
         "Вывод содержит секцию Reference check с результатом проверки ссылок",
-        "Файлы объекта не удалены (dry run)"
+        "Файлы объекта не удалены (dry run)",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/meta-remove/scripts/meta-remove.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/meta-remove/scripts/meta-remove.ps1"
       ]
     },
     {
@@ -29,11 +31,12 @@
       "prompt": "Удали общий модуль УстаревшиеФункции из конфигурации в src/. На него есть ссылки, но нужно удалить принудительно.",
       "expected_output": "Общий модуль УстаревшиеФункции удалён принудительно, несмотря на найденные ссылки.",
       "expectations": [
-        "Скрипт meta-remove.ps1 вызван с флагом -Force",
+        "Скрипт python3 <skills-root>/meta-remove/scripts/meta-remove.py на Linux или powershell.exe -NoProfile -File <skills-root>/meta-remove/scripts/meta-remove.ps1 на Windows вызван с флагом -Force",
         "Параметр -Object содержит \"CommonModule.УстаревшиеФункции\"",
         "Вывод содержит предупреждение о найденных ссылках",
         "Вывод содержит подтверждение успешного удаления объекта",
-        "Модуль убран из Configuration.xml"
+        "Модуль убран из Configuration.xml",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/meta-remove/scripts/meta-remove.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/meta-remove/scripts/meta-remove.ps1"
       ]
     }
   ]

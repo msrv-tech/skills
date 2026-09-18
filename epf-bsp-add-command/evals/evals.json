@@ -26,7 +26,7 @@
     },
     {
       "id": 3,
-      "prompt": "Добавь команду ПечатьСчёта в обработку ПечатьДокументов с типом PrintForm. Исходники в D:/Projects/src/.",
+      "prompt": "Добавь команду ПечатьСчёта в обработку ПечатьДокументов с типом PrintForm. Исходники в <project-root>/Projects/src/.",
       "expected_output": "Добавлена команда с типом CommandTypeServerMethodCall() и Modifier = \"PrintMXL\". В процедуре Print добавлен блок для нового макета ПечатьСчёта.",
       "expectations": [
         "Блок NewCommand содержит NewCommand.Modifier = \"PrintMXL\"",

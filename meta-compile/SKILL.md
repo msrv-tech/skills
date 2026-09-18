@@ -10,6 +10,22 @@ allowed-tools:
 
 # /meta-compile — генерация объектов метаданных из JSON DSL
 
+<!-- docs-evals:python-entrypoint:start -->
+## Запуск скрипта
+
+Основной запуск на Linux выполняется Python 3 с аргументами CLI скрипта:
+
+```bash
+python3 "<skills-root>/meta-compile/scripts/meta-compile.py" -JsonPath <project-root>/definition.json
+```
+
+Windows PowerShell остаётся отдельным вариантом запуска:
+
+```powershell
+powershell.exe -NoProfile -File "<skills-root>/meta-compile/scripts/meta-compile.ps1" -JsonPath <project-root>/definition.json
+```
+<!-- docs-evals:python-entrypoint:end -->
+
 Принимает JSON-определение объекта метаданных → генерирует XML + модули в структуре выгрузки конфигурации + регистрирует в Configuration.xml.
 
 ## Порядок работы

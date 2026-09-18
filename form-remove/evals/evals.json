@@ -6,21 +6,23 @@
       "prompt": "Удали форму ФормаПодбора из справочника Номенклатура. Исходники в папке src/.",
       "expected_output": "Форма ФормаПодбора удалена: удалён файл-метаданные Forms/ФормаПодбора.xml и каталог Forms/ФормаПодбора/, из XML объекта убрана регистрация формы.",
       "expectations": [
-        "Скрипт remove-form.ps1 вызван с параметрами -ObjectName 'Номенклатура' и -FormName 'ФормаПодбора'",
+        "Скрипт python3 <skills-root>/form-remove/scripts/remove-form.py на Linux или powershell.exe -NoProfile -File <skills-root>/form-remove/scripts/remove-form.ps1 на Windows вызван с параметрами -ObjectName 'Номенклатура' и -FormName 'ФормаПодбора'",
         "Удалён файл src/Номенклатура/Forms/ФормаПодбора.xml",
         "Удалён каталог src/Номенклатура/Forms/ФормаПодбора/ рекурсивно",
-        "Элемент <Form> с именем ФормаПодбора убран из ChildObjects в Номенклатура.xml"
+        "Элемент <Form> с именем ФормаПодбора убран из ChildObjects в Номенклатура.xml",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/form-remove/scripts/remove-form.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/form-remove/scripts/remove-form.ps1"
       ]
     },
     {
       "id": 2,
-      "prompt": "Нужно удалить устаревшую форму ФормаСпискаУстаревшая из документа ЗаказПокупателя. Исходники лежат в D:/Projects/Config/src/",
+      "prompt": "Нужно удалить устаревшую форму ФормаСпискаУстаревшая из документа ЗаказПокупателя. Исходники лежат в <project-root>/Projects/Config/src/",
       "expected_output": "Форма ФормаСпискаУстаревшая удалена из объекта ЗаказПокупателя, файлы формы удалены, XML объекта обновлён.",
       "expectations": [
-        "Скрипт remove-form.ps1 вызван с параметром -SrcDir 'D:/Projects/Config/src'",
-        "Удалён файл D:/Projects/Config/src/ЗаказПокупателя/Forms/ФормаСпискаУстаревшая.xml",
-        "Удалён каталог D:/Projects/Config/src/ЗаказПокупателя/Forms/ФормаСпискаУстаревшая/",
-        "Регистрация формы удалена из ЗаказПокупателя.xml"
+        "Скрипт python3 <skills-root>/form-remove/scripts/remove-form.py на Linux или powershell.exe -NoProfile -File <skills-root>/form-remove/scripts/remove-form.ps1 на Windows вызван с параметром -SrcDir '<project-root>/Projects/Config/src'",
+        "Удалён файл <project-root>/Projects/Config/src/ЗаказПокупателя/Forms/ФормаСпискаУстаревшая.xml",
+        "Удалён каталог <project-root>/Projects/Config/src/ЗаказПокупателя/Forms/ФормаСпискаУстаревшая/",
+        "Регистрация формы удалена из ЗаказПокупателя.xml",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/form-remove/scripts/remove-form.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/form-remove/scripts/remove-form.ps1"
       ]
     },
     {
@@ -28,10 +30,11 @@
       "prompt": "Удали форму ФормаЭлемента из обработки ЗагрузкаДанных. Это была DefaultForm объекта. Исходники в src/.",
       "expected_output": "Форма удалена, а значение DefaultForm в XML объекта очищено, поскольку удалённая форма являлась формой по умолчанию.",
       "expectations": [
-        "Скрипт remove-form.ps1 вызван с параметрами -ObjectName 'ЗагрузкаДанных' и -FormName 'ФормаЭлемента'",
+        "Скрипт python3 <skills-root>/form-remove/scripts/remove-form.py на Linux или powershell.exe -NoProfile -File <skills-root>/form-remove/scripts/remove-form.ps1 на Windows вызван с параметрами -ObjectName 'ЗагрузкаДанных' и -FormName 'ФормаЭлемента'",
         "Файлы формы ФормаЭлемента удалены (xml и директория)",
         "Значение DefaultForm очищено в XML объекта ЗагрузкаДанных.xml",
-        "Регистрация формы убрана из ChildObjects"
+        "Регистрация формы убрана из ChildObjects",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/form-remove/scripts/remove-form.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/form-remove/scripts/remove-form.ps1"
       ]
     }
   ]

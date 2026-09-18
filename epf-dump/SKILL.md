@@ -10,6 +10,22 @@ allowed-tools:
 
 # /epf-dump — Разборка обработки
 
+<!-- docs-evals:python-entrypoint:start -->
+## Запуск скрипта
+
+Основной запуск на Linux выполняется Python 3 с аргументами CLI скрипта:
+
+```bash
+python3 "<skills-root>/epf-dump/scripts/epf-dump.py" -InfoBasePath <test-infobase-path>
+```
+
+Windows PowerShell остаётся отдельным вариантом запуска:
+
+```powershell
+powershell.exe -NoProfile -File "<skills-root>/epf-dump/scripts/epf-dump.ps1" -InfoBasePath <test-infobase-path>
+```
+<!-- docs-evals:python-entrypoint:end -->
+
 ## Usage
 
 ```

@@ -9,6 +9,22 @@ allowed-tools:
 
 # /skd-validate — валидация СКД (DataCompositionSchema)
 
+<!-- docs-evals:python-entrypoint:start -->
+## Запуск скрипта
+
+Основной запуск на Linux выполняется Python 3 с аргументами CLI скрипта:
+
+```bash
+python3 "<skills-root>/skd-validate/scripts/skd-validate.py" -TemplatePath <project-root>/Template.xml
+```
+
+Windows PowerShell остаётся отдельным вариантом запуска:
+
+```powershell
+powershell.exe -NoProfile -File "<skills-root>/skd-validate/scripts/skd-validate.ps1" -TemplatePath <project-root>/Template.xml
+```
+<!-- docs-evals:python-entrypoint:end -->
+
 Проверяет структурную корректность Template.xml схемы компоновки данных. Выявляет ошибки формата, битые ссылки, дубликаты имён.
 
 ## Параметры

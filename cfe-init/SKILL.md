@@ -9,6 +9,22 @@ allowed-tools:
 
 # /cfe-init — Создание расширения конфигурации 1С
 
+<!-- docs-evals:python-entrypoint:start -->
+## Запуск скрипта
+
+Основной запуск на Linux выполняется Python 3 с аргументами CLI скрипта:
+
+```bash
+python3 "<skills-root>/cfe-init/scripts/cfe-init.py" -ConfigPath <project-root>/src
+```
+
+Windows PowerShell остаётся отдельным вариантом запуска:
+
+```powershell
+powershell.exe -NoProfile -File "<skills-root>/cfe-init/scripts/cfe-init.ps1" -ConfigPath <project-root>/src
+```
+<!-- docs-evals:python-entrypoint:end -->
+
 Создаёт scaffold расширения: `Configuration.xml`, `Languages/Русский.xml`, опционально `Roles/`.
 
 ## Подготовка
@@ -71,4 +87,4 @@ powershell.exe -NoProfile -File <skills-root>/cfe-init/scripts/cfe-init.ps1 -Nam
 
 ## Реестр тестовых баз
 
-Перед любой операцией с ИБ используй скил `test-databases`: запусти его bundled-скрипт `scripts/resolve-registry.ps1`, затем выбери запись по правилам этого скила. Не определяй путь к реестру самостоятельно, не дублируй его структуру и не подключайся к базе вне реестра. `.v8-project.json` используй только для вспомогательных полей, которых нет в выбранной записи.
+Перед любой операцией с ИБ используй скил `test-databases`: на Linux запусти `python3 <skills-root>/test-databases/scripts/resolve-registry.py`, а на Windows — `resolve-registry.ps1` через PowerShell; затем выбери запись по правилам этого скила. Не определяй путь к реестру самостоятельно, не дублируй его структуру и не подключайся к базе вне реестра. `.v8-project.json` используй только для вспомогательных полей, которых нет в выбранной записи.

@@ -5,6 +5,7 @@ import argparse
 import json
 import os
 import re
+import subprocess
 import sys
 import uuid
 import xml.etree.ElementTree as ET
@@ -429,11 +430,22 @@ def main():
     # --- 6. Auto-validate ---
     if not args.NoValidate:
         script_dir = os.path.dirname(os.path.abspath(__file__))
-        validate_script = os.path.normpath(os.path.join(script_dir, '..', '..', 'subsystem-validate', 'scripts', 'subsystem-validate.ps1'))
-        if os.path.exists(validate_script):
-            print()
-            print("--- Running subsystem-validate ---")
-            os.system(f'powershell.exe -NoProfile -File "{validate_script}" -SubsystemPath "{target_xml}"')
+        validate_script = os.path.normpath(os.path.join(
+            script_dir, '..', '..', 'subsystem-validate', 'scripts', 'subsystem-validate.py'
+        ))
+        if not os.path.isfile(validate_script):
+            print(f"Validator not found: {validate_script}", file=sys.stderr)
+            sys.exit(1)
+        print()
+        print("--- Running subsystem-validate ---")
+        try:
+            subprocess.run(
+                [sys.executable, validate_script, "-SubsystemPath", target_xml],
+                check=True,
+            )
+        except subprocess.CalledProcessError as exc:
+            print(f"subsystem-validate failed with exit code {exc.returncode}", file=sys.stderr)
+            sys.exit(exc.returncode or 1)
 
     # --- 7. Summary ---
     print()

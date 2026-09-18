@@ -10,6 +10,22 @@ allowed-tools:
 
 # /web-publish — Публикация 1С через Apache
 
+<!-- docs-evals:python-entrypoint:start -->
+## Запуск скрипта
+
+Основной запуск на Linux выполняется Python 3 с аргументами CLI скрипта:
+
+```bash
+python3 "<skills-root>/web-publish/scripts/web-publish.py" -InfoBasePath <test-infobase-path> -AppName <publication-name>
+```
+
+Windows PowerShell остаётся отдельным вариантом запуска:
+
+```powershell
+powershell.exe -NoProfile -File "<skills-root>/web-publish/scripts/web-publish.ps1" -InfoBasePath <test-infobase-path> -AppName <publication-name>
+```
+<!-- docs-evals:python-entrypoint:end -->
+
 Генерирует `default.vrd`, настраивает `httpd.conf` и запускает Apache HTTP Server для веб-доступа к информационной базе. При необходимости скачивает portable Apache. Идемпотентный — повторный вызов обновляет конфигурацию.
 
 ## Usage
@@ -23,10 +39,46 @@ allowed-tools:
 
 ## Параметры подключения
 
-Перед обращением к ИБ обязательно примени `test-databases`: запусти `scripts/resolve-registry.ps1` из каталога этого skill и выбери разрешённую запись по его правилам. Параметры подключения, пользователя и пароль передавай только из выбранной записи.
+Перед обращением к ИБ обязательно примени `test-databases`: на Linux запусти `python3 <skills-root>/test-databases/scripts/resolve-registry.py`, а на Windows — `resolve-registry.ps1` через PowerShell; затем выбери разрешённую запись по его правилам. Параметры подключения, пользователя и пароль передавай только из выбранной записи.
 
 Не принимай произвольный путь, сервер или строку подключения как замену реестру. `.v8-project.json` разрешён только для вспомогательных полей вроде `v8path`, `configSrc` или `webUrl`. Если подходящей записи нет или выбор неоднозначен, остановись и запроси уточнение.
 ## Команда
+
+Ubuntu с системным Apache:
+
+```bash
+python3 <skills-root>/web-publish/scripts/web-publish.py \
+  -InfoBasePath /srv/1c/mydb -AppName mydb
+```
+
+Linux использует официальный `wsap24.so` из `-WsModule`, `-V8Path`,
+`ONEC_WSAP_MODULE_PATH` или стандартного каталога `/opt/1cv8/x86_64`.
+Создаются только отдельные файлы `1c-skills-*.conf` в
+`/etc/apache2/conf-available` и ссылки в `conf-enabled`. Перед каждым reload
+обязательно выполняется `apache2ctl configtest`; при ошибке изменения
+откатываются. Скрипт не вызывает `sudo`, не скачивает компоненты и не изменяет
+чужие публикации.
+
+Для первичной установки передай локальный официальный WS DEB либо
+`setup-full-*.run` с той же полной версией платформы и архитектурой `amd64`.
+Установщик проверяет версию и после установки требует matching `webinst` и
+`wsap24.so`:
+
+```bash
+sudo <skills-root>/web-publish/scripts/install_ubuntu.sh \
+  --ws-deb /path/to/1c-enterprise-ws.deb --platform-version 8.3.27.1688
+
+# Вариант для официального полного installer:
+sudo <skills-root>/web-publish/scripts/install_ubuntu.sh \
+  --installer-run /path/to/setup-full-8.5.1.1529-x86_64.run \
+  --platform-version 8.5.1.1529
+```
+
+Без одного из `--ws-deb`/`--installer-run` установщик завершается с ошибкой.
+Агент не должен запускать установщик или `sudo` без отдельного запроса
+пользователя.
+
+Windows:
 
 ```powershell
 powershell.exe -NoProfile -File <skills-root>/web-publish/scripts/web-publish.ps1 <параметры>

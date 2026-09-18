@@ -99,6 +99,10 @@ export function isConnected() {
  * Waits for initialization (themesCell_theme_0 selector) and attempts to close startup modals.
  */
 export async function connect(url, { extensionPath } = {}) {
+  const configuredExecutable = process.env.PLAYWRIGHT_EXECUTABLE_PATH;
+  const executableOptions = configuredExecutable
+    ? { executablePath: configuredExecutable }
+    : {};
   if (isConnected()) {
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: LOAD_TIMEOUT });
   } else {
@@ -108,6 +112,7 @@ export async function connect(url, { extensionPath } = {}) {
       persistentUserDataDir = pathJoin(tmpdir(), 'pw-1c-ext-' + Date.now());
       mkdirSync(persistentUserDataDir, { recursive: true });
       const context = await chromium.launchPersistentContext(persistentUserDataDir, {
+        ...executableOptions,
         headless: false,
         args: [
           '--start-maximized',
@@ -121,7 +126,11 @@ export async function connect(url, { extensionPath } = {}) {
       page = context.pages()[0] || await context.newPage();
     } else {
       // Fallback: launch without extension
-      browser = await chromium.launch({ headless: false, args: ['--start-maximized'] });
+      browser = await chromium.launch({
+        ...executableOptions,
+        headless: false,
+        args: ['--start-maximized'],
+      });
       const context = await browser.newContext({
         viewport: null,
         permissions: ['clipboard-read', 'clipboard-write'],

@@ -10,17 +10,53 @@ allowed-tools:
 
 # /meta-edit — точечное редактирование метаданных 1С
 
+<!-- docs-evals:python-entrypoint:start -->
+## Запуск скрипта
+
+Основной запуск на Linux выполняется Python 3 с аргументами CLI скрипта:
+
+```bash
+python3 "<skills-root>/meta-edit/scripts/meta-edit.py" \
+  -ObjectPath <project-root>/src/Object.xml \
+  -Operation modify-property -Value "CodeLength=11"
+```
+
+Windows PowerShell остаётся отдельным вариантом запуска:
+
+```powershell
+powershell.exe -NoProfile -File "<skills-root>/meta-edit/scripts/meta-edit.ps1" -ObjectPath <project-root>/src/Object.xml
+```
+<!-- docs-evals:python-entrypoint:end -->
+
 Атомарные операции модификации существующих XML объектов метаданных.
 
 ## Команда
 
 ### Inline mode (простые операции)
 
+Linux:
+
+```bash
+python3 <skills-root>/meta-edit/scripts/meta-edit.py \
+  -ObjectPath "<path>" -Operation <op> -Value "<val>"
+```
+
+Windows:
+
 ```powershell
 powershell.exe -NoProfile -File <skills-root>/meta-edit/scripts/meta-edit.ps1 -ObjectPath "<path>" -Operation <op> -Value "<val>"
 ```
 
 ### JSON mode (сложные/комбинированные)
+
+Linux:
+
+```bash
+python3 <skills-root>/meta-edit/scripts/meta-edit.py \
+  -DefinitionFile "<json>" -ObjectPath "<path>"
+```
+
+Windows:
 
 ```powershell
 powershell.exe -NoProfile -File <skills-root>/meta-edit/scripts/meta-edit.ps1 -DefinitionFile "<json>" -ObjectPath "<path>"
@@ -76,7 +112,9 @@ Batch через `;;` во всех операциях. Подробный си�
 
 ## Быстрые примеры
 
-```powershell
+Следующие фрагменты аргументов одинаковы для Python CLI и PowerShell:
+
+```text
 # Добавить реквизиты
 -Operation add-attribute -Value "Комментарий: Строка(200) ;; Сумма: Число(15,2) | index"
 

@@ -3,14 +3,15 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "Разбери обработку МояОбработка.epf из папки build/ в исходники. База файловая: C:\\Bases\\Trade.",
+      "prompt": "Разбери обработку МояОбработка.epf из папки build/ в исходники. База файловая: <project-root>/Bases/Trade.",
       "expected_output": "XML-исходники обработки выгружены в папку src/ в иерархическом формате.",
       "expectations": [
-        "Скрипт epf-dump.ps1 вызван с параметром -InputFile, указывающим на build\\МояОбработка.epf",
-        "Скрипт вызван с параметром -InfoBasePath C:\\Bases\\Trade",
+        "Скрипт python3 <skills-root>/epf-dump/scripts/epf-dump.py на Linux или powershell.exe -NoProfile -File <skills-root>/epf-dump/scripts/epf-dump.ps1 на Windows вызван с параметром -InputFile, указывающим на build/МояОбработка.epf",
+        "Скрипт вызван с параметром -InfoBasePath <project-root>/Bases/Trade",
         "Скрипт вызван с параметром -OutputDir src",
         "Создана структура каталогов src/МояОбработка/ с вложенными Ext/ и Forms/",
-        "Код возврата скрипта 0 (успешная разборка)"
+        "Код возврата скрипта 0 (успешная разборка)",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/epf-dump/scripts/epf-dump.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/epf-dump/scripts/epf-dump.ps1"
       ]
     },
     {
@@ -18,10 +19,11 @@
       "prompt": "Разбери внешний отчёт ОтчётПоПродажам.erf в каталог sources/. Подключение к серверной базе: сервер 1c-srv, база Trade_Main, пользователь Admin.",
       "expected_output": "XML-исходники отчёта выгружены в sources/ через серверное подключение.",
       "expectations": [
-        "Скрипт epf-dump.ps1 вызван с параметром -InputFile, указывающим на ОтчётПоПродажам.erf",
+        "Скрипт python3 <skills-root>/epf-dump/scripts/epf-dump.py на Linux или powershell.exe -NoProfile -File <skills-root>/epf-dump/scripts/epf-dump.ps1 на Windows вызван с параметром -InputFile, указывающим на ОтчётПоПродажам.erf",
         "Скрипт вызван с параметрами -InfoBaseServer 1c-srv и -InfoBaseRef Trade_Main",
         "Скрипт вызван с параметром -UserName Admin",
-        "Скрипт вызван с параметром -OutputDir sources"
+        "Скрипт вызван с параметром -OutputDir sources",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/epf-dump/scripts/epf-dump.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/epf-dump/scripts/epf-dump.ps1"
       ]
     },
     {
@@ -30,9 +32,10 @@
       "expected_output": "Скрипт определил базу из .v8-project.json по текущей ветке Git и выполнил разборку в src/.",
       "expectations": [
         "Прочитан файл .v8-project.json для определения базы и v8path",
-        "Скрипт epf-dump.ps1 вызван с параметром -InputFile, указывающим на ЗагрузкаДанных.epf",
+        "Скрипт python3 <skills-root>/epf-dump/scripts/epf-dump.py на Linux или powershell.exe -NoProfile -File <skills-root>/epf-dump/scripts/epf-dump.ps1 на Windows вызван с параметром -InputFile, указывающим на ЗагрузкаДанных.epf",
         "Скрипт вызван с параметром -OutputDir src (значение по умолчанию)",
-        "Скрипт вызван с параметром -Format Hierarchical"
+        "Скрипт вызван с параметром -Format Hierarchical",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/epf-dump/scripts/epf-dump.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/epf-dump/scripts/epf-dump.ps1"
       ]
     }
   ]

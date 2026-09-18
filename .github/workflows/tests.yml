@@ -1,0 +1,68 @@
+name: tests-ci
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-ci.txt
+
+      - name: Install pinned Python dependencies
+        run: python -m pip install --requirement requirements-ci.txt
+
+      - name: Check repository hygiene
+        run: python codex-test-bridge/scripts/check_repository_hygiene.py
+
+      - name: Compile and import Python
+        shell: bash
+        run: |
+          git ls-files -z '*.py' | xargs -0 python -m py_compile
+          python -c 'import lxml.etree, psutil, common.apache_linux, common.onec_runtime, common.test_database_registry'
+          git ls-files -z '*.sh' | xargs -0 -n1 bash -n
+
+      - name: Run root unit tests
+        run: python -m unittest discover -s tests -v
+
+      - name: Run bridge unit tests
+        run: python -m unittest discover -s codex-test-bridge/tests -v
+
+      - name: Smoke test XML validators
+        shell: bash
+        run: |
+          python cfe-validate/scripts/cfe-validate.py \
+            -ExtensionPath codex-test-bridge/src -Detailed
+          python meta-validate/scripts/meta-validate.py \
+            -ObjectPath 'codex-test-bridge/src/CommonModules/CodexUIJobsServer.xml|codex-test-bridge/src/HTTPServices/CodexTestBridge.xml|codex-test-bridge/src/InformationRegisters/CodexUIJobs.xml' \
+            -Detailed
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: web-test/scripts/package-lock.json
+
+      - name: Install Node dependencies
+        working-directory: web-test/scripts
+        run: npm ci
+
+      - name: Check JavaScript syntax
+        shell: bash
+        run: git ls-files -z '*.js' '*.mjs' | xargs -0 -n1 node --check

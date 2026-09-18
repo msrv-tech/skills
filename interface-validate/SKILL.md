@@ -9,6 +9,22 @@ allowed-tools:
 
 # /interface-validate — валидация CommandInterface.xml
 
+<!-- docs-evals:python-entrypoint:start -->
+## Запуск скрипта
+
+Основной запуск на Linux выполняется Python 3 с аргументами CLI скрипта:
+
+```bash
+python3 "<skills-root>/interface-validate/scripts/interface-validate.py" -CIPath <project-root>/CommandInterface.xml
+```
+
+Windows PowerShell остаётся отдельным вариантом запуска:
+
+```powershell
+powershell.exe -NoProfile -File "<skills-root>/interface-validate/scripts/interface-validate.ps1" -CIPath <project-root>/CommandInterface.xml
+```
+<!-- docs-evals:python-entrypoint:end -->
+
 Проверяет XML командного интерфейса на структурные ошибки: корневой элемент, допустимые секции, порядок, формат ссылок на команды, дубликаты.
 
 ## Параметры

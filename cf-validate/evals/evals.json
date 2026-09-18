@@ -4,34 +4,37 @@
     {
       "id": 1,
       "prompt": "Проверь конфигурацию после добавления нового справочника. Исходники в src/.",
-      "expected_output": "Скрипт cf-validate.ps1 запущен, выполнены все 8 проверок, выведен итоговый отчёт с числом ошибок и предупреждений.",
+      "expected_output": "Скрипт python3 <skills-root>/cf-validate/scripts/cf-validate.py на Linux или powershell.exe -NoProfile -File <skills-root>/cf-validate/scripts/cf-validate.ps1 на Windows запущен, выполнены все 8 проверок, выведен итоговый отчёт с числом ошибок и предупреждений.",
       "expectations": [
-        "Скрипт cf-validate.ps1 вызван с параметром -ConfigPath src/",
+        "Скрипт python3 <skills-root>/cf-validate/scripts/cf-validate.py на Linux или powershell.exe -NoProfile -File <skills-root>/cf-validate/scripts/cf-validate.ps1 на Windows вызван с параметром -ConfigPath src/",
         "Ответ содержит результаты проверки структуры XML (well-formedness)",
         "Ответ содержит результат проверки InternalInfo с 7 ContainedObject",
-        "Ответ содержит итоговую строку с числом ошибок и предупреждений (=== Result: ... ===)"
+        "Ответ содержит итоговую строку с числом ошибок и предупреждений (=== Result: ... ===)",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/cf-validate/scripts/cf-validate.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/cf-validate/scripts/cf-validate.ps1"
       ]
     },
     {
       "id": 2,
-      "prompt": "Проверь конфигурацию C:/WS/tasks/cfsrc/acc_8.3.24, выведи максимум 10 ошибок.",
-      "expected_output": "Скрипт cf-validate.ps1 запущен с MaxErrors 10 для указанного пути, при наличии более 10 ошибок валидация остановлена после 10-й.",
+      "prompt": "Проверь конфигурацию <project-root>/WS/tasks/cfsrc/acc_8.3.24, выведи максимум 10 ошибок.",
+      "expected_output": "Скрипт python3 <skills-root>/cf-validate/scripts/cf-validate.py на Linux или powershell.exe -NoProfile -File <skills-root>/cf-validate/scripts/cf-validate.ps1 на Windows запущен с MaxErrors 10 для указанного пути, при наличии более 10 ошибок валидация остановлена после 10-й.",
       "expectations": [
-        "Скрипт cf-validate.ps1 вызван с параметром -ConfigPath C:/WS/tasks/cfsrc/acc_8.3.24",
-        "Скрипт cf-validate.ps1 вызван с параметром -MaxErrors 10",
+        "Скрипт python3 <skills-root>/cf-validate/scripts/cf-validate.py на Linux или powershell.exe -NoProfile -File <skills-root>/cf-validate/scripts/cf-validate.ps1 на Windows вызван с параметром -ConfigPath <project-root>/WS/tasks/cfsrc/acc_8.3.24",
+        "Скрипт python3 <skills-root>/cf-validate/scripts/cf-validate.py на Linux или powershell.exe -NoProfile -File <skills-root>/cf-validate/scripts/cf-validate.ps1 на Windows вызван с параметром -MaxErrors 10",
         "Ответ содержит итоговую строку с числом ошибок и предупреждений",
-        "Ответ содержит коды exit code: 0 при успехе, 1 при наличии ошибок"
+        "Ответ содержит коды exit code: 0 при успехе, 1 при наличии ошибок",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/cf-validate/scripts/cf-validate.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/cf-validate/scripts/cf-validate.ps1"
       ]
     },
     {
       "id": 3,
       "prompt": "Проверь конфигурацию в test-tmp/cf и сохрани отчёт в файл report.txt.",
-      "expected_output": "Скрипт cf-validate.ps1 запущен с параметром OutFile, результаты валидации записаны в report.txt в кодировке UTF-8 BOM.",
+      "expected_output": "Скрипт python3 <skills-root>/cf-validate/scripts/cf-validate.py на Linux или powershell.exe -NoProfile -File <skills-root>/cf-validate/scripts/cf-validate.ps1 на Windows запущен с параметром OutFile, результаты валидации записаны в report.txt в кодировке UTF-8 BOM.",
       "expectations": [
-        "Скрипт cf-validate.ps1 вызван с параметром -ConfigPath test-tmp/cf",
-        "Скрипт cf-validate.ps1 вызван с параметром -OutFile report.txt",
+        "Скрипт python3 <skills-root>/cf-validate/scripts/cf-validate.py на Linux или powershell.exe -NoProfile -File <skills-root>/cf-validate/scripts/cf-validate.ps1 на Windows вызван с параметром -ConfigPath test-tmp/cf",
+        "Скрипт python3 <skills-root>/cf-validate/scripts/cf-validate.py на Linux или powershell.exe -NoProfile -File <skills-root>/cf-validate/scripts/cf-validate.ps1 на Windows вызван с параметром -OutFile report.txt",
         "Ответ содержит результаты проверок ChildObjects: валидные имена типов и отсутствие дубликатов",
-        "Ответ содержит результат проверки DefaultLanguage и наличия файлов языков"
+        "Ответ содержит результат проверки DefaultLanguage и наличия файлов языков",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/cf-validate/scripts/cf-validate.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/cf-validate/scripts/cf-validate.ps1"
       ]
     }
   ]

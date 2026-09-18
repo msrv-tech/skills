@@ -6,9 +6,10 @@
       "prompt": "Скрой команду Catalog.Контрагенты.Create в командном интерфейсе подсистемы Продажи. Файл: upload/acc_8.3.24/Subsystems/Продажи/Ext/CommandInterface.xml",
       "expected_output": "Команда Catalog.Контрагенты.Create скрыта в CommandInterface.xml подсистемы Продажи через операцию hide.",
       "expectations": [
-        "Скрипт interface-edit.ps1 вызван с параметрами -CIPath, -Operation hide и -Value 'Catalog.Контрагенты.Create'",
+        "Скрипт python3 <skills-root>/interface-edit/scripts/interface-edit.py на Linux или powershell.exe -NoProfile -File <skills-root>/interface-edit/scripts/interface-edit.ps1 на Windows вызван с параметрами -CIPath, -Operation hide и -Value 'Catalog.Контрагенты.Create'",
         "В CommandInterface.xml для команды Catalog.Контрагенты.Create установлено значение Visibility=false",
-        "XML-файл CommandInterface.xml сохранён с изменениями"
+        "XML-файл CommandInterface.xml сохранён с изменениями",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/interface-edit/scripts/interface-edit.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/interface-edit/scripts/interface-edit.ps1"
       ]
     },
     {
@@ -16,9 +17,10 @@
       "prompt": "Размести команду Document.ЗаказКлиента.Create в группу ДокументыПродаж командного интерфейса. Файл: src/Subsystems/Продажи/Ext/CommandInterface.xml",
       "expected_output": "Команда Document.ЗаказКлиента.Create помещена в группу ДокументыПродаж через операцию place.",
       "expectations": [
-        "Скрипт interface-edit.ps1 вызван с параметром -Operation place",
+        "Скрипт python3 <skills-root>/interface-edit/scripts/interface-edit.py на Linux или powershell.exe -NoProfile -File <skills-root>/interface-edit/scripts/interface-edit.ps1 на Windows вызван с параметром -Operation place",
         "В CommandInterface.xml добавлена или обновлена секция CommandsPlacement для Document.ЗаказКлиента.Create",
-        "Указана группа CommandGroup=ДокументыПродаж"
+        "Указана группа CommandGroup=ДокументыПродаж",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/interface-edit/scripts/interface-edit.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/interface-edit/scripts/interface-edit.ps1"
       ]
     },
     {
@@ -26,9 +28,10 @@
       "prompt": "Установи порядок подсистем в корневом CommandInterface: сначала Продажи, потом Закупки, потом Склад. Файл: upload/my_config/Ext/CommandInterface.xml",
       "expected_output": "Порядок подсистем в секции SubsystemsOrder обновлён: Продажи, Закупки, Склад.",
       "expectations": [
-        "Скрипт interface-edit.ps1 вызван с параметром -Operation subsystem-order",
+        "Скрипт python3 <skills-root>/interface-edit/scripts/interface-edit.py на Linux или powershell.exe -NoProfile -File <skills-root>/interface-edit/scripts/interface-edit.ps1 на Windows вызван с параметром -Operation subsystem-order",
         "Секция SubsystemsOrder в CommandInterface.xml содержит подсистемы в указанном порядке",
-        "Формат ссылок на подсистемы соответствует Subsystem.X"
+        "Формат ссылок на подсистемы соответствует Subsystem.X",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/interface-edit/scripts/interface-edit.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/interface-edit/scripts/interface-edit.ps1"
       ]
     }
   ]

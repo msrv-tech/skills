@@ -10,8 +10,8 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from ui_worker import (
     UiWorkerError, expand, navigation_ref_from_uuid, prepare_native_ui_scenario, redact_command,
-    isolate_test_client_startup_parameter, resolve_native_ui_references, run_ui_worker,
-    suppress_1c_startup_ui, validate_worker_config,
+    isolate_test_client_startup_parameter, manager_failure_error, resolve_native_ui_references, run_ui_worker,
+    suppress_1c_startup_ui, validate_worker_config, xvfb_process_environment,
 )
 from agent_ui import diagnose_ui_failure, normalize_ui_tree
 from uia_runner import _locate_inner_button_by_pixels
@@ -42,6 +42,21 @@ def free_port():
 
 
 class UiWorkerTests(unittest.TestCase):
+    def test_manager_failure_preserves_structured_manager_error(self):
+        error = manager_failure_error(
+            {
+                "ok": False,
+                "status": "failed",
+                "error": "Отсутствует подходящий клиент тестирования.",
+            },
+            0,
+        )
+        self.assertEqual(error["type"], "ManagerFailure")
+        self.assertEqual(
+            error["message"],
+            "Отсутствует подходящий клиент тестирования.",
+        )
+
     def test_compact_ui_result_does_not_embed_ui_tree(self):
         compact = compact_ui_result({
             "ok": True, "runId": "run", "status": "passed", "durationMs": 42,
@@ -406,6 +421,14 @@ class UiWorkerTests(unittest.TestCase):
         self.assertEqual(command, ["1cv8c", "ENTERPRISE", "/TestClient", "-TPort", "1538"])
         self.assertEqual(isolate_test_client_startup_parameter(command), command)
         self.assertEqual(isolate_test_client_startup_parameter(["python", "client.py"]), ["python", "client.py"])
+
+    def test_xvfb_process_environment_uses_x11(self):
+        if not sys.platform.startswith("linux"):
+            self.skipTest("GTK X11 requirement applies to Linux")
+        environment = xvfb_process_environment({"CUSTOM": "value"}, 99)
+        self.assertEqual(environment["DISPLAY"], ":99")
+        self.assertEqual(environment["CUSTOM"], "value")
+        self.assertEqual(environment["GDK_BACKEND"], "x11")
 
     def test_redacted_command_is_safe_to_serialize_in_report(self):
         command = ["1cv8c", "ENTERPRISE", "/F", "private-database-path", "/N", "private-login", "/P", "private-password"]

@@ -4,34 +4,37 @@
     {
       "id": 1,
       "prompt": "Собери обработку НастройкаОтчётов из исходников",
-      "expected_output": "Скрипт epf-build.ps1 вызван с параметрами -SourceFile и -OutputFile. EPF-файл создан в папке build.",
+      "expected_output": "Скрипт python3 <skills-root>/epf-build/scripts/epf-build.py на Linux или powershell.exe -NoProfile -File <skills-root>/epf-build/scripts/epf-build.ps1 на Windows вызван с параметрами -SourceFile и -OutputFile. EPF-файл создан в папке build.",
       "expectations": [
-        "Скрипт epf-build.ps1 вызван с параметром -SourceFile содержащим путь к src/НастройкаОтчётов.xml",
+        "Скрипт python3 <skills-root>/epf-build/scripts/epf-build.py на Linux или powershell.exe -NoProfile -File <skills-root>/epf-build/scripts/epf-build.ps1 на Windows вызван с параметром -SourceFile содержащим путь к src/НастройкаОтчётов.xml",
         "Передан параметр -OutputFile содержащий путь к build/НастройкаОтчётов.epf",
         "Параметры подключения к базе взяты из .v8-project.json",
-        "После выполнения прочитан лог и показан результат сборки"
+        "После выполнения прочитан лог и показан результат сборки",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/epf-build/scripts/epf-build.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/epf-build/scripts/epf-build.ps1"
       ]
     },
     {
       "id": 2,
       "prompt": "Собери обработку ЗагрузкаДанных из папки source в папку dist используя базу test",
-      "expected_output": "Скрипт epf-build.ps1 вызван с параметрами подключения к базе test, -SourceFile из source/ и -OutputFile в dist/",
+      "expected_output": "Скрипт python3 <skills-root>/epf-build/scripts/epf-build.py на Linux или powershell.exe -NoProfile -File <skills-root>/epf-build/scripts/epf-build.ps1 на Windows вызван с параметрами подключения к базе test, -SourceFile из source/ и -OutputFile в dist/",
       "expectations": [
-        "Скрипт epf-build.ps1 вызван с параметром -SourceFile содержащим путь к source/ЗагрузкаДанных.xml",
+        "Скрипт python3 <skills-root>/epf-build/scripts/epf-build.py на Linux или powershell.exe -NoProfile -File <skills-root>/epf-build/scripts/epf-build.ps1 на Windows вызван с параметром -SourceFile содержащим путь к source/ЗагрузкаДанных.xml",
         "Передан параметр -OutputFile содержащий путь к dist/ЗагрузкаДанных.epf",
         "База test разрешена из .v8-project.json (по id или alias)",
-        "Параметры подключения -InfoBasePath или -InfoBaseServer/-InfoBaseRef переданы корректно"
+        "Параметры подключения -InfoBasePath или -InfoBaseServer/-InfoBaseRef переданы корректно",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/epf-build/scripts/epf-build.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/epf-build/scripts/epf-build.ps1"
       ]
     },
     {
       "id": 3,
       "prompt": "Собери отчёт АнализПродаж на серверной базе srv01/MyApp_Dev, пользователь Admin",
-      "expected_output": "Скрипт epf-build.ps1 вызван с параметрами серверного подключения. Создан ERF-файл в build/.",
+      "expected_output": "Скрипт python3 <skills-root>/epf-build/scripts/epf-build.py на Linux или powershell.exe -NoProfile -File <skills-root>/epf-build/scripts/epf-build.ps1 на Windows вызван с параметрами серверного подключения. Создан ERF-файл в build/.",
       "expectations": [
-        "Скрипт epf-build.ps1 вызван с параметрами -InfoBaseServer \"srv01\" и -InfoBaseRef \"MyApp_Dev\"",
+        "Скрипт python3 <skills-root>/epf-build/scripts/epf-build.py на Linux или powershell.exe -NoProfile -File <skills-root>/epf-build/scripts/epf-build.ps1 на Windows вызван с параметрами -InfoBaseServer \"srv01\" и -InfoBaseRef \"MyApp_Dev\"",
         "Передан параметр -UserName \"Admin\"",
         "Параметр -SourceFile указывает на корневой XML-файл отчёта",
-        "Параметр -OutputFile содержит путь к .erf-файлу или .epf-файлу"
+        "Параметр -OutputFile содержит путь к .erf-файлу или .epf-файлу",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/epf-build/scripts/epf-build.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/epf-build/scripts/epf-build.ps1"
       ]
     }
   ]

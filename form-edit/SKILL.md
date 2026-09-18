@@ -10,6 +10,22 @@ allowed-tools:
 
 # /form-edit — Редактирование формы
 
+<!-- docs-evals:python-entrypoint:start -->
+## Запуск скрипта
+
+Основной запуск на Linux выполняется Python 3 с аргументами CLI скрипта:
+
+```bash
+python3 "<skills-root>/form-edit/scripts/form-edit.py" -FormPath <project-root>/Form.xml -JsonPath <project-root>/definition.json
+```
+
+Windows PowerShell остаётся отдельным вариантом запуска:
+
+```powershell
+powershell.exe -NoProfile -File "<skills-root>/form-edit/scripts/form-edit.ps1" -FormPath <project-root>/Form.xml -JsonPath <project-root>/definition.json
+```
+<!-- docs-evals:python-entrypoint:end -->
+
 Добавляет элементы, реквизиты и/или команды в существующий Form.xml. Автоматически выделяет ID из правильного пула, генерирует companion-элементы (ContextMenu, ExtendedTooltip, и др.) и обработчики событий.
 
 ## Использование

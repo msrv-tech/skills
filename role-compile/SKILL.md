@@ -10,6 +10,22 @@ allowed-tools:
 
 # /role-compile — генерация роли 1С из JSON DSL
 
+<!-- docs-evals:python-entrypoint:start -->
+## Запуск скрипта
+
+Основной запуск на Linux выполняется Python 3 с аргументами CLI скрипта:
+
+```bash
+python3 "<skills-root>/role-compile/scripts/role-compile.py" -JsonPath <project-root>/definition.json
+```
+
+Windows PowerShell остаётся отдельным вариантом запуска:
+
+```powershell
+powershell.exe -NoProfile -File "<skills-root>/role-compile/scripts/role-compile.ps1" -JsonPath <project-root>/definition.json
+```
+<!-- docs-evals:python-entrypoint:end -->
+
 Принимает JSON-определение роли → генерирует `Roles/Имя.xml` (метаданные) и `Roles/Имя/Ext/Rights.xml` (права). UUID автоматически.
 
 ## Параметры и команда

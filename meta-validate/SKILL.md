@@ -9,6 +9,22 @@ allowed-tools:
 
 # /meta-validate — валидация объекта метаданных 1С
 
+<!-- docs-evals:python-entrypoint:start -->
+## Запуск скрипта
+
+Основной запуск на Linux выполняется Python 3 с аргументами CLI скрипта:
+
+```bash
+python3 "<skills-root>/meta-validate/scripts/meta-validate.py" -ObjectPath <project-root>/src/Object.xml
+```
+
+Windows PowerShell остаётся отдельным вариантом запуска:
+
+```powershell
+powershell.exe -NoProfile -File "<skills-root>/meta-validate/scripts/meta-validate.ps1" -ObjectPath <project-root>/src/Object.xml
+```
+<!-- docs-evals:python-entrypoint:end -->
+
 Проверяет XML объекта метаданных из выгрузки конфигурации на структурные ошибки.
 
 ## Параметры

@@ -6,11 +6,12 @@
       "prompt": "Скомпилируй управляемую форму из файла form.json и сохрани результат в src/DataProcessors/МояОбработка/Forms/Форма/Form.xml.",
       "expected_output": "Form.xml сгенерирован в указанном месте. XML содержит корневой элемент Form с пространствами имён, все элементы имеют уникальные числовые ID.",
       "expectations": [
-        "Скрипт form-compile.ps1 вызван с параметрами -JsonPath и -OutputPath",
+        "Скрипт python3 <skills-root>/form-compile/scripts/form-compile.py на Linux или powershell.exe -NoProfile -File <skills-root>/form-compile/scripts/form-compile.ps1 на Windows вызван с параметрами -JsonPath и -OutputPath",
         "Файл Form.xml создан по указанному пути",
         "Form.xml содержит объявление пространства имён xmlns:v8 или аналогичное",
         "Каждый элемент формы имеет атрибут id с числовым значением",
-        "ID элементов уникальны и последовательны"
+        "ID элементов уникальны и последовательны",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/form-compile/scripts/form-compile.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/form-compile/scripts/form-compile.ps1"
       ]
     },
     {
@@ -18,11 +19,12 @@
       "prompt": "Сгенерируй Form.xml из JSON-определения. DSL-файл: form-def.json. Выходной файл: output/Form.xml. Форма должна содержать группу с полями НачДата и КонДата и кнопку Сформировать.",
       "expected_output": "Form.xml сгенерирован с элементами Group, содержащей два поля дат, и кнопкой команды.",
       "expectations": [
-        "Скрипт form-compile.ps1 вызван с правильными путями",
+        "Скрипт python3 <skills-root>/form-compile/scripts/form-compile.py на Linux или powershell.exe -NoProfile -File <skills-root>/form-compile/scripts/form-compile.ps1 на Windows вызван с правильными путями",
         "Файл Form.xml создан в output/Form.xml",
         "XML содержит элемент типа Group (или UsualGroup)",
         "Присутствуют элементы для полей НачДата и КонДата",
-        "Присутствует элемент кнопки (Button или CommandBarButton)"
+        "Присутствует элемент кнопки (Button или CommandBarButton)",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/form-compile/scripts/form-compile.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/form-compile/scripts/form-compile.ps1"
       ]
     },
     {
@@ -30,11 +32,12 @@
       "prompt": "Создай управляемую форму списка справочника Контрагенты. DSL в файле catalog-list.json, результат нужен в Forms/ФормаСписка/Form.xml.",
       "expected_output": "Form.xml для формы списка: содержит элемент таблицы (Table) с привязкой к основному реквизиту Список, правильную структуру XML.",
       "expectations": [
-        "Скрипт form-compile.ps1 вызван корректно",
+        "Скрипт python3 <skills-root>/form-compile/scripts/form-compile.py на Linux или powershell.exe -NoProfile -File <skills-root>/form-compile/scripts/form-compile.ps1 на Windows вызван корректно",
         "Файл Form.xml создан в Forms/ФормаСписка/Form.xml",
         "XML содержит элемент Table (или DynamicList) для списка",
         "XML корректно сформирован — открывающие теги закрыты, нет незакрытых элементов",
-        "Файл начинается с XML-декларации или корневого элемента Form"
+        "Файл начинается с XML-декларации или корневого элемента Form",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/form-compile/scripts/form-compile.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/form-compile/scripts/form-compile.ps1"
       ]
     }
   ]

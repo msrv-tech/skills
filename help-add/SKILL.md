@@ -12,6 +12,22 @@ allowed-tools:
 
 # /help-add — Добавление справки
 
+<!-- docs-evals:python-entrypoint:start -->
+## Запуск скрипта
+
+Основной запуск на Linux выполняется Python 3 с аргументами CLI скрипта:
+
+```bash
+python3 "<skills-root>/help-add/scripts/add-help.py" -ObjectName <ObjectName> -Lang <Lang>
+```
+
+Windows PowerShell остаётся отдельным вариантом запуска:
+
+```powershell
+powershell.exe -NoProfile -File "<skills-root>/help-add/scripts/add-help.ps1" -ObjectName <ObjectName> -Lang <Lang>
+```
+<!-- docs-evals:python-entrypoint:end -->
+
 Добавляет встроенную справку к объекту: файл метаданных `Help.xml`, HTML-страницу и при необходимости обновляет метаданные форм.
 
 ## Usage
@@ -29,7 +45,7 @@ allowed-tools:
 ## Команда
 
 ```powershell
-powershell.exe -NoProfile -File <skills-root>/help-manage/scripts/add-help.ps1 -ObjectName "<ObjectName>" [-Lang "<Lang>"] [-SrcDir "<SrcDir>"]
+powershell.exe -NoProfile -File <skills-root>/help-add/scripts/add-help.ps1 -ObjectName "<ObjectName>" [-Lang "<Lang>"] [-SrcDir "<SrcDir>"]
 ```
 
 ## Что делает скрипт

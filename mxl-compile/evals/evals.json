@@ -4,24 +4,26 @@
     {
       "id": 1,
       "prompt": "Создай макет печатной формы для счёта на оплату. Формат A4 альбомный. Нужны области: Шапка (реквизиты организации и покупателя), Строка (номенклатура, количество, цена, сумма), Итого (итоговая сумма). Сохрани в src/DataProcessors/ПечатьСчёта/Templates/СчётНаОплату/Template.xml.",
-      "expected_output": "JSON DSL записан, скрипт mxl-compile.ps1 выполнен, файл Template.xml создан с тремя именованными областями и параметрами.",
+      "expected_output": "JSON DSL записан, скрипт python3 <skills-root>/mxl-compile/scripts/mxl-compile.py на Linux или powershell.exe -NoProfile -File <skills-root>/mxl-compile/scripts/mxl-compile.ps1 на Windows выполнен, файл Template.xml создан с тремя именованными областями и параметрами.",
       "expectations": [
         "JSON-определение макета записано в файл перед вызовом скрипта",
-        "Скрипт mxl-compile.ps1 вызван с параметрами -JsonPath и -OutputPath",
+        "Скрипт python3 <skills-root>/mxl-compile/scripts/mxl-compile.py на Linux или powershell.exe -NoProfile -File <skills-root>/mxl-compile/scripts/mxl-compile.ps1 на Windows вызван с параметрами -JsonPath и -OutputPath",
         "Файл Template.xml создан по указанному пути",
         "Template.xml содержит три именованные области: Шапка, Строка, Итого",
-        "В области Строка присутствуют параметры для номенклатуры, количества, цены и суммы"
+        "В области Строка присутствуют параметры для номенклатуры, количества, цены и суммы",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/mxl-compile/scripts/mxl-compile.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/mxl-compile/scripts/mxl-compile.ps1"
       ]
     },
     {
       "id": 2,
-      "prompt": "Сгенерируй макет этикетки товара формата A5 книжный. Одна область Label с параметрами: Наименование, Артикул, Цена. Жирный шрифт для цены. Результат в D:/Templates/Этикетка/Template.xml.",
+      "prompt": "Сгенерируй макет этикетки товара формата A5 книжный. Одна область Label с параметрами: Наименование, Артикул, Цена. Жирный шрифт для цены. Результат в <project-root>/Templates/Этикетка/Template.xml.",
       "expected_output": "Template.xml создан с одной областью Label и тремя параметрами, стиль цены с жирным шрифтом.",
       "expectations": [
         "JSON DSL содержит определение page как \"A5-portrait\" или эквивалентное",
-        "Скрипт mxl-compile.ps1 выполнен без ошибок",
+        "Скрипт python3 <skills-root>/mxl-compile/scripts/mxl-compile.py на Linux или powershell.exe -NoProfile -File <skills-root>/mxl-compile/scripts/mxl-compile.ps1 на Windows выполнен без ошибок",
         "Template.xml содержит именованную область Label",
-        "В области Label присутствуют параметры Наименование, Артикул, Цена"
+        "В области Label присутствуют параметры Наименование, Артикул, Цена",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/mxl-compile/scripts/mxl-compile.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/mxl-compile/scripts/mxl-compile.ps1"
       ]
     },
     {
@@ -29,10 +31,11 @@
       "prompt": "Создай макет для отчёта по продажам. Области: Заголовок (название отчёта и период), ЗаголовокТаблицы (шапка колонок), Строка (контрагент, сумма продаж), Подвал (итог). Формат A4 книжный. Путь: src/Reports/ПродажиПоКонтрагентам/Templates/ОсновнойМакет/Template.xml.",
       "expected_output": "Template.xml создан с четырьмя областями. Скрипт выполнен успешно.",
       "expectations": [
-        "Скрипт mxl-compile.ps1 вызван с корректными путями",
+        "Скрипт python3 <skills-root>/mxl-compile/scripts/mxl-compile.py на Linux или powershell.exe -NoProfile -File <skills-root>/mxl-compile/scripts/mxl-compile.ps1 на Windows вызван с корректными путями",
         "Template.xml содержит четыре именованные области: Заголовок, ЗаголовокТаблицы, Строка, Подвал",
         "В области Заголовок присутствуют параметры для названия и периода",
-        "В области Строка присутствуют параметры для контрагента и суммы"
+        "В области Строка присутствуют параметры для контрагента и суммы",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/mxl-compile/scripts/mxl-compile.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/mxl-compile/scripts/mxl-compile.ps1"
       ]
     }
   ]

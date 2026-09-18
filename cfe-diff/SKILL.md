@@ -9,6 +9,22 @@ allowed-tools:
 
 # /cfe-diff — Анализ расширения конфигурации
 
+<!-- docs-evals:python-entrypoint:start -->
+## Запуск скрипта
+
+Основной запуск на Linux выполняется Python 3 с аргументами CLI скрипта:
+
+```bash
+python3 "<skills-root>/cfe-diff/scripts/cfe-diff.py" -ConfigPath <project-root>/src -ExtensionPath <project-root>/extension
+```
+
+Windows PowerShell остаётся отдельным вариантом запуска:
+
+```powershell
+powershell.exe -NoProfile -File "<skills-root>/cfe-diff/scripts/cfe-diff.ps1" -ConfigPath <project-root>/src -ExtensionPath <project-root>/extension
+```
+<!-- docs-evals:python-entrypoint:end -->
+
 Анализирует расширение в двух режимах: обзор изменений (Mode A) или проверка переноса (Mode B).
 
 ## Параметры

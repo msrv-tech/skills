@@ -9,6 +9,22 @@ allowed-tools:
 
 # /cfe-borrow — Заимствование объектов из конфигурации
 
+<!-- docs-evals:python-entrypoint:start -->
+## Запуск скрипта
+
+Основной запуск на Linux выполняется Python 3 с аргументами CLI скрипта:
+
+```bash
+python3 "<skills-root>/cfe-borrow/scripts/cfe-borrow.py" -ConfigPath <project-root>/src -ExtensionPath <project-root>/extension
+```
+
+Windows PowerShell остаётся отдельным вариантом запуска:
+
+```powershell
+powershell.exe -NoProfile -File "<skills-root>/cfe-borrow/scripts/cfe-borrow.ps1" -ConfigPath <project-root>/src -ExtensionPath <project-root>/extension
+```
+<!-- docs-evals:python-entrypoint:end -->
+
 Заимствует объекты из основной конфигурации в расширение. Создаёт XML-файлы с `ObjectBelonging=Adopted` и `ExtendedConfigurationObject`, добавляет запись в ChildObjects расширения.
 
 ## Предусловие
@@ -101,4 +117,4 @@ powershell.exe -NoProfile -File <skills-root>/cfe-borrow/scripts/cfe-borrow.ps1 
 
 ## Реестр тестовых баз
 
-Перед любой операцией с ИБ используй скил `test-databases`: запусти его bundled-скрипт `scripts/resolve-registry.ps1`, затем выбери запись по правилам этого скила. Не определяй путь к реестру самостоятельно, не дублируй его структуру и не подключайся к базе вне реестра. `.v8-project.json` используй только для вспомогательных полей, которых нет в выбранной записи.
+Перед любой операцией с ИБ используй скил `test-databases`: на Linux запусти `python3 <skills-root>/test-databases/scripts/resolve-registry.py`, а на Windows — `resolve-registry.ps1` через PowerShell; затем выбери запись по правилам этого скила. Не определяй путь к реестру самостоятельно, не дублируй его структуру и не подключайся к базе вне реестра. `.v8-project.json` используй только для вспомогательных полей, которых нет в выбранной записи.

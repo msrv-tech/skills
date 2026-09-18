@@ -10,6 +10,22 @@ allowed-tools:
 
 # /subsystem-edit — редактирование подсистемы 1С
 
+<!-- docs-evals:python-entrypoint:start -->
+## Запуск скрипта
+
+Основной запуск на Linux выполняется Python 3 с аргументами CLI скрипта:
+
+```bash
+python3 "<skills-root>/subsystem-edit/scripts/subsystem-edit.py" -SubsystemPath <project-root>/Subsystem.xml
+```
+
+Windows PowerShell остаётся отдельным вариантом запуска:
+
+```powershell
+powershell.exe -NoProfile -File "<skills-root>/subsystem-edit/scripts/subsystem-edit.ps1" -SubsystemPath <project-root>/Subsystem.xml
+```
+<!-- docs-evals:python-entrypoint:end -->
+
 Точечное редактирование XML подсистемы: состав, дочерние подсистемы, свойства.
 
 ## Параметры и команда

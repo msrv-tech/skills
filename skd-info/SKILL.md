@@ -9,6 +9,22 @@ allowed-tools:
 
 # /skd-info — Анализ схемы компоновки данных
 
+<!-- docs-evals:python-entrypoint:start -->
+## Запуск скрипта
+
+Основной запуск на Linux выполняется Python 3 с аргументами CLI скрипта:
+
+```bash
+python3 "<skills-root>/skd-info/scripts/skd-info.py" -TemplatePath <project-root>/Template.xml
+```
+
+Windows PowerShell остаётся отдельным вариантом запуска:
+
+```powershell
+powershell.exe -NoProfile -File "<skills-root>/skd-info/scripts/skd-info.ps1" -TemplatePath <project-root>/Template.xml
+```
+<!-- docs-evals:python-entrypoint:end -->
+
 Читает Template.xml схемы компоновки данных (СКД) и выводит компактную сводку. Заменяет необходимость читать тысячи строк XML.
 
 ## Параметры и команда

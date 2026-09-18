@@ -3,35 +3,38 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "Проверь корректность подсистемы Продажи после того как я добавил новые объекты. Файл: D:/Projects/App/src/Subsystems/Продажи.xml.",
-      "expected_output": "Скрипт subsystem-validate.ps1 вызван, подсистема прошла валидацию — 13 проверок пройдены без ошибок, или обнаружены конкретные ошибки с описанием.",
+      "prompt": "Проверь корректность подсистемы Продажи после того как я добавил новые объекты. Файл: <project-root>/Projects/App/src/Subsystems/Продажи.xml.",
+      "expected_output": "Скрипт python3 <skills-root>/subsystem-validate/scripts/subsystem-validate.py на Linux или powershell.exe -NoProfile -File <skills-root>/subsystem-validate/scripts/subsystem-validate.ps1 на Windows вызван, подсистема прошла валидацию — 13 проверок пройдены без ошибок, или обнаружены конкретные ошибки с описанием.",
       "expectations": [
-        "Скрипт subsystem-validate.ps1 вызван с параметром -SubsystemPath, указывающим на Продажи.xml",
+        "Скрипт python3 <skills-root>/subsystem-validate/scripts/subsystem-validate.py на Linux или powershell.exe -NoProfile -File <skills-root>/subsystem-validate/scripts/subsystem-validate.ps1 на Windows вызван с параметром -SubsystemPath, указывающим на Продажи.xml",
         "Вывод содержит результат валидации: PASSED или список найденных ошибок",
         "Упомянуты конкретные проверки (XML-структура, Content, ChildObjects, свойства)",
-        "Claude информирует пользователя об итоге — прошла или не прошла валидация"
+        "Claude информирует пользователя об итоге — прошла или не прошла валидация",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/subsystem-validate/scripts/subsystem-validate.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/subsystem-validate/scripts/subsystem-validate.ps1"
       ]
     },
     {
       "id": 2,
       "prompt": "Подсистема Зарплата содержит UseOneCommand=true, но у неё несколько объектов в составе. Проверь, найдёт ли это валидатор. Файл: src/Subsystems/Зарплата.xml.",
-      "expected_output": "Скрипт subsystem-validate.ps1 вызван, валидатор находит ошибку — UseOneCommand=true требует ровно 1 элемент в Content, а найдено несколько.",
+      "expected_output": "Скрипт python3 <skills-root>/subsystem-validate/scripts/subsystem-validate.py на Linux или powershell.exe -NoProfile -File <skills-root>/subsystem-validate/scripts/subsystem-validate.ps1 на Windows вызван, валидатор находит ошибку — UseOneCommand=true требует ровно 1 элемент в Content, а найдено несколько.",
       "expectations": [
-        "Скрипт subsystem-validate.ps1 вызван с параметром -SubsystemPath, указывающим на Зарплата.xml",
+        "Скрипт python3 <skills-root>/subsystem-validate/scripts/subsystem-validate.py на Linux или powershell.exe -NoProfile -File <skills-root>/subsystem-validate/scripts/subsystem-validate.ps1 на Windows вызван с параметром -SubsystemPath, указывающим на Зарплата.xml",
         "Вывод содержит ошибку, связанную с нарушением правила UseOneCommand=true",
         "Claude поясняет пользователю в чём заключается ошибка и как её исправить",
-        "Валидация завершилась с результатом FAILED или эквивалентным статусом ошибки"
+        "Валидация завершилась с результатом FAILED или эквивалентным статусом ошибки",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/subsystem-validate/scripts/subsystem-validate.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/subsystem-validate/scripts/subsystem-validate.ps1"
       ]
     },
     {
       "id": 3,
-      "prompt": "Проверь подсистему Администрирование — есть ли в ней ссылки на несуществующие дочерние подсистемы. Путь: C:/Config/src/Subsystems/Администрирование.xml.",
-      "expected_output": "Скрипт subsystem-validate.ps1 вызван, проверка ChildObjects выполнена — найдены или не найдены битые ссылки на файлы дочерних подсистем.",
+      "prompt": "Проверь подсистему Администрирование — есть ли в ней ссылки на несуществующие дочерние подсистемы. Путь: <project-root>/Config/src/Subsystems/Администрирование.xml.",
+      "expected_output": "Скрипт python3 <skills-root>/subsystem-validate/scripts/subsystem-validate.py на Linux или powershell.exe -NoProfile -File <skills-root>/subsystem-validate/scripts/subsystem-validate.ps1 на Windows вызван, проверка ChildObjects выполнена — найдены или не найдены битые ссылки на файлы дочерних подсистем.",
       "expectations": [
-        "Скрипт subsystem-validate.ps1 вызван с параметром -SubsystemPath, указывающим на Администрирование.xml",
+        "Скрипт python3 <skills-root>/subsystem-validate/scripts/subsystem-validate.py на Linux или powershell.exe -NoProfile -File <skills-root>/subsystem-validate/scripts/subsystem-validate.ps1 на Windows вызван с параметром -SubsystemPath, указывающим на Администрирование.xml",
         "Выполнена проверка 10 (ChildObjects → файлы существуют)",
         "Вывод содержит информацию о наличии или отсутствии битых ссылок на дочерние подсистемы",
-        "Claude сообщает итог валидации и рекомендации при наличии ошибок"
+        "Claude сообщает итог валидации и рекомендации при наличии ошибок",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/subsystem-validate/scripts/subsystem-validate.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/subsystem-validate/scripts/subsystem-validate.ps1"
       ]
     }
   ]

@@ -13,6 +13,43 @@ MD_NS = "http://v8.1c.ru/8.3/MDClasses"
 XR_NS = "http://v8.1c.ru/8.3/xcf/readable"
 XSI_NS = "http://www.w3.org/2001/XMLSchema-instance"
 V8_NS = "http://v8.1c.ru/8.1/data/core"
+CURRENT_CONFIG_NS = "http://v8.1c.ru/8.1/data/enterprise/current-config"
+_QNAME_VALUE = re.compile(r"^(\s*)([A-Za-z_][\w.-]*):(\S+)(\s*)$")
+
+
+def _rewrite_current_config_qname(value, nsmap):
+    """Rewrite a QName value to cfg: when it belongs to CURRENT_CONFIG_NS.
+
+    Prefixes bound to the same URI are aliases, so mapping them all to cfg:
+    preserves the QName. Replacement is applied only to a complete prefix:local
+    token from nsmap, never as a raw substring — otherwise p1: would corrupt
+    d5p1:CatalogRef.X into d5cfg:CatalogRef.X.
+    """
+    if value is None:
+        return value
+    match = _QNAME_VALUE.fullmatch(value)
+    if match is None:
+        return value
+    lead, prefix, local, trail = match.groups()
+    if prefix == "cfg" or nsmap.get(prefix) != CURRENT_CONFIG_NS:
+        return value
+    return f"{lead}cfg:{local}{trail}"
+
+
+def serialize_type_xml(type_node, namespace_pattern):
+    clone = etree.fromstring(etree.tostring(type_node))
+
+    def rewrite(element):
+        nsmap = element.nsmap
+        element.text = _rewrite_current_config_qname(element.text, nsmap)
+        for name, attr_value in element.attrib.items():
+            element.set(name, _rewrite_current_config_qname(attr_value, nsmap))
+        for child in element:
+            rewrite(child)
+            child.tail = _rewrite_current_config_qname(child.tail, nsmap)
+
+    rewrite(clone)
+    return namespace_pattern.sub("", etree.tostring(clone, encoding="unicode"))
 
 
 def localname(el):
@@ -725,8 +762,7 @@ def main():
                 type_node = child.find(f"{{{MD_NS}}}Properties/{{{MD_NS}}}Type")
                 type_xml = ""
                 if type_node is not None:
-                    type_xml = etree.tostring(type_node, encoding="unicode")
-                    type_xml = ns_strip.sub("", type_xml)
+                    type_xml = serialize_type_xml(type_node, ns_strip)
 
                 attrs.append({"Name": attr_name, "Uuid": attr_uuid, "TypeXml": type_xml})
 
@@ -771,8 +807,7 @@ def main():
                         ts_type_node = ts_child.find(f"{{{MD_NS}}}Properties/{{{MD_NS}}}Type")
                         ts_type_xml = ""
                         if ts_type_node is not None:
-                            ts_type_xml = etree.tostring(ts_type_node, encoding="unicode")
-                            ts_type_xml = ns_strip.sub("", ts_type_xml)
+                            ts_type_xml = serialize_type_xml(ts_type_node, ns_strip)
                         ts_attrs.append({
                             "Name": (ts_attr_name_el.text or "").strip(),
                             "Uuid": ts_attr_uuid,

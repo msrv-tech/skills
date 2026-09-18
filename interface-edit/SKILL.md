@@ -10,6 +10,22 @@ allowed-tools:
 
 # /interface-edit — редактирование CommandInterface.xml
 
+<!-- docs-evals:python-entrypoint:start -->
+## Запуск скрипта
+
+Основной запуск на Linux выполняется Python 3 с аргументами CLI скрипта:
+
+```bash
+python3 "<skills-root>/interface-edit/scripts/interface-edit.py" -CIPath <project-root>/CommandInterface.xml
+```
+
+Windows PowerShell остаётся отдельным вариантом запуска:
+
+```powershell
+powershell.exe -NoProfile -File "<skills-root>/interface-edit/scripts/interface-edit.ps1" -CIPath <project-root>/CommandInterface.xml
+```
+<!-- docs-evals:python-entrypoint:end -->
+
 Точечное редактирование файла командного интерфейса подсистемы 1С.
 
 ## Параметры
@@ -43,7 +59,7 @@ powershell.exe -NoProfile -File '<skills-root>/interface-edit/scripts/interface-
 |----------|----------|----------|
 | hide | Cmd.Name или массив | Скрыть команду (CommandsVisibility, false) |
 | show | Cmd.Name или массив | Показать команду (visibility, true) |
-| place | {"command":"...","group":"CommandGroup.X"} | Разместить команду в группе |
+| place | {"command":"...","group":"NavigationPanelOrdinary"} | Разместить команду в стандартной или существующей пользовательской группе |
 | order | {"group":"...","commands":[...]} | Задать порядок команд в группе |
 | subsystem-order | ["Subsystem.X.Subsystem.A",...] | Порядок дочерних подсистем |
 | group-order | ["NavigationPanelOrdinary",...] | Порядок групп |
@@ -58,7 +74,7 @@ powershell.exe -NoProfile -File '<skills-root>/interface-edit/scripts/interface-
 ... -Operation show -Value "Report.Продажи.Command.Отчёт"
 
 # Разместить в группе
-... -Operation place -Value '{"command":"Report.X.Command.Y","group":"CommandGroup.Отчеты"}'
+... -Operation place -Value '{"command":"Report.X.Command.Y","group":"ActionsPanelReports"}'
 
 # Задать порядок подсистем
 ... -Operation subsystem-order -Value '["Subsystem.X.Subsystem.A","Subsystem.X.Subsystem.B"]'

@@ -26,6 +26,9 @@ allowed-tools:
 # /web-session — Управление 1С в веб-клиенте
 
 Скилл для работы с 1С:Предприятие через Playwright MCP (браузер).
+Backend браузерный и не использует Win32 UIA. Он доступен на Linux и Windows,
+если Playwright MCP и Chromium реально запущены. При ошибке не переключайся
+автоматически на нативный UI backend.
 
 > **Источник:** адаптировано из [RooLee10/web-session](https://github.com/RooLee10/web-session) (MIT)
 
@@ -230,7 +233,7 @@ return { status: 'ok' };
 
 Команда `запусти сценарий <путь>.js` — выполнить файл через `browser_run_code`.
 
-### Способ A (по умолчанию): clipboard loader
+### Windows: clipboard loader
 
 ```powershell
 Get-Content -LiteralPath <путь> -Raw | Set-Clipboard
@@ -255,9 +258,10 @@ async (page) => {
 }
 ```
 
-### Способ B (fallback): прямой запуск
+### Linux: прямой запуск
 
-Если clipboard недоступен — прочитать файл, передать код напрямую в `browser_run_code`.
+Прочитай файл сценария и передай код напрямую в `browser_run_code`. Это
+отдельный Linux-вариант, а не автоматический fallback.
 
 ---
 

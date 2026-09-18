@@ -6,12 +6,13 @@
       "prompt": "Добавь форму ФормаДокумента к документу src/Documents/АвансовыйОтчет.xml. Назначение Object, установить как форму по умолчанию.",
       "expected_output": "Созданы файлы формы в Documents/АвансовыйОтчет/Forms/ФормаДокумента/, форма зарегистрирована в XML документа как DefaultObjectForm.",
       "expectations": [
-        "Скрипт form-add.ps1 вызван с параметром -ObjectPath src/Documents/АвансовыйОтчет.xml",
+        "Скрипт python3 <skills-root>/form-add/scripts/form-add.py на Linux или powershell.exe -NoProfile -File <skills-root>/form-add/scripts/form-add.ps1 на Windows вызван с параметром -ObjectPath src/Documents/АвансовыйОтчет.xml",
         "Скрипт вызван с параметром -FormName ФормаДокумента",
         "Скрипт вызван с параметром -Purpose Object",
         "Скрипт вызван с флагом -SetDefault",
         "Создан файл src/Documents/АвансовыйОтчет/Forms/ФормаДокумента/Ext/Form.xml",
-        "В АвансовыйОтчет.xml обновлён тег DefaultObjectForm или DefaultForm"
+        "В АвансовыйОтчет.xml обновлён тег DefaultObjectForm или DefaultForm",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/form-add/scripts/form-add.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/form-add/scripts/form-add.ps1"
       ]
     },
     {
@@ -19,11 +20,12 @@
       "prompt": "Добавь форму списка ФормаСписка к справочнику src/Catalogs/Контрагенты.xml. Синоним: Список контрагентов.",
       "expected_output": "Форма списка создана и зарегистрирована как DefaultListForm в XML справочника.",
       "expectations": [
-        "Скрипт form-add.ps1 вызван с параметром -ObjectPath src/Catalogs/Контрагенты.xml",
+        "Скрипт python3 <skills-root>/form-add/scripts/form-add.py на Linux или powershell.exe -NoProfile -File <skills-root>/form-add/scripts/form-add.ps1 на Windows вызван с параметром -ObjectPath src/Catalogs/Контрагенты.xml",
         "Скрипт вызван с параметром -FormName ФормаСписка",
         "Скрипт вызван с параметром -Purpose List",
         "Скрипт вызван с параметром -Synonym \"Список контрагентов\"",
-        "Создан файл src/Catalogs/Контрагенты/Forms/ФормаСписка/Ext/Form/Module.bsl с пятью регионами"
+        "Создан файл src/Catalogs/Контрагенты/Forms/ФормаСписка/Ext/Form/Module.bsl с пятью регионами",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/form-add/scripts/form-add.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/form-add/scripts/form-add.ps1"
       ]
     },
     {
@@ -31,11 +33,12 @@
       "prompt": "Добавь форму записи ФормаЗаписи к регистру сведений src/InformationRegisters/КурсыВалют.xml.",
       "expected_output": "Форма записи создана и зарегистрирована как DefaultRecordForm в XML регистра.",
       "expectations": [
-        "Скрипт form-add.ps1 вызван с параметром -ObjectPath src/InformationRegisters/КурсыВалют.xml",
+        "Скрипт python3 <skills-root>/form-add/scripts/form-add.py на Linux или powershell.exe -NoProfile -File <skills-root>/form-add/scripts/form-add.ps1 на Windows вызван с параметром -ObjectPath src/InformationRegisters/КурсыВалют.xml",
         "Скрипт вызван с параметром -FormName ФормаЗаписи",
         "Скрипт вызван с параметром -Purpose Record",
         "Создан файл src/InformationRegisters/КурсыВалют/Forms/ФормаЗаписи.xml (метаданные формы с UUID)",
-        "В КурсыВалют.xml добавлена запись <Form> в ChildObjects и обновлён DefaultRecordForm"
+        "В КурсыВалют.xml добавлена запись <Form> в ChildObjects и обновлён DefaultRecordForm",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/form-add/scripts/form-add.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/form-add/scripts/form-add.ps1"
       ]
     }
   ]

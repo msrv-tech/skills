@@ -10,6 +10,22 @@ allowed-tools:
 
 # /form-compile — Генерация Form.xml
 
+<!-- docs-evals:python-entrypoint:start -->
+## Запуск скрипта
+
+Основной запуск на Linux выполняется Python 3 с аргументами CLI скрипта:
+
+```bash
+python3 "<skills-root>/form-compile/scripts/form-compile.py" -ObjectPath <project-root>/src/Object.xml -JsonPath <project-root>/definition.json -OutputPath <project-root>/src/Object/Forms/Form/Ext/Form.xml
+```
+
+Windows PowerShell остаётся отдельным вариантом запуска:
+
+```powershell
+powershell.exe -NoProfile -File "<skills-root>/form-compile/scripts/form-compile.ps1" -ObjectPath <project-root>/src/Object.xml -JsonPath <project-root>/definition.json -OutputPath <project-root>/src/Object/Forms/Form/Ext/Form.xml
+```
+<!-- docs-evals:python-entrypoint:end -->
+
 Два режима:
 1. **JSON DSL** — из JSON-определения формы
 2. **From object** (`-FromObject`) — автоматически из метаданных объекта 1С по пресету ERP

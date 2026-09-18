@@ -167,7 +167,7 @@ KNOWN_RIGHTS = {
         "EditDataHistoryVersionComment", "SwitchToDataHistoryVersion",
     ],
     "InformationRegister": [
-        "Read", "Update", "View", "Edit", "TotalsControl",
+        "Read", "Insert", "Update", "Delete", "View", "Edit", "TotalsControl",
         "ReadDataHistory", "ViewDataHistory", "UpdateDataHistory",
         "UpdateDataHistoryOfMissingData", "ReadDataHistoryOfMissingData",
         "UpdateDataHistorySettings", "UpdateDataHistoryVersionComment",
@@ -285,7 +285,7 @@ PRESETS = {
         "ChartOfCalculationTypes": ["Read", "Insert", "Update", "Delete", "View", "Edit", "InputByString", "InteractiveInsert", "InteractiveSetDeletionMark", "InteractiveClearDeletionMark"],
         "BusinessProcess": ["Read", "Insert", "Update", "Delete", "View", "Edit", "InputByString", "Start", "InteractiveInsert", "InteractiveSetDeletionMark", "InteractiveClearDeletionMark", "InteractiveActivate", "InteractiveStart"],
         "Task": ["Read", "Insert", "Update", "Delete", "View", "Edit", "InputByString", "Execute", "InteractiveInsert", "InteractiveSetDeletionMark", "InteractiveClearDeletionMark", "InteractiveActivate", "InteractiveExecute"],
-        "InformationRegister": ["Read", "Update", "View", "Edit"],
+        "InformationRegister": ["Read", "Insert", "Update", "Delete", "View", "Edit"],
         "AccumulationRegister": ["Read", "Update", "View", "Edit"],
         "AccountingRegister": ["Read", "Update", "View", "Edit"],
         "Constant": ["Read", "Update", "View", "Edit"],

@@ -3,7 +3,6 @@
 # Source: https://github.com/Desko77/claude-code-skills-1c
 
 import argparse
-import glob
 import os
 import random
 import shutil
@@ -11,26 +10,8 @@ import subprocess
 import sys
 import tempfile
 
-
-def resolve_v8path(v8path):
-    """Resolve path to 1cv8.exe."""
-    if not v8path:
-        candidates = glob.glob(r"C:\Program Files\1cv8\*\bin\1cv8.exe")
-        if candidates:
-            candidates.sort()
-            return candidates[-1]
-        else:
-            print("Error: 1cv8.exe not found. Specify -V8Path", file=sys.stderr)
-            sys.exit(1)
-    elif os.path.isdir(v8path):
-        v8path = os.path.join(v8path, "1cv8.exe")
-
-    if not os.path.isfile(v8path):
-        print(f"Error: 1cv8.exe not found at {v8path}", file=sys.stderr)
-        sys.exit(1)
-
-    return v8path
-
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+from common.onec_runtime import mask_sensitive_arguments, onec_process_env, resolve_1cv8_cli as resolve_v8path
 
 def main():
     sys.stdout.reconfigure(encoding="utf-8")
@@ -154,11 +135,12 @@ def main():
         arguments.append("/DisableStartupDialogs")
 
         # --- Execute ---
-        print(f"Running: 1cv8.exe {' '.join(arguments)}")
+        print(f"Running: {os.path.basename(v8path)} {' '.join(mask_sensitive_arguments(arguments))}")
         result = subprocess.run(
             [v8path] + arguments,
             capture_output=True,
             text=True,
+            env=onec_process_env(),
         )
         exit_code = result.returncode
 

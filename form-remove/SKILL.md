@@ -12,6 +12,22 @@ allowed-tools:
 
 # /form-remove — Удаление формы
 
+<!-- docs-evals:python-entrypoint:start -->
+## Запуск скрипта
+
+Основной запуск на Linux выполняется Python 3 с аргументами CLI скрипта:
+
+```bash
+python3 "<skills-root>/form-remove/scripts/remove-form.py" -ObjectName <ObjectName> -FormName <FormName>
+```
+
+Windows PowerShell остаётся отдельным вариантом запуска:
+
+```powershell
+powershell.exe -NoProfile -File "<skills-root>/form-remove/scripts/remove-form.ps1" -ObjectName <ObjectName> -FormName <FormName>
+```
+<!-- docs-evals:python-entrypoint:end -->
+
 Удаляет форму и убирает её регистрацию из корневого XML объекта.
 
 ## Usage

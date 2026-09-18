@@ -3,36 +3,39 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "Создай подсистему Продажи с синонимом 'Управление продажами'. В состав включи: Catalog.Контрагенты, Catalog.Номенклатура, Document.РеализацияТоваровУслуг, Report.ПродажиПоМенеджерам. Картинка: CommonPicture.Продажи. Конфигурация в C:/Projects/ERP/src/.",
-      "expected_output": "Создан файл C:/Projects/ERP/src/Subsystems/Продажи.xml. Подсистема добавлена в <ChildObjects> файла Configuration.xml.",
+      "prompt": "Создай подсистему Продажи с синонимом 'Управление продажами'. В состав включи: Catalog.Контрагенты, Catalog.Номенклатура, Document.РеализацияТоваровУслуг, Report.ПродажиПоМенеджерам. Картинка: CommonPicture.Продажи. Конфигурация в <project-root>/Projects/ERP/src/.",
+      "expected_output": "Создан файл <project-root>/Projects/ERP/src/Subsystems/Продажи.xml. Подсистема добавлена в <ChildObjects> файла Configuration.xml.",
       "expectations": [
-        "Скрипт subsystem-compile.ps1 вызван с параметрами -OutputDir и -Value или -DefinitionFile",
+        "Скрипт python3 <skills-root>/subsystem-compile/scripts/subsystem-compile.py на Linux или powershell.exe -NoProfile -File <skills-root>/subsystem-compile/scripts/subsystem-compile.ps1 на Windows вызван с параметрами -OutputDir и -Value или -DefinitionFile",
         "Создан файл Subsystems/Продажи.xml с элементами <Subsystem> и корректным UUID",
         "В XML-файле присутствуют ссылки на объекты состава: Catalog.Контрагенты, Document.РеализацияТоваровУслуг и другие",
         "В Configuration.xml в секции <ChildObjects> добавлена строка <Subsystem>Продажи</Subsystem>",
-        "В файле подсистемы присутствует ссылка на картинку CommonPicture.Продажи"
+        "В файле подсистемы присутствует ссылка на картинку CommonPicture.Продажи",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/subsystem-compile/scripts/subsystem-compile.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/subsystem-compile/scripts/subsystem-compile.ps1"
       ]
     },
     {
       "id": 2,
-      "prompt": "Добавь дочернюю подсистему НормативноСправочнаяИнформация внутрь существующей подсистемы Склад. Родительская подсистема в D:/1C/UT/src/Subsystems/Склад.xml. Конфигурация в D:/1C/UT/src/.",
-      "expected_output": "Создан файл D:/1C/UT/src/Subsystems/Склад/НормативноСправочнаяИнформация.xml. В файл Склад.xml добавлена ссылка на дочернюю подсистему.",
+      "prompt": "Добавь дочернюю подсистему НормативноСправочнаяИнформация внутрь существующей подсистемы Склад. Родительская подсистема в <project-root>/1C/UT/src/Subsystems/Склад.xml. Конфигурация в <project-root>/1C/UT/src/.",
+      "expected_output": "Создан файл <project-root>/1C/UT/src/Subsystems/Склад/НормативноСправочнаяИнформация.xml. В файл Склад.xml добавлена ссылка на дочернюю подсистему.",
       "expectations": [
-        "Скрипт subsystem-compile.ps1 вызван с параметром -Parent, указывающим на Subsystems/Склад.xml",
+        "Скрипт python3 <skills-root>/subsystem-compile/scripts/subsystem-compile.py на Linux или powershell.exe -NoProfile -File <skills-root>/subsystem-compile/scripts/subsystem-compile.ps1 на Windows вызван с параметром -Parent, указывающим на Subsystems/Склад.xml",
         "Создан файл в папке Subsystems/Склад/НормативноСправочнаяИнформация.xml",
         "В родительскую подсистему Склад.xml добавлена ссылка на дочернюю подсистему в <ChildObjects>",
-        "Созданный XML содержит корректную структуру метаданных подсистемы с уникальным UUID"
+        "Созданный XML содержит корректную структуру метаданных подсистемы с уникальным UUID",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/subsystem-compile/scripts/subsystem-compile.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/subsystem-compile/scripts/subsystem-compile.ps1"
       ]
     },
     {
       "id": 3,
-      "prompt": "Создай минимальную подсистему Отчётность только с именем (без состава и картинки) и добавь её в конфигурацию E:/EDT/BP/src/.",
+      "prompt": "Создай минимальную подсистему Отчётность только с именем (без состава и картинки) и добавь её в конфигурацию <project-root>/EDT/BP/src/.",
       "expected_output": "Создан Subsystems/Отчётность.xml с минимальными данными (только name). Подсистема зарегистрирована в Configuration.xml.",
       "expectations": [
-        "Скрипт subsystem-compile.ps1 вызван с JSON-определением содержащим только поле name: 'Отчётность'",
+        "Скрипт python3 <skills-root>/subsystem-compile/scripts/subsystem-compile.py на Linux или powershell.exe -NoProfile -File <skills-root>/subsystem-compile/scripts/subsystem-compile.ps1 на Windows вызван с JSON-определением содержащим только поле name: 'Отчётность'",
         "Создан файл Subsystems/Отчётность.xml",
         "В Configuration.xml добавлена запись <Subsystem>Отчётность</Subsystem>",
-        "Автоматическая валидация (если не указан -NoValidate) выполнена после генерации"
+        "Автоматическая валидация (если не указан -NoValidate) выполнена после генерации",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/subsystem-compile/scripts/subsystem-compile.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/subsystem-compile/scripts/subsystem-compile.ps1"
       ]
     }
   ]

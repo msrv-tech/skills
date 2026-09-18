@@ -10,6 +10,22 @@ allowed-tools:
 
 # /mxl-compile — Компилятор макета из DSL
 
+<!-- docs-evals:python-entrypoint:start -->
+## Запуск скрипта
+
+Основной запуск на Linux выполняется Python 3 с аргументами CLI скрипта:
+
+```bash
+python3 "<skills-root>/mxl-compile/scripts/mxl-compile.py" -JsonPath <project-root>/definition.json
+```
+
+Windows PowerShell остаётся отдельным вариантом запуска:
+
+```powershell
+powershell.exe -NoProfile -File "<skills-root>/mxl-compile/scripts/mxl-compile.ps1" -JsonPath <project-root>/definition.json
+```
+<!-- docs-evals:python-entrypoint:end -->
+
 Принимает компактное JSON-определение макета и генерирует корректный Template.xml для табличного документа 1С. агент описывает *что* нужно (области, параметры, стили), скрипт обеспечивает *корректность* XML (палитры, индексы, объединения, namespace).
 
 ## Использование

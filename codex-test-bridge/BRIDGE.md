@@ -387,6 +387,10 @@ Cleanup включен по умолчанию. Его можно отключи
 используй `run-ui`. Worker запускает штатные `/TestClient` и `/TestManager` на
 невидимом Windows desktop или в Xvfb и не требует web-клиента:
 
+Win32 desktop и UIA доступны только на Windows. Linux backend использует Xvfb
+и штатную объектную модель TestClient/TestManager; UIA там не эмулируется, а
+неподдерживаемый шаг должен завершаться ошибкой без смены backend.
+
 ```powershell
 python .\client.py run-ui `
   .\server.example.invalid.json `
@@ -433,20 +437,28 @@ bridge. Тестовый протокол 1С не требует совпаде
 Пример сборки CFE из XML на Linux:
 
 ```bash
-P=/opt/1cv8/x86_64/8.3.27.1859
-WORK=/tmp/codex-test-bridge-build
-rm -rf "$WORK"
-mkdir -p "$WORK"
-$P/ibcmd infobase create --database-path "$WORK/ib"
-$P/ibcmd extension --database-path "$WORK/ib" create \
-  --name=CodexTestBridge --name-prefix=CTB --purpose=add-on
-$P/ibcmd config import --database-path "$WORK/ib" \
-  --extension=CodexTestBridge ./src
-$P/ibcmd config check --database-path "$WORK/ib" \
-  --extension=CodexTestBridge --force
-$P/ibcmd config save --database-path "$WORK/ib" \
-  --extension=CodexTestBridge ./codex-test-bridge.cfe
+export CODEX_IBCMD=/opt/1cv8/x86_64/8.5.1.1529/ibcmd
+IBCMD="$CODEX_IBCMD" ./scripts/build_cfe_linux.sh
 ```
+
+Скрипт принимает точный executable или каталог версии платформы 8.5. Для
+каталога строго поддерживаются `<version>/ibcmd` и `<version>/bin/ibcmd`.
+Если присутствуют оба, нужно передать точный путь: неявного выбора нет.
+Сборка использует отдельный каталог `--data`; Designer fallback отсутствует.
+`/opt/1cv8/env` можно загрузить, когда он существует, но этот файл не является
+обязательной частью Linux-пакетов 8.5.
+
+Полная проверка Linux-стенда:
+
+```bash
+./scripts/linux_flow.sh doctor
+./scripts/linux_flow.sh run
+```
+
+`run` выполняет реальную сборку, установку, изменение VRD, проверку и reload
+Apache, оба HTTP health-запроса и `assertConnected` через Xvfb. Скрипт не
+устанавливает зависимости и не вызывает `sudo`; недостающая зависимость или
+нехватка прав являются ошибкой.
 
 ## Контракт для агентов
 

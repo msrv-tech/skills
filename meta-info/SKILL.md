@@ -9,6 +9,22 @@ allowed-tools:
 
 # /meta-info — Структура объекта метаданных 1С
 
+<!-- docs-evals:python-entrypoint:start -->
+## Запуск скрипта
+
+Основной запуск на Linux выполняется Python 3 с аргументами CLI скрипта:
+
+```bash
+python3 "<skills-root>/meta-info/scripts/meta-info.py" -ObjectPath <project-root>/src/Object.xml
+```
+
+Windows PowerShell остаётся отдельным вариантом запуска:
+
+```powershell
+powershell.exe -NoProfile -File "<skills-root>/meta-info/scripts/meta-info.ps1" -ObjectPath <project-root>/src/Object.xml
+```
+<!-- docs-evals:python-entrypoint:end -->
+
 Читает XML объекта метаданных из выгрузки конфигурации 1С и выводит компактное описание структуры.
 
 ## Параметры и команда

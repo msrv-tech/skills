@@ -10,6 +10,22 @@ allowed-tools:
 
 # /skd-compile — генерация СКД из JSON DSL
 
+<!-- docs-evals:python-entrypoint:start -->
+## Запуск скрипта
+
+Основной запуск на Linux выполняется Python 3 с аргументами CLI скрипта:
+
+```bash
+python3 "<skills-root>/skd-compile/scripts/skd-compile.py" -DefinitionFile <project-root>/definition.json -Value <Value>
+```
+
+Windows PowerShell остаётся отдельным вариантом запуска:
+
+```powershell
+powershell.exe -NoProfile -File "<skills-root>/skd-compile/scripts/skd-compile.ps1" -DefinitionFile <project-root>/definition.json -Value <Value>
+```
+<!-- docs-evals:python-entrypoint:end -->
+
 Принимает JSON-определение схемы компоновки данных → генерирует Template.xml (DataCompositionSchema).
 
 ## Параметры и команда

@@ -2,6 +2,11 @@
 
 Справочник операций для скалярных свойств объекта и свойств со вложенной XML-структурой (Owners, RegisterRecords, BasedOn, InputByString).
 
+Примеры ниже показывают аргументы, одинаковые для обоих entrypoint:
+`python3 <skills-root>/meta-edit/scripts/meta-edit.py` на Linux и
+`powershell.exe -NoProfile -File <skills-root>/meta-edit/scripts/meta-edit.ps1`
+на Windows.
+
 ## modify-property
 
 Изменение скалярных свойств объекта. Формат: `Ключ=Значение` (batch через `;;`):

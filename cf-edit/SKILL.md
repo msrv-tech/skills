@@ -10,6 +10,22 @@ allowed-tools:
 
 # /cf-edit — редактирование конфигурации 1С
 
+<!-- docs-evals:python-entrypoint:start -->
+## Запуск скрипта
+
+Основной запуск на Linux выполняется Python 3 с аргументами CLI скрипта:
+
+```bash
+python3 "<skills-root>/cf-edit/scripts/cf-edit.py" -ConfigPath <project-root>/src
+```
+
+Windows PowerShell остаётся отдельным вариантом запуска:
+
+```powershell
+powershell.exe -NoProfile -File "<skills-root>/cf-edit/scripts/cf-edit.ps1" -ConfigPath <project-root>/src
+```
+<!-- docs-evals:python-entrypoint:end -->
+
 Точечное редактирование Configuration.xml: свойства, состав ChildObjects, роли по умолчанию.
 
 ## Параметры и команда

@@ -12,6 +12,22 @@ allowed-tools:
 
 # /form-add — Добавление формы к объекту конфигурации
 
+<!-- docs-evals:python-entrypoint:start -->
+## Запуск скрипта
+
+Основной запуск на Linux выполняется Python 3 с аргументами CLI скрипта:
+
+```bash
+python3 "<skills-root>/form-add/scripts/form-add.py" -ObjectPath <project-root>/src/Object.xml
+```
+
+Windows PowerShell остаётся отдельным вариантом запуска:
+
+```powershell
+powershell.exe -NoProfile -File "<skills-root>/form-add/scripts/form-add.ps1" -ObjectPath <project-root>/src/Object.xml
+```
+<!-- docs-evals:python-entrypoint:end -->
+
 Создаёт управляемую форму (metadata XML + Form.xml + Module.bsl) и регистрирует её в корневом XML объекта конфигурации (Document, Catalog, InformationRegister и др.).
 
 ## Usage

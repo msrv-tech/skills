@@ -9,6 +9,22 @@ allowed-tools:
 
 # /subsystem-validate — валидация подсистемы 1С
 
+<!-- docs-evals:python-entrypoint:start -->
+## Запуск скрипта
+
+Основной запуск на Linux выполняется Python 3 с аргументами CLI скрипта:
+
+```bash
+python3 "<skills-root>/subsystem-validate/scripts/subsystem-validate.py" -SubsystemPath <project-root>/Subsystem.xml
+```
+
+Windows PowerShell остаётся отдельным вариантом запуска:
+
+```powershell
+powershell.exe -NoProfile -File "<skills-root>/subsystem-validate/scripts/subsystem-validate.ps1" -SubsystemPath <project-root>/Subsystem.xml
+```
+<!-- docs-evals:python-entrypoint:end -->
+
 Проверяет структурную корректность XML-файла подсистемы из выгрузки конфигурации.
 
 ## Параметры

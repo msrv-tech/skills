@@ -3,35 +3,38 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "Добавь в СКД отчёта C:/Reports/Продажи/Ext/Template.xml новое поле Менеджер (тип СправочникСсылка.Пользователи, роль @dimension) и итог по полю Сумма (выражение Сумма). Потом добавь фильтр по Менеджеру (пользовательский, по умолчанию выключен).",
-      "expected_output": "Скрипт skd-edit.ps1 вызван трижды (add-field, add-total, add-filter). Поле Менеджер добавлено в набор данных и в selection. Итог по Сумме добавлен. Фильтр по Менеджеру добавлен с userSettingID.",
+      "prompt": "Добавь в СКД отчёта <project-root>/Reports/Продажи/Ext/Template.xml новое поле Менеджер (тип СправочникСсылка.Пользователи, роль @dimension) и итог по полю Сумма (выражение Сумма). Потом добавь фильтр по Менеджеру (пользовательский, по умолчанию выключен).",
+      "expected_output": "Скрипт python3 <skills-root>/skd-edit/scripts/skd-edit.py на Linux или powershell.exe -NoProfile -File <skills-root>/skd-edit/scripts/skd-edit.ps1 на Windows вызван трижды (add-field, add-total, add-filter). Поле Менеджер добавлено в набор данных и в selection. Итог по Сумме добавлен. Фильтр по Менеджеру добавлен с userSettingID.",
       "expectations": [
-        "Скрипт skd-edit.ps1 вызван с параметром -Operation add-field и значением 'Менеджер: CatalogRef.Пользователи @dimension'",
-        "Скрипт skd-edit.ps1 вызван с параметром -Operation add-total и значением 'Сумма: Сумма'",
-        "Скрипт skd-edit.ps1 вызван с параметром -Operation add-filter и значением 'Менеджер = _ @off @user'",
-        "После редактирования файл Template.xml содержит поле Менеджер в секции fields набора данных"
+        "Скрипт python3 <skills-root>/skd-edit/scripts/skd-edit.py на Linux или powershell.exe -NoProfile -File <skills-root>/skd-edit/scripts/skd-edit.ps1 на Windows вызван с параметром -Operation add-field и значением 'Менеджер: CatalogRef.Пользователи @dimension'",
+        "Скрипт python3 <skills-root>/skd-edit/scripts/skd-edit.py на Linux или powershell.exe -NoProfile -File <skills-root>/skd-edit/scripts/skd-edit.ps1 на Windows вызван с параметром -Operation add-total и значением 'Сумма: Сумма'",
+        "Скрипт python3 <skills-root>/skd-edit/scripts/skd-edit.py на Linux или powershell.exe -NoProfile -File <skills-root>/skd-edit/scripts/skd-edit.ps1 на Windows вызван с параметром -Operation add-filter и значением 'Менеджер = _ @off @user'",
+        "После редактирования файл Template.xml содержит поле Менеджер в секции fields набора данных",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/skd-edit/scripts/skd-edit.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/skd-edit/scripts/skd-edit.ps1"
       ]
     },
     {
       "id": 2,
-      "prompt": "В СКД D:/1C/ERP/src/Reports/ОстаткиТМЦ/Ext/Template.xml нужно заменить текст запроса — добавить в него ещё одну таблицу через LEFT JOIN. Новый запрос: ВЫБРАТЬ Остатки.Номенклатура, Остатки.Количество, Цены.Цена ИЗ РегистрНакопления.Остатки КАК Остатки ЛЕВОЕ СОЕДИНЕНИЕ РегистрСведений.ЦеныНоменклатуры КАК Цены ПО Остатки.Номенклатура = Цены.Номенклатура.",
-      "expected_output": "Скрипт skd-edit.ps1 вызван с операцией set-query. Текст запроса в Template.xml заменён на новый с LEFT JOIN.",
+      "prompt": "В СКД <project-root>/1C/ERP/src/Reports/ОстаткиТМЦ/Ext/Template.xml нужно заменить текст запроса — добавить в него ещё одну таблицу через LEFT JOIN. Новый запрос: ВЫБРАТЬ Остатки.Номенклатура, Остатки.Количество, Цены.Цена ИЗ РегистрНакопления.Остатки КАК Остатки ЛЕВОЕ СОЕДИНЕНИЕ РегистрСведений.ЦеныНоменклатуры КАК Цены ПО Остатки.Номенклатура = Цены.Номенклатура.",
+      "expected_output": "Скрипт python3 <skills-root>/skd-edit/scripts/skd-edit.py на Linux или powershell.exe -NoProfile -File <skills-root>/skd-edit/scripts/skd-edit.ps1 на Windows вызван с операцией set-query. Текст запроса в Template.xml заменён на новый с LEFT JOIN.",
       "expectations": [
-        "Скрипт skd-edit.ps1 вызван с параметром -Operation set-query",
+        "Скрипт python3 <skills-root>/skd-edit/scripts/skd-edit.py на Linux или powershell.exe -NoProfile -File <skills-root>/skd-edit/scripts/skd-edit.ps1 на Windows вызван с параметром -Operation set-query",
         "Параметр -Value содержит полный текст нового запроса с ЛЕВОЕ СОЕДИНЕНИЕ",
         "После редактирования файл Template.xml содержит новый текст запроса в секции query набора данных",
-        "Операция set-query выполнена без пакетного режима (не содержит ';;' в значении)"
+        "Операция set-query выполнена без пакетного режима (не содержит ';;' в значении)",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/skd-edit/scripts/skd-edit.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/skd-edit/scripts/skd-edit.ps1"
       ]
     },
     {
       "id": 3,
-      "prompt": "В отчёте E:/EDT/ZUP/src/Reports/ЗарплатаСотрудников/Ext/Template.xml нужно: изменить структуру группировки на 'Подразделение > Сотрудник > детали', добавить сортировку по Сотруднику по возрастанию, и установить заголовок отчёта 'Зарплата сотрудников за период'.",
-      "expected_output": "Три вызова skd-edit.ps1: set-structure, add-order, set-outputParameter. Структура заменена, сортировка и заголовок добавлены.",
+      "prompt": "В отчёте <project-root>/EDT/ZUP/src/Reports/ЗарплатаСотрудников/Ext/Template.xml нужно: изменить структуру группировки на 'Подразделение > Сотрудник > детали', добавить сортировку по Сотруднику по возрастанию, и установить заголовок отчёта 'Зарплата сотрудников за период'.",
+      "expected_output": "Три вызова python3 <skills-root>/skd-edit/scripts/skd-edit.py на Linux или powershell.exe -NoProfile -File <skills-root>/skd-edit/scripts/skd-edit.ps1 на Windows: set-structure, add-order, set-outputParameter. Структура заменена, сортировка и заголовок добавлены.",
       "expectations": [
-        "Скрипт skd-edit.ps1 вызван с -Operation set-structure и значением 'Подразделение > Сотрудник > details'",
-        "Скрипт skd-edit.ps1 вызван с -Operation add-order и значением 'Сотрудник'",
-        "Скрипт skd-edit.ps1 вызван с -Operation set-outputParameter и значением 'Заголовок = Зарплата сотрудников за период'",
-        "Каждый вызов скрипта завершился без ошибок (результат прочитан или код возврата 0)"
+        "Скрипт python3 <skills-root>/skd-edit/scripts/skd-edit.py на Linux или powershell.exe -NoProfile -File <skills-root>/skd-edit/scripts/skd-edit.ps1 на Windows вызван с -Operation set-structure и значением 'Подразделение > Сотрудник > details'",
+        "Скрипт python3 <skills-root>/skd-edit/scripts/skd-edit.py на Linux или powershell.exe -NoProfile -File <skills-root>/skd-edit/scripts/skd-edit.ps1 на Windows вызван с -Operation add-order и значением 'Сотрудник'",
+        "Скрипт python3 <skills-root>/skd-edit/scripts/skd-edit.py на Linux или powershell.exe -NoProfile -File <skills-root>/skd-edit/scripts/skd-edit.ps1 на Windows вызван с -Operation set-outputParameter и значением 'Заголовок = Зарплата сотрудников за период'",
+        "Каждый вызов скрипта завершился без ошибок (результат прочитан или код возврата 0)",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/skd-edit/scripts/skd-edit.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/skd-edit/scripts/skd-edit.ps1"
       ]
     }
   ]

@@ -10,6 +10,22 @@ allowed-tools:
 
 # /repo-update - Обновление из хранилища 1С
 
+<!-- docs-evals:python-entrypoint:start -->
+## Запуск скрипта
+
+Основной запуск на Linux выполняется Python 3 с аргументами CLI скрипта:
+
+```bash
+python3 "<skills-root>/repo-update/scripts/repo-update.py" -RegistryPath <private-registry.json> -Database <registered-test-database>
+```
+
+Windows PowerShell остаётся отдельным вариантом запуска:
+
+```powershell
+powershell.exe -NoProfile -File "<skills-root>/repo-update/scripts/repo-update.ps1" -RegistryPath <private-registry.json> -Database <registered-test-database>
+```
+<!-- docs-evals:python-entrypoint:end -->
+
 Получает конфигурацию из хранилища 1С в локальную конфигурацию выбранной информационной базы через пакетный режим конфигуратора:
 `/ConfigurationRepositoryUpdateCfg`.
 
@@ -27,7 +43,8 @@ allowed-tools:
 
 ## Источник параметров
 
-Сначала используй скил `test-databases`. Скрипт `repo-update.ps1` сам вызывает его resolver; `-RegistryPath` нужен только для явного override.
+Сначала используй скил `test-databases`. Python- и PowerShell-скрипты вызывают
+общий resolver; `-RegistryPath` нужен только для явного override.
 
 Правила выбора записи:
 1. Если пользователь указал базу, сопоставь ее с `Ref`, последним сегментом `path`, `Repository.Name`, `Repository.Url`, `Srvr/Ref`.
@@ -57,12 +74,23 @@ allowed-tools:
 
 ## Команда
 
-Запускай bundled-скрипт из каталога этого скила:
+Linux — основной backend. Путь к `1cv8` можно передать через `-V8Path`, задать
+в `ONEC_1CV8_PATH`/`CODEX_1C_EXECUTABLE` или разрешить строго из
+`/opt/1cv8/x86_64/<version>/1cv8` либо
+`/opt/1cv8/x86_64/<version>/bin/1cv8`:
+
+```bash
+python3 <skills-root>/repo-update/scripts/repo-update.py \
+  -ProjectPath <project-root>
+python3 <skills-root>/repo-update/scripts/repo-update.py \
+  -Database <registered-test-database> -Force -UpdateDB
+```
+
+Windows PowerShell — отдельный вариант:
 
 ```powershell
-$codexRoot = if ($env:CODEX_HOME) { $env:CODEX_HOME } else { Join-Path ([Environment]::GetFolderPath('UserProfile')) '.codex' }
-$repoUpdateScript = Join-Path $codexRoot 'skills\repo-update\scripts\repo-update.ps1'
-& $repoUpdateScript
+powershell.exe -NoProfile -File <skills-root>/repo-update/scripts/repo-update.ps1 `
+  -ProjectPath <project-root>
 ```
 
 ### Параметры скрипта
@@ -89,6 +117,24 @@ $repoUpdateScript = Join-Path $codexRoot 'skills\repo-update\scripts\repo-update
 - В выводе скрипта команда печатается с замаскированными паролями.
 
 ## Примеры
+
+Linux:
+
+```bash
+# Текущий проект
+python3 <skills-root>/repo-update/scripts/repo-update.py \
+  -ProjectPath <project-root>
+
+# Явно выбранная тестовая база
+python3 <skills-root>/repo-update/scripts/repo-update.py \
+  -Database demo -Force
+
+# Получить и применить к БД
+python3 <skills-root>/repo-update/scripts/repo-update.py \
+  -Database demo -Force -UpdateDB
+```
+
+Windows:
 
 ```powershell
 $codexRoot = if ($env:CODEX_HOME) { $env:CODEX_HOME } else { Join-Path ([Environment]::GetFolderPath('UserProfile')) '.codex' }

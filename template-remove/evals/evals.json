@@ -3,35 +3,38 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "Удали макет СтарыйМакет из обработки ЗагрузкаДанных. Исходники в D:/Projects/App/src/.",
-      "expected_output": "Скрипт remove-template.ps1 вызван, папка Templates/СтарыйМакет/ и файл Templates/СтарыйМакет.xml удалены, из ЗагрузкаДанных.xml убрана запись Template.",
+      "prompt": "Удали макет СтарыйМакет из обработки ЗагрузкаДанных. Исходники в <project-root>/Projects/App/src/.",
+      "expected_output": "Скрипт python3 <skills-root>/template-remove/scripts/remove-template.py на Linux или powershell.exe -NoProfile -File <skills-root>/template-remove/scripts/remove-template.ps1 на Windows вызван, папка Templates/СтарыйМакет/ и файл Templates/СтарыйМакет.xml удалены, из ЗагрузкаДанных.xml убрана запись Template.",
       "expectations": [
-        "Скрипт remove-template.ps1 вызван с параметрами -ObjectName ЗагрузкаДанных и -TemplateName СтарыйМакет",
+        "Скрипт python3 <skills-root>/template-remove/scripts/remove-template.py на Linux или powershell.exe -NoProfile -File <skills-root>/template-remove/scripts/remove-template.ps1 на Windows вызван с параметрами -ObjectName ЗагрузкаДанных и -TemplateName СтарыйМакет",
         "Удалён файл Templates/СтарыйМакет.xml (метаданные макета)",
         "Удалена папка Templates/СтарыйМакет/ (содержимое макета)",
-        "Из корневого XML объекта ЗагрузкаДанных.xml убран элемент Template для СтарыйМакет"
+        "Из корневого XML объекта ЗагрузкаДанных.xml убран элемент Template для СтарыйМакет",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/template-remove/scripts/remove-template.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/template-remove/scripts/remove-template.ps1"
       ]
     },
     {
       "id": 2,
       "prompt": "Удали схему компоновки ОсновнаяСхема из отчёта АнализПродаж. Исходники в src/.",
-      "expected_output": "Скрипт remove-template.ps1 вызван, макет ОсновнаяСхема удалён, поле MainDataCompositionSchema в АнализПродаж.xml очищено.",
+      "expected_output": "Скрипт python3 <skills-root>/template-remove/scripts/remove-template.py на Linux или powershell.exe -NoProfile -File <skills-root>/template-remove/scripts/remove-template.ps1 на Windows вызван, макет ОсновнаяСхема удалён, поле MainDataCompositionSchema в АнализПродаж.xml очищено.",
       "expectations": [
-        "Скрипт remove-template.ps1 вызван с параметрами -ObjectName АнализПродаж и -TemplateName ОсновнаяСхема",
+        "Скрипт python3 <skills-root>/template-remove/scripts/remove-template.py на Linux или powershell.exe -NoProfile -File <skills-root>/template-remove/scripts/remove-template.ps1 на Windows вызван с параметрами -ObjectName АнализПродаж и -TemplateName ОсновнаяСхема",
         "Удалены файлы Templates/ОсновнаяСхема.xml и папка Templates/ОсновнаяСхема/",
         "Поле MainDataCompositionSchema в АнализПродаж.xml очищено (так как удалённый макет был основной схемой)",
-        "Claude сообщает об очистке MainDataCompositionSchema"
+        "Claude сообщает об очистке MainDataCompositionSchema",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/template-remove/scripts/remove-template.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/template-remove/scripts/remove-template.ps1"
       ]
     },
     {
       "id": 3,
-      "prompt": "Удали макет ПФ_MXL_Счёт из справочника Договоры. Исходники в C:/Config/src/.",
-      "expected_output": "Скрипт remove-template.ps1 вызван, файлы макета ПФ_MXL_Счёт удалены, из Договоры.xml убрана соответствующая запись Template.",
+      "prompt": "Удали макет ПФ_MXL_Счёт из справочника Договоры. Исходники в <project-root>/Config/src/.",
+      "expected_output": "Скрипт python3 <skills-root>/template-remove/scripts/remove-template.py на Linux или powershell.exe -NoProfile -File <skills-root>/template-remove/scripts/remove-template.ps1 на Windows вызван, файлы макета ПФ_MXL_Счёт удалены, из Договоры.xml убрана соответствующая запись Template.",
       "expectations": [
-        "Скрипт remove-template.ps1 вызван с параметрами -ObjectName Договоры и -TemplateName ПФ_MXL_Счёт",
-        "Параметр -SrcDir указывает на C:/Config/src/ или эквивалентный путь",
+        "Скрипт python3 <skills-root>/template-remove/scripts/remove-template.py на Linux или powershell.exe -NoProfile -File <skills-root>/template-remove/scripts/remove-template.ps1 на Windows вызван с параметрами -ObjectName Договоры и -TemplateName ПФ_MXL_Счёт",
+        "Параметр -SrcDir указывает на <project-root>/Config/src/ или эквивалентный путь",
         "Удалён файл Templates/ПФ_MXL_Счёт.xml и папка Templates/ПФ_MXL_Счёт/",
-        "Из корневого XML справочника Договоры.xml убран элемент Template для ПФ_MXL_Счёт"
+        "Из корневого XML справочника Договоры.xml убран элемент Template для ПФ_MXL_Счёт",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/template-remove/scripts/remove-template.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/template-remove/scripts/remove-template.ps1"
       ]
     }
   ]

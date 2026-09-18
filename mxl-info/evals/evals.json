@@ -6,10 +6,11 @@
       "prompt": "Перед написанием кода заполнения покажи структуру макета накладной: какие именованные области есть и какие параметры нужно заполнять. Макет: src/Documents/РеализацияТоваровУслуг/Templates/Накладная/Template.xml.",
       "expected_output": "Вывод содержит список именованных областей макета с типами, диапазонами строк и перечнем параметров по каждой области.",
       "expectations": [
-        "Скрипт mxl-info.ps1 вызван с параметром -TemplatePath",
+        "Скрипт python3 <skills-root>/mxl-info/scripts/mxl-info.py на Linux или powershell.exe -NoProfile -File <skills-root>/mxl-info/scripts/mxl-info.ps1 на Windows вызван с параметром -TemplatePath",
         "Вывод содержит секцию Named areas со списком областей (имя, тип, диапазон строк)",
         "Вывод содержит секцию Parameters by area с параметрами каждой области",
-        "Области перечислены в порядке сверху вниз (по позиции строк)"
+        "Области перечислены в порядке сверху вниз (по позиции строк)",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/mxl-info/scripts/mxl-info.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/mxl-info/scripts/mxl-info.ps1"
       ]
     },
     {
@@ -17,10 +18,11 @@
       "prompt": "Покажи структуру макета обработки ЗагрузкаДанных — нужно знать статические тексты и шаблоны строк. Обработка называется ЗагрузкаДанных, макет — ОбразецДанных. Исходники в src/.",
       "expected_output": "Вывод содержит структуру макета с текстовым содержимым ячеек и шаблонными строками с параметрами в скобках.",
       "expectations": [
-        "Скрипт mxl-info.ps1 вызван с параметрами -ProcessorName ЗагрузкаДанных и -TemplateName ОбразецДанных",
+        "Скрипт python3 <skills-root>/mxl-info/scripts/mxl-info.py на Linux или powershell.exe -NoProfile -File <skills-root>/mxl-info/scripts/mxl-info.ps1 на Windows вызван с параметрами -ProcessorName ЗагрузкаДанных и -TemplateName ОбразецДанных",
         "Флаг -WithText передан для отображения текстового содержимого",
         "Вывод содержит секцию Text content со статическими текстами",
-        "Вывод содержит шаблонные строки (Templates) с подстановками [ИмяПараметра]"
+        "Вывод содержит шаблонные строки (Templates) с подстановками [ИмяПараметра]",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/mxl-info/scripts/mxl-info.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/mxl-info/scripts/mxl-info.ps1"
       ]
     },
     {
@@ -28,10 +30,11 @@
       "prompt": "Макет отчёта по продажам слишком большой — вывод обрезается на 150 строках. Покажи следующие 150 строк. Путь: src/Reports/ОтчётПоПродажам/Templates/Основной/Template.xml.",
       "expected_output": "Вывод содержит следующую страницу описания макета (строки 150-300), предыдущие 150 строк пропущены.",
       "expectations": [
-        "Скрипт mxl-info.ps1 вызван с параметром -Offset 150",
+        "Скрипт python3 <skills-root>/mxl-info/scripts/mxl-info.py на Linux или powershell.exe -NoProfile -File <skills-root>/mxl-info/scripts/mxl-info.ps1 на Windows вызван с параметром -Offset 150",
         "Параметр -TemplatePath указывает на Template.xml отчёта",
         "Вывод начинается со строки, следующей после ранее показанных 150 строк",
-        "Если вывод снова обрезан — показана подсказка использовать -Offset 300"
+        "Если вывод снова обрезан — показана подсказка использовать -Offset 300",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/mxl-info/scripts/mxl-info.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/mxl-info/scripts/mxl-info.ps1"
       ]
     }
   ]

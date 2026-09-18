@@ -11,6 +11,9 @@ import sys
 import tempfile
 import uuid
 
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+from common.onec_runtime import onec_process_env
+
 
 def new_uuid():
     return str(uuid.uuid4())
@@ -1039,6 +1042,7 @@ def main():
     result = subprocess.run(
         [args.V8Path, 'CREATEINFOBASE', f'File={temp_base}', '/DisableStartupDialogs'],
         capture_output=True, text=True,
+        env=onec_process_env(),
     )
     if result.returncode != 0:
         print(f'Failed to create infobase (code: {result.returncode})', file=sys.stderr)
@@ -1051,6 +1055,7 @@ def main():
         result = subprocess.run(
             [args.V8Path, 'DESIGNER', f'/F{temp_base}', '/LoadConfigFromFiles', cfg_dir, '/DisableStartupDialogs'],
             capture_output=True, text=True,
+            env=onec_process_env(),
         )
         if result.returncode != 0:
             print(f'Failed to load config (code: {result.returncode})', file=sys.stderr)
@@ -1062,6 +1067,7 @@ def main():
         result = subprocess.run(
             [args.V8Path, 'DESIGNER', f'/F{temp_base}', '/UpdateDBCfg', '/Out', update_log, '/DisableStartupDialogs'],
             capture_output=True, text=True,
+            env=onec_process_env(),
         )
         if result.returncode != 0:
             if os.path.isfile(update_log):

@@ -15,6 +15,16 @@ import time
 import psutil
 
 
+def linux_main():
+    """Dispatch to managed-publication shutdown on system Apache."""
+    skills_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    if skills_root not in sys.path:
+        sys.path.insert(0, skills_root)
+    from common.apache_linux import cli, linux_stop
+
+    cli(linux_stop)
+
+
 def get_our_httpd(httpd_exe_norm):
     """Filter httpd processes by our ApachePath."""
     result = []
@@ -45,6 +55,9 @@ def get_all_httpd():
 def main():
     sys.stdout.reconfigure(encoding="utf-8")
     sys.stderr.reconfigure(encoding="utf-8")
+    if os.name != "nt":
+        linux_main()
+        return
     parser = argparse.ArgumentParser(description='Stop Apache HTTP Server', allow_abbrev=False)
     parser.add_argument('-ApachePath', type=str, default='', help='Apache root (default: tools\\apache24)')
     args = parser.parse_args()

@@ -9,6 +9,22 @@ allowed-tools:
 
 # /web-stop — Остановка Apache
 
+<!-- docs-evals:python-entrypoint:start -->
+## Запуск скрипта
+
+Основной запуск на Linux выполняется Python 3 с аргументами CLI скрипта:
+
+```bash
+python3 "<skills-root>/web-stop/scripts/web-stop.py" -ApachePath <ApachePath>
+```
+
+Windows PowerShell остаётся отдельным вариантом запуска:
+
+```powershell
+powershell.exe -NoProfile -File "<skills-root>/web-stop/scripts/web-stop.ps1" -ApachePath <ApachePath>
+```
+<!-- docs-evals:python-entrypoint:end -->
+
 Останавливает Apache HTTP Server. Публикации сохраняются — при следующем `/web-publish` сервер запустится снова.
 
 ## Usage
@@ -23,6 +39,18 @@ allowed-tools:
 По умолчанию `tools/apache24` от корня проекта.
 
 ## Команда
+
+Ubuntu:
+
+```bash
+python3 <skills-root>/web-stop/scripts/web-stop.py
+```
+
+На общей системной Apache скрипт не останавливает `apache2.service`: он
+отключает только ссылки `1c-skills-*.conf`, проверяет конфигурацию и выполняет
+reload. Файлы публикаций сохраняются, чужие сайты и публикации не изменяются.
+
+Windows:
 
 ```powershell
 powershell.exe -NoProfile -File <skills-root>/web-stop/scripts/web-stop.ps1 <параметры>

@@ -8,6 +8,22 @@ allowed-tools:
 
 # /role-validate — валидация роли 1С
 
+<!-- docs-evals:python-entrypoint:start -->
+## Запуск скрипта
+
+Основной запуск на Linux выполняется Python 3 с аргументами CLI скрипта:
+
+```bash
+python3 "<skills-root>/role-validate/scripts/role-validate.py" -RightsPath <project-root>/Rights.xml
+```
+
+Windows PowerShell остаётся отдельным вариантом запуска:
+
+```powershell
+powershell.exe -NoProfile -File "<skills-root>/role-validate/scripts/role-validate.ps1" -RightsPath <project-root>/Rights.xml
+```
+<!-- docs-evals:python-entrypoint:end -->
+
 Проверяет корректность `Rights.xml` роли: формат XML, namespace, глобальные флаги, типы объектов, имена прав, RLS-ограничения, шаблоны. Опционально проверяет метаданные роли (UUID, имя, синоним).
 
 ## Параметры

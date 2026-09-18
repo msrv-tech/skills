@@ -13,6 +13,22 @@ allowed-tools:
 
 # test-databases — только демобазы из реестра
 
+<!-- docs-evals:python-entrypoint:start -->
+## Запуск скрипта
+
+Основной запуск на Linux выполняется Python 3 с аргументами CLI скрипта:
+
+```bash
+python3 "<skills-root>/test-databases/scripts/resolve-registry.py" -RegistryPath <private-registry.json>
+```
+
+Windows PowerShell остаётся отдельным вариантом запуска:
+
+```powershell
+powershell.exe -NoProfile -File "<skills-root>/test-databases/scripts/resolve-registry.ps1" -RegistryPath <private-registry.json>
+```
+<!-- docs-evals:python-entrypoint:end -->
+
 ## Главное правило
 
 **Работай только с демобазами из реестра, разрешённого bundled-скриптом этого скила.**
@@ -25,19 +41,35 @@ allowed-tools:
 
 ## Разрешение реестра
 
-Запусти `scripts/resolve-registry.ps1` из каталога этого скила. Не угадывай путь и не копируй алгоритм разрешения в другие скилы.
+Не угадывай путь и не копируй алгоритм разрешения в другие скилы.
+
+Linux — основной backend:
+
+```bash
+python3 <skills-root>/test-databases/scripts/resolve-registry.py
+python3 <skills-root>/test-databases/scripts/resolve-registry.py \
+  -RegistryPath <private-registry.json>
+```
+
+Windows PowerShell — отдельный вариант:
+
+```powershell
+powershell.exe -NoProfile -File <skills-root>/test-databases/scripts/resolve-registry.ps1
+```
 
 Resolver использует первый настроенный источник:
 
 1. `-RegistryPath` для явного override;
 2. `CODEX_1C_TEST_DATABASES` для CI и временных окружений;
-3. `testDatabasesPath` из приватного `%CODEX_HOME%\1c\local.json`; если `CODEX_HOME` не задан, используй профиль Codex текущего пользователя.
+3. `testDatabasesPath` из приватного `<CODEX_HOME>/1c/local.json`; если
+   `CODEX_HOME` не задан, используй `.codex/1c/local.json` в домашнем каталоге
+   текущего пользователя.
 
 Локальный файл находится вне репозитория и имеет вид:
 
 ```json
 {
-  "testDatabasesPath": "<private-path>\\test-databases.json"
+  "testDatabasesPath": "<private-path>/test-databases.json"
 }
 ```
 
