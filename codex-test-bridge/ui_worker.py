@@ -98,6 +98,13 @@ def write_atomic_json(path: Path, value: Any) -> None:
     temporary.replace(path)
 
 
+PLACEHOLDER_TOKEN = re.compile(r"^\$\{[A-Za-z_][A-Za-z0-9_.]*\}$")
+
+
+def is_placeholder_token(value: Any) -> bool:
+    return isinstance(value, str) and PLACEHOLDER_TOKEN.fullmatch(value) is not None
+
+
 def navigation_ref_from_uuid(value: str) -> str:
     """Convert a standard 1C UUID to the byte-group order used by e1cib ref."""
     match = re.fullmatch(
@@ -148,9 +155,15 @@ def prepare_native_ui_scenario(data: Any) -> dict[str, Any]:
                     raise UiWorkerError(
                         f"UI scenario step {index}: uuid shorthand requires kind=catalog|document and metadataName"
                     )
-                ref = navigation_ref_from_uuid(str(step["uuid"]))
-                step["link"] = f"e1cib/data/{kind_names[kind]}.{metadata_name}?ref={ref}"
-            if not isinstance(step.get("link"), str) or not step["link"]:
+                uuid_value = str(step["uuid"])
+                if is_placeholder_token(uuid_value):
+                    # Hybrid before-hooks substitute ${alias.path} after this
+                    # validation pass. Keep the shorthand until then.
+                    pass
+                else:
+                    ref = navigation_ref_from_uuid(uuid_value)
+                    step["link"] = f"e1cib/data/{kind_names[kind]}.{metadata_name}?ref={ref}"
+            if not (isinstance(step.get("link"), str) and step["link"]) and not step.get("uuid"):
                 raise UiWorkerError(f"UI scenario step {index}: openNavigationLink requires link or uuid shorthand")
         if action == "openClientNavigationLink":
             if not isinstance(step.get("link"), str) or not step["link"]:
@@ -1221,6 +1234,13 @@ def run_ui_worker(config: dict[str, Any], scenario_path: str | Path, artifact_di
                                     response = server_hook_handler(partial) if server_hook_handler else {"ok": False, "error": "No server hook handler"}
                                 except Exception as exc:
                                     response = {"ok": False, "error": f"{type(exc).__name__}: {exc}"}
+                                if isinstance(response, dict) and isinstance(response.get("scenario"), dict):
+                                    try:
+                                        prepared = prepare_native_ui_scenario(response["scenario"])
+                                        prepared.pop("$schema", None)
+                                        response["scenario"] = prepared
+                                    except UiWorkerError as exc:
+                                        response = {"ok": False, "error": str(exc)}
                                 response.setdefault("hookId", hook_id)
                                 response.setdefault("status", "server-hook-response")
                                 bridge_command(runtime_config, {"command": "uiJobSet", "jobId": run_id, "status": "server-hook-response", "result": json.dumps(response, ensure_ascii=True, separators=(",", ":"))})

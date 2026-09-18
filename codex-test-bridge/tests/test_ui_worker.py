@@ -84,6 +84,24 @@ class UiWorkerTests(unittest.TestCase):
             "e1cib/data/Справочник.ВнутренниеДокументы?ref=93f40050568b412711e40dada14919f5",
         )
 
+    def test_navigation_uuid_placeholder_is_kept_for_hybrid_hooks(self):
+        scenario = prepare_native_ui_scenario({"steps": [{
+            "action": "openNavigationLink", "kind": "catalog", "metadataName": "Контрагенты",
+            "uuid": "${partner.result.uuid}",
+            "targetForm": {"formName": "Справочник.Контрагенты.Форма.ФормаЭлемента"},
+        }]})
+        self.assertEqual(scenario["steps"][0]["uuid"], "${partner.result.uuid}")
+        self.assertNotIn("link", scenario["steps"][0])
+        expanded = prepare_native_ui_scenario({"steps": [{
+            "action": "openNavigationLink", "kind": "catalog", "metadataName": "Контрагенты",
+            "uuid": "a14919f5-0dad-11e4-93f4-0050568b4127",
+            "targetForm": {"formName": "Справочник.Контрагенты.Форма.ФормаЭлемента"},
+        }]})
+        self.assertEqual(
+            expanded["steps"][0]["link"],
+            "e1cib/data/Справочник.Контрагенты?ref=93f40050568b412711e40dada14919f5",
+        )
+
     def test_navigation_requires_a_real_target_form(self):
         with self.assertRaisesRegex(UiWorkerError, "requires targetForm"):
             prepare_native_ui_scenario({"steps": [{"action": "openNavigationLink", "link": "e1cib/app/Обработка.Тест"}]})
