@@ -15,7 +15,7 @@ from scenario_runner import (
     save_junit_report,
     save_report,
 )
-from ui_worker import load_worker_config, run_ui_worker
+from ui_worker import load_worker_config, run_ui_worker, failed_ui_steps
 from agent_ui import normalize_ui_report
 from hybrid_runner import run_hybrid_scenario
 from hybrid_suite import run_hybrid_suite, save_hybrid_suite_junit
@@ -32,18 +32,47 @@ if hasattr(sys.stdout, "reconfigure"):
 
 def compact_ui_result(result: dict, report_path: str = "") -> dict:
     manager_result = result.get("managerResult") if isinstance(result.get("managerResult"), dict) else {}
-    steps = manager_result.get("steps") if isinstance(manager_result.get("steps"), list) else []
-    return {
+    top_steps = manager_result.get("steps") if isinstance(manager_result.get("steps"), list) else []
+    suite_steps = []
+    for scenario in manager_result.get("scenarios") or []:
+        if isinstance(scenario, dict) and isinstance(scenario.get("steps"), list):
+            suite_steps.extend(scenario["steps"])
+    steps = suite_steps or top_steps
+    failed = failed_ui_steps(manager_result)
+    compact = {
         "ok": result.get("ok", False),
         "runId": result.get("runId"),
         "status": result.get("status"),
         "durationMs": result.get("durationMs"),
         "steps": len(steps),
-        "failedSteps": len([step for step in steps if isinstance(step, dict) and step.get("status") == "failed"]),
+        "failedSteps": len(failed),
         "error": result.get("error"),
         "report": str(Path(report_path).resolve()) if report_path else None,
         "artifacts": result.get("artifacts", {}),
     }
+    if failed:
+        compact["failed"] = [
+            {
+                "scenario": step.get("scenarioName"),
+                "name": step.get("name"),
+                "action": step.get("action"),
+                "error": step.get("error"),
+            }
+            for step in failed
+        ]
+        last = failed[-1]
+        if not compact.get("error"):
+            compact["error"] = {
+                "type": "ScenarioFailure",
+                "message": str(last.get("error") or last.get("name") or "UI step failed"),
+            }
+        elif isinstance(compact["error"], dict) and str(compact["error"].get("message", "")).startswith("Test manager exit code:"):
+            prefix = last.get("scenarioName") or last.get("name") or "UI step"
+            compact["error"] = {
+                "type": "ScenarioFailure",
+                "message": f"{prefix}: {last.get('error') or last.get('name') or 'UI step failed'}",
+            }
+    return compact
 
 
 def decode_json_object(data: str) -> dict:
@@ -108,6 +137,19 @@ def main() -> int:
     query.add_argument("text")
     query.add_argument("--limit", type=int, default=100)
     query.add_argument("--params", default="{}", help="JSON object")
+
+    event_log = sub.add_parser("event-log", help="Read 1C event log (журнал регистрации)")
+    event_log.add_argument("--minutes", type=int, default=60, help="Look back this many minutes (default 60, max 1440)")
+    event_log.add_argument("--limit", type=int, default=100, help="Newest events to return (default 100, max 1000)")
+    event_log.add_argument("--level", default="", help="error,warning,information,note; comma-separated")
+    event_log.add_argument("--event", default="", help="Event name, for example _$Session$_.Start")
+    event_log.add_argument("--user", default="")
+    event_log.add_argument("--comment", default="")
+    event_log.add_argument("--metadata", default="")
+    event_log.add_argument("--application", default="")
+    event_log.add_argument("--start-date", default="", help="ISO 8601 or YYYYMMDDHHMMSS")
+    event_log.add_argument("--end-date", default="", help="ISO 8601 or YYYYMMDDHHMMSS")
+    event_log.add_argument("--filter", default="{}", help="JSON object merged into EventLog filter")
 
     execute_bsl = sub.add_parser("execute-bsl")
     execute_bsl.add_argument("code", help="1C code for Выполнить(). Set РезультатВыполнения to return a value")
@@ -268,6 +310,29 @@ def main() -> int:
             f"{base_url}/command",
             {"command": "Query", "text": args.text, "limit": args.limit, "params": json.loads(args.params)},
         )
+    elif args.cmd == "event-log":
+        payload = {"command": "EventLog", "limit": args.limit, "minutes": args.minutes}
+        if args.level:
+            levels = [item.strip() for item in args.level.split(",") if item.strip()]
+            payload["level"] = levels[0] if len(levels) == 1 else levels
+        if args.event:
+            payload["event"] = args.event
+        if args.user:
+            payload["user"] = args.user
+        if args.comment:
+            payload["comment"] = args.comment
+        if args.metadata:
+            payload["metadata"] = args.metadata
+        if args.application:
+            payload["application"] = args.application
+        if args.start_date:
+            payload["startDate"] = args.start_date
+        if args.end_date:
+            payload["endDate"] = args.end_date
+        extra_filter = json.loads(args.filter)
+        if extra_filter:
+            payload["filter"] = extra_filter
+        result = request_json(f"{base_url}/command", payload)
     elif args.cmd == "execute-bsl":
         result = request_json(
             f"{base_url}/command",

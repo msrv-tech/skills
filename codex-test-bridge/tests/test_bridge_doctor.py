@@ -24,6 +24,17 @@ class BridgeDoctorTests(unittest.TestCase):
         self.assertIn('Получить(Данные, "text", "")', handler)
         self.assertIn('Получить(Данные, "query", "")', handler)
 
+    def test_event_log_command_is_declared(self):
+        root = Path(__file__).resolve().parents[1]
+        module = (root / "src" / "HTTPServices" / "CodexTestBridge" / "Ext" / "Module.bsl").read_text(encoding="utf-8-sig")
+        self.assertIn('ИначеЕсли Команда = "eventlog" Тогда', module)
+        self.assertIn("Функция КомандаEventLog", module)
+        self.assertIn("ВыгрузитьЖурналРегистрации", module)
+        self.assertIn("EventLog,", module)
+        client_src = (root / "client.py").read_text(encoding="utf-8")
+        self.assertIn('sub.add_parser("event-log"', client_src)
+        self.assertIn('"command": "EventLog"', client_src)
+
     def test_http_contract_without_worker(self):
         result = run_doctor(
             lambda: {"ok": True, "metadataName": "Demo"},

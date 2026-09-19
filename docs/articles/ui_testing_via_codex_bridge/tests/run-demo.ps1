@@ -5,7 +5,8 @@ param(
     [Parameter(Mandatory)]
     [string]$ArtifactDir,
 
-    [string]$Database = 'fresh-bp-demo'
+    [Parameter(Mandatory)]
+    [string]$Database
 )
 
 $ErrorActionPreference = 'Stop'

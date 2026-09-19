@@ -60,6 +60,7 @@ NATIVE_UI_STEP_FIELDS = {
     "finishRow", "onChangeWait", "replace", "waitClosed", "optional", "elementType", "onPrompt",
     "dialogTitle", "promptTimeout", "row", "expandParents", "key", "choiceRow", "element", "field", "button",
     "dialogButton", "table", "choiceTable", "targetForm", "choiceForm", "reference", "choiceField",
+    "select", "newForm",
 }
 NATIVE_UI_SELECTOR_FIELDS = {"title", "objectName", "formName", "metadataFullName", "saveAs", "timeout", "pollingInterval"}
 NATIVE_UI_REFERENCE_FIELDS = {"kind", "metadataName", "uuid", "choiceField"}
@@ -821,19 +822,38 @@ def is_scenario_result(value: Any) -> bool:
     return "ok" in value or isinstance(value.get("steps"), list)
 
 
+def failed_ui_steps(manager_result: dict[str, Any]) -> list[dict[str, Any]]:
+    failed: list[dict[str, Any]] = []
+    for step in manager_result.get("steps") or []:
+        if isinstance(step, dict) and step.get("status") == "failed":
+            failed.append(step)
+    for scenario in manager_result.get("scenarios") or []:
+        if not isinstance(scenario, dict):
+            continue
+        scenario_name = str(scenario.get("name") or scenario.get("scenarioId") or "")
+        for step in scenario.get("steps") or []:
+            if isinstance(step, dict) and step.get("status") == "failed":
+                item = dict(step)
+                if scenario_name and not item.get("scenarioName"):
+                    item["scenarioName"] = scenario_name
+                failed.append(item)
+    return failed
+
+
 def manager_failure_error(
     manager_result: dict[str, Any],
     manager_exit_code: int | None,
 ) -> dict[str, str]:
-    failed_steps = [
-        step
-        for step in manager_result.get("steps", [])
-        if isinstance(step, dict) and step.get("status") == "failed"
-    ]
+    failed_steps = failed_ui_steps(manager_result)
     if failed_steps:
+        last = failed_steps[-1]
+        prefix = str(last.get("scenarioName") or last.get("name") or "UI step")
+        detail = str(last.get("error") or last.get("name") or "UI step failed")
+        if last.get("scenarioName") and last.get("name"):
+            prefix = f"{last['scenarioName']}: {last['name']}"
         return {
             "type": "ScenarioFailure",
-            "message": str(failed_steps[-1].get("error", "UI step failed")),
+            "message": f"{prefix}: {detail}" if prefix not in detail else detail,
         }
     manager_error = manager_result.get("error")
     if isinstance(manager_error, dict):

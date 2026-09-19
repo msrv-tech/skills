@@ -100,6 +100,33 @@ python .\client.py --base-url $bridgeUrl smoke-utf8
 }
 ```
 
+### EventLog
+
+Читает журнал регистрации через `ВыгрузитьЖурналРегистрации`. Не подменяй
+эту команду произвольным `ExecuteBSL`. По умолчанию берётся последний час,
+возвращаются самые новые записи.
+
+```json
+{
+  "command": "EventLog",
+  "minutes": 60,
+  "limit": 50,
+  "level": "error"
+}
+```
+
+Фильтры: `level` (`error`/`warning`/`information`/`note` или русские имена),
+`event`, `user`, `comment`, `metadata`, `application`, `session`, `data`,
+`startDate`, `endDate`. Даты — ISO 8601 или `{ "type": "Date", "value": "20260918120000" }`.
+`minutes` не больше 1440, `limit` не больше 1000. Ответ: `events[]` с полями
+`date`, `level`, `event`, `user`, `comment`, `metadata`, `data`,
+`dataPresentation`, `application`, `computer`, `session`; `scanned` — сколько
+записей попало в окно до обрезки по `limit`. `events[0]` — самая новая запись.
+
+```powershell
+python .\client.py --base-url $bridgeUrl event-log --minutes 30 --level error --limit 50
+```
+
 ### ExecuteBSL
 
 Выполняет серверный код через `Выполнить()`. В коде доступен массив

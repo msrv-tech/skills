@@ -85,6 +85,8 @@
         "replace": {"type": "boolean", "default": true},
         "waitClosed": {"type": "boolean"},
         "optional": {"type": "boolean"},
+        "select": {"type": "boolean", "default": true},
+        "newForm": {"type": "boolean", "default": false},
         "elementType": {"enum": ["field", "button", "table", "group", "decoration", "addition"]},
         "onPrompt": {"enum": ["discard", "save", "cancel"]},
         "dialogTitle": {"type": "string"},

@@ -10,7 +10,7 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from ui_worker import (
     UiWorkerError, expand, navigation_ref_from_uuid, prepare_native_ui_scenario, redact_command,
-    isolate_test_client_startup_parameter, manager_failure_error, resolve_native_ui_references, run_ui_worker,
+    isolate_test_client_startup_parameter, manager_failure_error, failed_ui_steps, resolve_native_ui_references, run_ui_worker,
     suppress_1c_startup_ui, validate_worker_config, xvfb_process_environment,
 )
 from agent_ui import diagnose_ui_failure, normalize_ui_tree
@@ -67,6 +67,42 @@ class UiWorkerTests(unittest.TestCase):
         self.assertEqual(compact["failedSteps"], 0)
         self.assertNotIn("managerResult", compact)
         self.assertNotIn("tree", json.dumps(compact))
+
+    def test_compact_ui_result_reports_nested_suite_failures(self):
+        compact = compact_ui_result({
+            "ok": False, "runId": "run", "status": "failed", "durationMs": 10,
+            "error": {"type": "ManagerFailure", "message": "Test manager exit code: 0"},
+            "managerResult": {
+                "ok": False,
+                "scenarios": [{
+                    "name": "Open catalogs",
+                    "steps": [
+                        {"status": "passed", "name": "Open"},
+                        {"status": "failed", "name": "Select row", "action": "selectTableRow",
+                         "error": "Table row was not found"},
+                    ],
+                }],
+            },
+        })
+        self.assertEqual(compact["steps"], 2)
+        self.assertEqual(compact["failedSteps"], 1)
+        self.assertEqual(compact["failed"][0]["scenario"], "Open catalogs")
+        self.assertIn("Table row was not found", compact["error"]["message"])
+
+    def test_manager_failure_uses_nested_suite_step_error(self):
+        error = manager_failure_error(
+            {
+                "ok": False,
+                "scenarios": [{
+                    "name": "Open catalogs",
+                    "steps": [{"status": "failed", "name": "Select row", "error": "row missing"}],
+                }],
+            },
+            0,
+        )
+        self.assertEqual(error["type"], "ScenarioFailure")
+        self.assertIn("Open catalogs", error["message"])
+        self.assertIn("row missing", error["message"])
     def test_navigation_ref_uses_1c_group_order(self):
         self.assertEqual(
             navigation_ref_from_uuid("a14919f5-0dad-11e4-93f4-0050568b4127"),
@@ -243,6 +279,8 @@ class UiWorkerTests(unittest.TestCase):
         self.assertIn("onChangeWait", step["properties"])
         self.assertIn("expandParents", step["properties"])
         self.assertIn("replace", step["properties"])
+        self.assertIn("select", step["properties"])
+        self.assertIn("newForm", step["properties"])
         self.assertIn("uiaBeforeSteps", schema["properties"])
         self.assertIn("restartTestClientOnStartup", schema["properties"])
         self.assertFalse(schema["properties"]["restartTestClientOnStartup"]["default"])
@@ -259,6 +297,41 @@ class UiWorkerTests(unittest.TestCase):
         self.assertEqual(scenario["steps"][1]["expandParents"][0]["Group"], "Parent")
         with self.assertRaisesRegex(UiWorkerError, "expandTreeRow requires row"):
             prepare_native_ui_scenario({"steps": [{"action": "expandTreeRow"}]})
+
+    def test_select_table_row_can_activate_without_choose(self):
+        scenario = prepare_native_ui_scenario({"steps": [{
+            "action": "selectTableRow", "table": {"objectName": "Список"},
+            "row": {"Наименование в программе": "HybridRich Partner"}, "select": False,
+        }, {
+            "action": "waitForm", "formName": "Документ.РеализацияТоваровУслуг.Форма.ФормаДокумента",
+            "newForm": True, "saveAs": "salesDoc",
+        }, {
+            "action": "inputText", "elementType": "addition",
+            "field": {"objectName": "СписокСтрокаПоиска"}, "value": "5487612390",
+        }]})
+        self.assertFalse(scenario["steps"][0]["select"])
+        self.assertTrue(scenario["steps"][1]["newForm"])
+        self.assertEqual(scenario["steps"][2]["elementType"], "addition")
+        module = (
+            Path(__file__).resolve().parents[1]
+            / "src" / "Ext" / "ManagedApplicationModule.bsl"
+        ).read_text(encoding="utf-8-sig")
+        self.assertIn('CTB_Получить(Шаг, "select", Истина)', module)
+        self.assertIn("CTB_ОсмотретьТаблицу", module)
+        self.assertIn('CTB_Получить(Шаг, "newForm", Ложь)', module)
+        self.assertIn("CTB_ПоказатьДополнениеДляВвода", module)
+        self.assertIn("CTB_НайтиОбъектыПоТипу", module)
+        self.assertIn("CTB_НайтиДополнениеДляВводаТекста", module)
+        self.assertIn("CTB_ВариантыОписанияСтрокиТаблицы", module)
+        self.assertIn("CTB_ПерейтиКСтрокеОбходом", module)
+        self.assertNotIn("ДополнениеСтрокиПоиска", module)
+        self.assertNotIn("СписокУправлениеПоиском", module)
+        self.assertIn("CTB_ЗаголовкиКнопокЗакрытия", module)
+        http = (
+            Path(__file__).resolve().parents[1]
+            / "src" / "HTTPServices" / "CodexTestBridge" / "Ext" / "Module.bsl"
+        ).read_text(encoding="utf-8-sig")
+        self.assertIn("ПрочитатьJSON(Чтение, Истина)", http)
 
     def test_command_interface_can_target_saved_form(self):
         scenario = prepare_native_ui_scenario({"steps": [{
