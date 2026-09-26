@@ -1,0 +1,36 @@
+{
+  "$schema": "../../ui-scenario.schema.json",
+  "name": "UI conformance: fields, checkbox, dropdown and group",
+  "conformanceCases": ["field.text", "field.multiline", "field.number", "field.date", "field.dropdown", "field.checkbox", "group.expand-collapse"],
+  "steps": [
+    {
+      "action": "openForm",
+      "metadataKind": "commonForm",
+      "metadataName": "CodexUIConformance",
+      "targetForm": {"formName": "ОбщаяФорма.CodexUIConformance", "saveAs": "fixture", "timeout": 30}
+    },
+    {"action": "inputText", "form": "fixture", "elementType": "field", "field": {"objectName": "TextValue"}, "value": "changed text", "replace": true},
+    {"action": "assertField", "form": "fixture", "field": {"objectName": "TextValue"}, "expected": "changed text"},
+    {"action": "inputText", "form": "fixture", "elementType": "field", "field": {"objectName": "TextValue"}, "value": " appended", "replace": false},
+    {"action": "assertField", "form": "fixture", "field": {"objectName": "TextValue"}, "expected": "changed text appended"},
+    {"action": "inputText", "form": "fixture", "elementType": "field", "field": {"objectName": "MultilineValue"}, "value": "first line\nsecond line", "replace": true},
+    {"action": "assertField", "form": "fixture", "field": {"objectName": "MultilineValue"}, "contains": "second line"},
+    {"action": "inputText", "form": "fixture", "field": {"objectName": "NumberValue"}, "value": "42"},
+    {"action": "assertField", "form": "fixture", "field": {"objectName": "NumberValue"}, "contains": "42"},
+    {"action": "assertField", "form": "fixture", "field": {"objectName": "DateValue"}, "notEmpty": true},
+    {"action": "selectFromDropdown", "form": "fixture", "field": {"objectName": "DropdownValue"}, "value": "Beta", "match": "exact"},
+    {"action": "assertField", "form": "fixture", "field": {"objectName": "DropdownValue"}, "expected": "Beta"},
+    {"action": "selectFromDropdown", "form": "fixture", "field": {"objectName": "DropdownValue"}, "value": "Gam", "match": "first"},
+    {"action": "assertField", "form": "fixture", "field": {"objectName": "DropdownValue"}, "expected": "Gamma"},
+    {"action": "setCheckbox", "form": "fixture", "field": {"objectName": "FlagValue"}, "checked": true},
+    {"action": "assertField", "form": "fixture", "field": {"objectName": "Status"}, "expected": "flag:true"},
+    {"action": "setCheckbox", "form": "fixture", "field": {"objectName": "FlagValue"}, "checked": false},
+    {"action": "assertField", "form": "fixture", "field": {"objectName": "Status"}, "expected": "flag:false"},
+    {"action": "setGroupExpanded", "form": "fixture", "element": {"objectName": "CollapsibleGroup"}, "expanded": false},
+    {"action": "assertGroupState", "form": "fixture", "element": {"objectName": "CollapsibleGroup"}, "expanded": false},
+    {"action": "setGroupExpanded", "form": "fixture", "element": {"objectName": "CollapsibleGroup"}, "expanded": true},
+    {"action": "assertGroupState", "form": "fixture", "element": {"objectName": "CollapsibleGroup"}, "expanded": true},
+    {"action": "assertElement", "form": "fixture", "elementType": "group", "element": {"objectName": "CollapsibleGroup"}, "visible": true},
+    {"action": "closeForm", "form": "fixture"}
+  ]
+}

@@ -127,7 +127,7 @@ def cfe_variant(compatibility_mode: str) -> str:
     match = COMPATIBILITY_PATTERN.fullmatch(normalized)
     if not match:
         raise UpdateError("Unsupported compatibility mode value")
-    return "full" if int(match.group(1)) >= 12 else "legacy"
+    return "full" if int(match.group(1)) >= 13 else "legacy"
 
 
 def source_bridge_version() -> str:

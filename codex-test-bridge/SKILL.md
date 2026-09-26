@@ -33,6 +33,9 @@ allowed-tools:
 - `ui-worker.cross-db.credentials.example.json` - cross-db запуск существующими
   прикладными тестовыми пользователями через env
 - `ui-scenario.schema.json` - схема нативного семантического UI DSL
+- `ui-actions.matrix.json` - каноническая матрица действий, элементов, backend и покрытия
+- `scripts/run_ui_conformance.py` - статическая и нативная проверка UI-матрицы
+- `examples/ui-conformance/` - эталонные сценарии общей fixture-формы
 - `UI_WORKER.md` - контракт управляющей обработки и backends
 - `BRIDGE.md` - подробная спецификация endpoints и команд
 - `scripts/build_cfe_linux.sh` - сборка CFE на Linux через `ibcmd`
@@ -70,9 +73,9 @@ UI-worker всегда маскирует `/P`, `/N`, `/S`, `/F` и соотве
 
 ## Выбор Варианта По Совместимости
 
-- Для режима совместимости основной конфигурации `8.3.12` и выше используй
+- Для режима совместимости основной конфигурации `8.3.13` и выше используй
   `codex-test-bridge.cfe`. Он содержит HTTP bridge и нативный UI-worker.
-- Для `8.3.11` и ниже используй `codex-test-bridge-legacy.cfe`. Он содержит весь
+- Для `8.3.12` и ниже используй `codex-test-bridge-legacy.cfe`. Он содержит весь
   HTTP API, но не содержит `uiJob*`, TestManager, общего модуля, роли и регистра
   UI-заданий: эти объекты запрещены самой платформой в старых режимах.
 - UI старой ИБ не теряется: запускай её как `/TestClient`, а `/TestManager` — в
@@ -84,7 +87,7 @@ Full-сборка намеренно не задаёт `DefaultRoles` и не с
 это свойство корневой конфигурации нельзя переопределять при совместимости
 `8.3.13` и ниже. Bridge работает под правами пользователя тестовой ИБ; используй
 отдельного пользователя с достаточными правами. На реальной конфигурации с
-режимом `8.3.12` подтверждены `uiJobCreate/uiJobDelete` и headless
+режимом `8.3.13` подтверждены `uiJobCreate/uiJobDelete` и headless
 TestManager/TestClient.
 
 Для UI-теста базы из приватного реестра сначала используй существующие `User` и
@@ -127,7 +130,7 @@ Windows PowerShell 5.1 иначе может исказить кирилличе
 
 Массовое обновление выполняется одной командой. Скрипт читает реестр как UTF-8,
 определяет режим совместимости по локальному `Configuration.xml`, выбирает full
-для 8.3.12+ и legacy для 8.3.11 и ниже. Установка всегда выполняется под
+для 8.3.13+ и legacy для 8.3.12 и ниже. Установка всегда выполняется под
 `User`/`Password` выбранной записи реестра; временные пользователи не создаются.
 Перед изменением ИБ скрипт обновляет локальные каталоги скиллов Codex и Cursor:
 копирует `codex-test-bridge`, `test-databases` и общий runtime `common` в
@@ -292,10 +295,25 @@ python .\client.py --base-url $bridgeUrl run-suite .\examples --report .\artifac
 python .\client.py run-ui .\server.example.invalid.json .\examples\native-ui-smoke.ui.json --artifact-dir .\artifacts\smoke --report .\artifacts\smoke\worker.json
 ```
 
+После изменения UI DSL, dispatcher или модели элементов обязательно выполни
+`python scripts/run_ui_conformance.py --validate-only`, затем нативный прогон
+этого же скрипта в registry mode. Источник состава действий —
+`ui-actions.matrix.json`; не поддерживай параллельный ручной список. Одиннадцать
+fixture-сценариев реально проверяют все 49 публичных действий и 62 обязательных
+вариантов: поля, кнопки,
+команды формы и приложения, таблицу и дерево, группы, декорацию, дополнение
+поиска, диалог, клавиатуру, окна, обработку, форму задачи и ссылки справочника,
+документа, ПВХ, плана счетов, ПВР, перечисления и составного типа. Каталог не
+принимает публичное действие без executable fixture coverage.
+
 На Windows backend `auto` создаёт невидимый Win32 desktop; только этот backend
-поддерживает UIA и `uiaBeforeSteps`. На Linux backend запускает Xvfb и работает
-через штатные TestClient/TestManager: UIA bootstrap недоступен и не
-эмулируется. Ошибка выбранного backend должна завершать запуск без
+поддерживает явные UIA-сценарии и `uiaBeforeSteps`. На Linux backend запускает Xvfb,
+работает через штатные TestClient/TestManager. Для декорации резервный путь —
+`Активизировать()` и повторное `Нажать()`; fixture принудительно проверяет его через
+`clickMode: "activated"`. После него доступен best-effort AT-SPI в частной D-Bus сессии.
+`pressKey` адресует X11-событие окну TestClient и использует AT-SPI как fallback.
+UIA bootstrap на Linux недоступен и не эмулируется. Ошибка выбранного
+backend должна завершать запуск без
 автоматического переключения. Обычные формы открывай без меню действием
 `openForm`: передай
 `metadataKind` (`catalog`, `document`, `task`, `dataProcessor`, `report`, `commonForm`),
@@ -328,6 +346,10 @@ python .\client.py run-ui .\server.example.invalid.json .\examples\native-ui-smo
 `openChoice` и `inspectTable`, затем передай в `row` ключи `columns[].name`
 (не заголовки с пробелами, если можно). `selectTableRow` по умолчанию вызывает
 `Выбрать()`; для позиционирования без открытия карточки используй `select: false`.
+Для составного поля передай `referenceType` с представлением строки в диалоге
+«Выбор типа данных». Стабильный объект `reference` может иметь `kind`:
+`catalog`, `document`, `chartOfCharacteristicTypes`, `chartOfAccounts` или
+`chartOfCalculationTypes`.
 Строка поиска динамического списка вводится через `inputText` с
 `elementType: "addition"`. Если выбранное дополнение свёрнуто или не принимает
 `ВвестиТекст`, bridge ищет на форме другие `ТестируемоеДополнениеЭлементаФормы`

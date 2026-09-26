@@ -3,14 +3,15 @@
 Поставляются две сборки:
 
 - `codex-test-bridge.cfe` — HTTP API и нативный UI-worker для режима
-  совместимости `8.3.12+`;
+  совместимости `8.3.13+`;
 - `codex-test-bridge-legacy.cfe` — тот же server-side HTTP API без `uiJob*` и
   UI-метаданных для режимов `8.3.11` и ниже. UI таких баз тестируется через
   отдельную ИБ-менеджер с полной сборкой.
 
 Режим основной конфигурации ради bridge не повышается.
 Full-сборка не переопределяет `DefaultRoles` и использует права пользователя
-тестовой ИБ — это позволяет UI-worker работать в конфигурациях `8.3.12–8.3.13`.
+тестовой ИБ — это позволяет UI-worker работать и с конфигурациями в режиме
+`8.3.12`, где в целевую базу ставится legacy-вариант.
 
 Служебное расширение для демо/тестовых баз. Публикует HTTP-сервис `codex-test`
 и дает внешний JSON API для быстрых проверок с Linux-агента.
@@ -284,7 +285,9 @@ python .\client.py --base-url $bridgeUrl event-log --minutes 30 --level error --
 }
 ```
 
-Поддерживаются `CatalogRef`, `DocumentRef`, `EnumRef`.
+Поддерживаются `CatalogRef`, `DocumentRef`, `EnumRef`,
+`ChartOfCharacteristicTypesRef`, `ChartOfAccountsRef` и
+`ChartOfCalculationTypesRef`.
 
 Также можно использовать универсальный формат:
 
@@ -414,9 +417,23 @@ Cleanup включен по умолчанию. Его можно отключи
 используй `run-ui`. Worker запускает штатные `/TestClient` и `/TestManager` на
 невидимом Windows desktop или в Xvfb и не требует web-клиента:
 
-Win32 desktop и UIA доступны только на Windows. Linux backend использует Xvfb
-и штатную объектную модель TestClient/TestManager; UIA там не эмулируется, а
-неподдерживаемый шаг должен завершаться ошибкой без смены backend.
+Win32 desktop и явные UIA-сценарии доступны только на Windows. Linux backend
+использует Xvfb и штатную объектную модель TestClient/TestManager. Для декорации
+проверен резерв `Активизировать()` → `Нажать()`; после него доступен best-effort
+AT-SPI. Отправка клавиш на Linux адресуется X11-окну TestClient, с AT-SPI как
+резервным механизмом.
+UIA на Linux не эмулируется, а backend при ошибке не переключается.
+
+Полная матрица действий находится в `ui-actions.matrix.json`, а исполняемый
+fixture-suite — в `examples/ui-conformance/`. Команда
+`scripts/run_ui_conformance.py --validate-only` проверяет полноту без запуска
+1С; registry mode выполняет одиннадцать сценариев, все 49 публичных действий и
+62 обязательных варианта одним
+тёплым TestClient, затем добавляет пооперационный раздел `conformance` в
+JSON-отчёт. Каталог не принимает публичную возможность без исполняемого
+fixture-покрытия. Fixture включает реальные ссылки справочника,
+документа, ПВХ, плана счетов, ПВР, перечисления, составного поля и табличной
+колонки. Linux worker сам выбирает свободный Xvfb display.
 
 ```powershell
 python .\client.py run-ui `

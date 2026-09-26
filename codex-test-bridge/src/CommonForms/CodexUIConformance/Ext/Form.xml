@@ -1,0 +1,735 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Form xmlns="http://v8.1c.ru/8.3/xcf/logform" xmlns:app="http://v8.1c.ru/8.2/managed-application/core" xmlns:cfg="http://v8.1c.ru/8.1/data/enterprise/current-config" xmlns:dcscor="http://v8.1c.ru/8.1/data-composition-system/core" xmlns:dcssch="http://v8.1c.ru/8.1/data-composition-system/schema" xmlns:dcsset="http://v8.1c.ru/8.1/data-composition-system/settings" xmlns:ent="http://v8.1c.ru/8.1/data/enterprise" xmlns:lf="http://v8.1c.ru/8.2/managed-application/logform" xmlns:style="http://v8.1c.ru/8.1/data/ui/style" xmlns:sys="http://v8.1c.ru/8.1/data/ui/fonts/system" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:v8ui="http://v8.1c.ru/8.1/data/ui" xmlns:web="http://v8.1c.ru/8.1/data/ui/colors/web" xmlns:win="http://v8.1c.ru/8.1/data/ui/colors/windows" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.20">
+	<Title>
+		<v8:item>
+			<v8:lang>ru</v8:lang>
+			<v8:content>Codex UI conformance</v8:content>
+		</v8:item>
+	</Title>
+	<AutoTitle>false</AutoTitle>
+	<CommandBarLocation>None</CommandBarLocation>
+	<SaveDataInSettings>DontUse</SaveDataInSettings>
+	<Width>110</Width>
+	<Height>42</Height>
+	<AutoCommandBar name="ФормаКоманднаяПанель" id="-1">
+		<HorizontalAlign>Right</HorizontalAlign>
+		<Autofill>false</Autofill>
+	</AutoCommandBar>
+	<Events>
+		<Event name="OnCreateAtServer">OnCreateAtServer</Event>
+	</Events>
+	<ChildItems>
+		<CommandBar name="FixtureCommandBar" id="1">
+			<ChildItems>
+				<Button name="CommandBarIncrement" id="2">
+					<CommandName>Form.Command.Increment</CommandName>
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Increment in command bar</v8:content>
+						</v8:item>
+					</Title>
+					<ExtendedTooltip name="CommandBarIncrementРасширеннаяПодсказка" id="3"/>
+				</Button>
+				<Button name="CommandBarReset" id="4">
+					<CommandName>Form.Command.Reset</CommandName>
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Reset fixture</v8:content>
+						</v8:item>
+					</Title>
+					<ExtendedTooltip name="CommandBarResetРасширеннаяПодсказка" id="5"/>
+				</Button>
+			</ChildItems>
+		</CommandBar>
+		<Pages name="FixturePages" id="6">
+			<PagesRepresentation>TabsOnTop</PagesRepresentation>
+			<ExtendedTooltip name="FixturePagesРасширеннаяПодсказка" id="7"/>
+			<ChildItems>
+				<Page name="FieldsPage" id="8">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Fields</v8:content>
+						</v8:item>
+					</Title>
+					<ExtendedTooltip name="FieldsPageРасширеннаяПодсказка" id="9"/>
+					<ChildItems>
+						<InputField name="TextValue" id="10">
+							<DataPath>TextValue</DataPath>
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Text value</v8:content>
+								</v8:item>
+							</Title>
+							<HorizontalStretch>true</HorizontalStretch>
+							<ContextMenu name="TextValueКонтекстноеМеню" id="11"/>
+							<ExtendedTooltip name="TextValueРасширеннаяПодсказка" id="12"/>
+							<Events>
+								<Event name="OnChange">TextValueПриИзменении</Event>
+							</Events>
+						</InputField>
+						<InputField name="MultilineValue" id="13">
+							<DataPath>MultilineValue</DataPath>
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Multiline value</v8:content>
+								</v8:item>
+							</Title>
+							<MultiLine>true</MultiLine>
+							<Height>4</Height>
+							<HorizontalStretch>true</HorizontalStretch>
+							<ContextMenu name="MultilineValueКонтекстноеМеню" id="14"/>
+							<ExtendedTooltip name="MultilineValueРасширеннаяПодсказка" id="15"/>
+							<Events>
+								<Event name="OnChange">MultilineValueПриИзменении</Event>
+							</Events>
+						</InputField>
+						<InputField name="NumberValue" id="16">
+							<DataPath>NumberValue</DataPath>
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Number value</v8:content>
+								</v8:item>
+							</Title>
+							<SpinButton>true</SpinButton>
+							<ContextMenu name="NumberValueКонтекстноеМеню" id="17"/>
+							<ExtendedTooltip name="NumberValueРасширеннаяПодсказка" id="18"/>
+							<Events>
+								<Event name="OnChange">NumberValueПриИзменении</Event>
+							</Events>
+						</InputField>
+						<InputField name="DateValue" id="19">
+							<DataPath>DateValue</DataPath>
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Date value</v8:content>
+								</v8:item>
+							</Title>
+							<ContextMenu name="DateValueКонтекстноеМеню" id="20"/>
+							<ExtendedTooltip name="DateValueРасширеннаяПодсказка" id="21"/>
+							<Events>
+								<Event name="OnChange">DateValueПриИзменении</Event>
+							</Events>
+						</InputField>
+						<InputField name="DropdownValue" id="22">
+							<DataPath>DropdownValue</DataPath>
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Dropdown value</v8:content>
+								</v8:item>
+							</Title>
+							<DropListButton>true</DropListButton>
+							<ContextMenu name="DropdownValueКонтекстноеМеню" id="23"/>
+							<ExtendedTooltip name="DropdownValueРасширеннаяПодсказка" id="24"/>
+							<Events>
+								<Event name="OnChange">DropdownValueПриИзменении</Event>
+							</Events>
+						</InputField>
+						<CheckBoxField name="FlagValue" id="25">
+							<DataPath>FlagValue</DataPath>
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Flag value</v8:content>
+								</v8:item>
+							</Title>
+							<ContextMenu name="FlagValueКонтекстноеМеню" id="26"/>
+							<ExtendedTooltip name="FlagValueРасширеннаяПодсказка" id="27"/>
+							<Events>
+								<Event name="OnChange">FlagValueПриИзменении</Event>
+							</Events>
+						</CheckBoxField>
+						<InputField name="ReadOnlyValue" id="28">
+							<DataPath>ReadOnlyValue</DataPath>
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Read only value</v8:content>
+								</v8:item>
+							</Title>
+							<ReadOnly>true</ReadOnly>
+							<ContextMenu name="ReadOnlyValueКонтекстноеМеню" id="29"/>
+							<ExtendedTooltip name="ReadOnlyValueРасширеннаяПодсказка" id="30"/>
+						</InputField>
+						<InputField name="DisabledValue" id="31">
+							<DataPath>DisabledValue</DataPath>
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Disabled value</v8:content>
+								</v8:item>
+							</Title>
+							<Enabled>false</Enabled>
+							<ContextMenu name="DisabledValueКонтекстноеМеню" id="32"/>
+							<ExtendedTooltip name="DisabledValueРасширеннаяПодсказка" id="33"/>
+						</InputField>
+						<InputField name="Status" id="34">
+							<DataPath>Status</DataPath>
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Status</v8:content>
+								</v8:item>
+							</Title>
+							<ReadOnly>true</ReadOnly>
+							<HorizontalStretch>true</HorizontalStretch>
+							<ContextMenu name="StatusКонтекстноеМеню" id="35"/>
+							<ExtendedTooltip name="StatusРасширеннаяПодсказка" id="36"/>
+						</InputField>
+						<InputField name="ClickCount" id="37">
+							<DataPath>ClickCount</DataPath>
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Click count</v8:content>
+								</v8:item>
+							</Title>
+							<ReadOnly>true</ReadOnly>
+							<ContextMenu name="ClickCountКонтекстноеМеню" id="38"/>
+							<ExtendedTooltip name="ClickCountРасширеннаяПодсказка" id="39"/>
+						</InputField>
+					</ChildItems>
+				</Page>
+				<Page name="TablesPage" id="40">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Tables</v8:content>
+						</v8:item>
+					</Title>
+					<ExtendedTooltip name="TablesPageРасширеннаяПодсказка" id="41"/>
+					<ChildItems>
+						<Table name="Rows" id="42">
+							<DataPath>Rows</DataPath>
+							<ChangeRowSet>true</ChangeRowSet>
+							<HeightInTableRows>9</HeightInTableRows>
+							<CommandBarLocation>Top</CommandBarLocation>
+							<SearchStringLocation>Top</SearchStringLocation>
+							<ContextMenu name="RowsКонтекстноеМеню" id="43"/>
+							<AutoCommandBar name="RowsКоманднаяПанель" id="44"/>
+							<SearchStringAddition name="RowsСтрокаПоиска" id="45"/>
+							<ViewStatusAddition name="RowsСостояниеПросмотра" id="46"/>
+							<SearchControlAddition name="RowsУправлениеПоиском" id="47"/>
+							<ChildItems>
+								<InputField name="RowsKey" id="48">
+									<DataPath>Rows.Key</DataPath>
+									<Title>
+										<v8:item>
+											<v8:lang>ru</v8:lang>
+											<v8:content>Key</v8:content>
+										</v8:item>
+									</Title>
+									<ReadOnly>true</ReadOnly>
+									<ContextMenu name="RowsKeyКонтекстноеМеню" id="49"/>
+									<ExtendedTooltip name="RowsKeyРасширеннаяПодсказка" id="50"/>
+								</InputField>
+								<InputField name="RowsText" id="51">
+									<DataPath>Rows.Text</DataPath>
+									<Title>
+										<v8:item>
+											<v8:lang>ru</v8:lang>
+											<v8:content>Text</v8:content>
+										</v8:item>
+									</Title>
+									<ContextMenu name="RowsTextКонтекстноеМеню" id="52"/>
+									<ExtendedTooltip name="RowsTextРасширеннаяПодсказка" id="53"/>
+									<Events>
+										<Event name="OnChange">RowsTextПриИзменении</Event>
+									</Events>
+								</InputField>
+								<InputField name="RowsNumber" id="54">
+									<DataPath>Rows.Number</DataPath>
+									<Title>
+										<v8:item>
+											<v8:lang>ru</v8:lang>
+											<v8:content>Number</v8:content>
+										</v8:item>
+									</Title>
+									<ContextMenu name="RowsNumberКонтекстноеМеню" id="55"/>
+									<ExtendedTooltip name="RowsNumberРасширеннаяПодсказка" id="56"/>
+									<Events>
+										<Event name="OnChange">RowsNumberПриИзменении</Event>
+									</Events>
+								</InputField>
+							</ChildItems>
+						</Table>
+						<Table name="TreeRows" id="147">
+							<Representation>Tree</Representation>
+							<DataPath>TreeRows</DataPath>
+							<Title><v8:item><v8:lang>ru</v8:lang><v8:content>Tree rows</v8:content></v8:item></Title>
+							<HeightInTableRows>6</HeightInTableRows>
+							<CommandBarLocation>None</CommandBarLocation>
+							<ContextMenu name="TreeRowsКонтекстноеМеню" id="148"/>
+							<AutoCommandBar name="TreeRowsКоманднаяПанель" id="149"/>
+							<SearchStringAddition name="TreeRowsСтрокаПоиска" id="162"/>
+							<ViewStatusAddition name="TreeRowsСостояниеПросмотра" id="163"/>
+							<SearchControlAddition name="TreeRowsУправлениеПоиском" id="164"/>
+							<Events>
+								<Event name="OnActivateRow">TreeRowsOnActivateRow</Event>
+							</Events>
+							<ChildItems>
+								<InputField name="TreeRowsKey" id="150">
+									<DataPath>TreeRows.Key</DataPath>
+									<Title><v8:item><v8:lang>ru</v8:lang><v8:content>Key</v8:content></v8:item></Title>
+									<ReadOnly>true</ReadOnly>
+									<ContextMenu name="TreeRowsKeyКонтекстноеМеню" id="151"/>
+									<ExtendedTooltip name="TreeRowsKeyРасширеннаяПодсказка" id="152"/>
+								</InputField>
+								<InputField name="TreeRowsText" id="153">
+									<DataPath>TreeRows.Text</DataPath>
+									<Title><v8:item><v8:lang>ru</v8:lang><v8:content>Text</v8:content></v8:item></Title>
+									<ReadOnly>true</ReadOnly>
+									<ContextMenu name="TreeRowsTextКонтекстноеМеню" id="154"/>
+									<ExtendedTooltip name="TreeRowsTextРасширеннаяПодсказка" id="155"/>
+								</InputField>
+							</ChildItems>
+						</Table>
+					</ChildItems>
+				</Page>
+				<Page name="ReferencesPage" id="93">
+					<Title>
+						<v8:item><v8:lang>ru</v8:lang><v8:content>References</v8:content></v8:item>
+					</Title>
+					<ExtendedTooltip name="ReferencesPageРасширеннаяПодсказка" id="94"/>
+					<ChildItems>
+						<InputField name="CatalogValue" id="95">
+							<DataPath>CatalogValue</DataPath>
+							<Title><v8:item><v8:lang>ru</v8:lang><v8:content>Catalog reference</v8:content></v8:item></Title>
+							<ChoiceButton>true</ChoiceButton>
+							<DropListButton>true</DropListButton>
+							<ContextMenu name="CatalogValueКонтекстноеМеню" id="96"/>
+							<ExtendedTooltip name="CatalogValueРасширеннаяПодсказка" id="97"/>
+							<Events><Event name="OnChange">ReferenceValueПриИзменении</Event></Events>
+						</InputField>
+						<InputField name="CatalogChoiceValue" id="98">
+							<DataPath>CatalogChoiceValue</DataPath>
+							<Title><v8:item><v8:lang>ru</v8:lang><v8:content>Catalog choice form</v8:content></v8:item></Title>
+							<ChoiceButton>true</ChoiceButton>
+							<CreateButton>true</CreateButton>
+							<ContextMenu name="CatalogChoiceValueКонтекстноеМеню" id="99"/>
+							<ExtendedTooltip name="CatalogChoiceValueРасширеннаяПодсказка" id="100"/>
+							<Events><Event name="OnChange">ReferenceValueПриИзменении</Event></Events>
+						</InputField>
+						<InputField name="DocumentValue" id="101">
+							<DataPath>DocumentValue</DataPath>
+							<Title><v8:item><v8:lang>ru</v8:lang><v8:content>Document reference</v8:content></v8:item></Title>
+							<ChoiceButton>true</ChoiceButton>
+							<DropListButton>true</DropListButton>
+							<ContextMenu name="DocumentValueКонтекстноеМеню" id="102"/>
+							<ExtendedTooltip name="DocumentValueРасширеннаяПодсказка" id="103"/>
+							<Events><Event name="OnChange">ReferenceValueПриИзменении</Event></Events>
+						</InputField>
+						<InputField name="CharacteristicValue" id="104">
+							<DataPath>CharacteristicValue</DataPath>
+							<Title><v8:item><v8:lang>ru</v8:lang><v8:content>Characteristic reference</v8:content></v8:item></Title>
+							<ChoiceButton>true</ChoiceButton>
+							<DropListButton>true</DropListButton>
+							<ContextMenu name="CharacteristicValueКонтекстноеМеню" id="105"/>
+							<ExtendedTooltip name="CharacteristicValueРасширеннаяПодсказка" id="106"/>
+							<Events><Event name="OnChange">ReferenceValueПриИзменении</Event></Events>
+						</InputField>
+						<InputField name="AccountValue" id="107">
+							<DataPath>AccountValue</DataPath>
+							<Title><v8:item><v8:lang>ru</v8:lang><v8:content>Account reference</v8:content></v8:item></Title>
+							<ChoiceButton>true</ChoiceButton>
+							<DropListButton>true</DropListButton>
+							<ContextMenu name="AccountValueКонтекстноеМеню" id="108"/>
+							<ExtendedTooltip name="AccountValueРасширеннаяПодсказка" id="109"/>
+							<Events><Event name="OnChange">ReferenceValueПриИзменении</Event></Events>
+						</InputField>
+						<InputField name="CalculationTypeValue" id="110">
+							<DataPath>CalculationTypeValue</DataPath>
+							<Title><v8:item><v8:lang>ru</v8:lang><v8:content>Calculation type reference</v8:content></v8:item></Title>
+							<ChoiceButton>true</ChoiceButton>
+							<DropListButton>true</DropListButton>
+							<ContextMenu name="CalculationTypeValueКонтекстноеМеню" id="111"/>
+							<ExtendedTooltip name="CalculationTypeValueРасширеннаяПодсказка" id="112"/>
+							<Events><Event name="OnChange">ReferenceValueПриИзменении</Event></Events>
+						</InputField>
+						<InputField name="EnumValue" id="113">
+							<DataPath>EnumValue</DataPath>
+							<Title><v8:item><v8:lang>ru</v8:lang><v8:content>Enum value</v8:content></v8:item></Title>
+							<DropListButton>true</DropListButton>
+							<ContextMenu name="EnumValueКонтекстноеМеню" id="114"/>
+							<ExtendedTooltip name="EnumValueРасширеннаяПодсказка" id="115"/>
+							<Events><Event name="OnChange">ReferenceValueПриИзменении</Event></Events>
+						</InputField>
+						<InputField name="CompositeValue" id="116">
+							<DataPath>CompositeValue</DataPath>
+							<Title><v8:item><v8:lang>ru</v8:lang><v8:content>Composite reference</v8:content></v8:item></Title>
+							<ChoiceButton>true</ChoiceButton>
+							<DropListButton>true</DropListButton>
+							<ContextMenu name="CompositeValueКонтекстноеМеню" id="117"/>
+							<ExtendedTooltip name="CompositeValueРасширеннаяПодсказка" id="118"/>
+							<Events><Event name="OnChange">ReferenceValueПриИзменении</Event></Events>
+						</InputField>
+						<Table name="ReferenceRows" id="119">
+							<DataPath>ReferenceRows</DataPath>
+							<ChangeRowSet>true</ChangeRowSet>
+							<HeightInTableRows>4</HeightInTableRows>
+							<CommandBarLocation>None</CommandBarLocation>
+							<ContextMenu name="ReferenceRowsКонтекстноеМеню" id="120"/>
+							<AutoCommandBar name="ReferenceRowsКоманднаяПанель" id="121"/>
+							<SearchStringAddition name="ReferenceRowsСтрокаПоиска" id="159"/>
+							<ViewStatusAddition name="ReferenceRowsСостояниеПросмотра" id="160"/>
+							<SearchControlAddition name="ReferenceRowsУправлениеПоиском" id="161"/>
+							<ChildItems>
+								<InputField name="ReferenceRowsKey" id="122">
+									<DataPath>ReferenceRows.Key</DataPath>
+									<Title><v8:item><v8:lang>ru</v8:lang><v8:content>Key</v8:content></v8:item></Title>
+									<ReadOnly>true</ReadOnly>
+									<ContextMenu name="ReferenceRowsKeyКонтекстноеМеню" id="123"/>
+									<ExtendedTooltip name="ReferenceRowsKeyРасширеннаяПодсказка" id="124"/>
+								</InputField>
+								<InputField name="ReferenceRowsCatalogValue" id="125">
+									<DataPath>ReferenceRows.CatalogValue</DataPath>
+									<Title><v8:item><v8:lang>ru</v8:lang><v8:content>Catalog</v8:content></v8:item></Title>
+									<ChoiceButton>true</ChoiceButton>
+									<DropListButton>true</DropListButton>
+									<ContextMenu name="ReferenceRowsCatalogValueКонтекстноеМеню" id="126"/>
+									<ExtendedTooltip name="ReferenceRowsCatalogValueРасширеннаяПодсказка" id="127"/>
+								</InputField>
+								<InputField name="ReferenceRowsDocumentValue" id="128">
+									<DataPath>ReferenceRows.DocumentValue</DataPath>
+									<Title><v8:item><v8:lang>ru</v8:lang><v8:content>Document</v8:content></v8:item></Title>
+									<ChoiceButton>true</ChoiceButton>
+									<DropListButton>true</DropListButton>
+									<ContextMenu name="ReferenceRowsDocumentValueКонтекстноеМеню" id="129"/>
+									<ExtendedTooltip name="ReferenceRowsDocumentValueРасширеннаяПодсказка" id="130"/>
+								</InputField>
+								<InputField name="ReferenceRowsCharacteristicValue" id="131">
+									<DataPath>ReferenceRows.CharacteristicValue</DataPath>
+									<Title><v8:item><v8:lang>ru</v8:lang><v8:content>Characteristic</v8:content></v8:item></Title>
+									<ChoiceButton>true</ChoiceButton>
+									<DropListButton>true</DropListButton>
+									<ContextMenu name="ReferenceRowsCharacteristicValueКонтекстноеМеню" id="132"/>
+									<ExtendedTooltip name="ReferenceRowsCharacteristicValueРасширеннаяПодсказка" id="133"/>
+								</InputField>
+							</ChildItems>
+						</Table>
+					</ChildItems>
+				</Page>
+			</ChildItems>
+		</Pages>
+		<UsualGroup name="CollapsibleGroup" id="57">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Collapsible group</v8:content>
+				</v8:item>
+			</Title>
+			<Group>Vertical</Group>
+			<Behavior>Collapsible</Behavior>
+			<ExtendedTooltip name="CollapsibleGroupРасширеннаяПодсказка" id="58"/>
+			<ChildItems>
+				<LabelDecoration name="ClickableDecoration" id="59">
+					<Title formatted="true">
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Clickable decoration</v8:content>
+						</v8:item>
+					</Title>
+					<Hyperlink>true</Hyperlink>
+					<ContextMenu name="ClickableDecorationКонтекстноеМеню" id="60"/>
+					<ExtendedTooltip name="ClickableDecorationРасширеннаяПодсказка" id="61"/>
+					<Events>
+						<Event name="Click">ClickableDecorationНажатие</Event>
+					</Events>
+				</LabelDecoration>
+				<InputField name="GroupValue" id="62">
+					<DataPath>GroupValue</DataPath>
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Group value</v8:content>
+						</v8:item>
+					</Title>
+					<ContextMenu name="GroupValueКонтекстноеМеню" id="63"/>
+					<ExtendedTooltip name="GroupValueРасширеннаяПодсказка" id="64"/>
+				</InputField>
+			</ChildItems>
+		</UsualGroup>
+		<UsualGroup name="ButtonsGroup" id="65">
+			<Group>Horizontal</Group>
+			<ExtendedTooltip name="ButtonsGroupРасширеннаяПодсказка" id="66"/>
+			<ChildItems>
+				<Button name="FormIncrement" id="67">
+					<CommandName>Form.Command.Increment</CommandName>
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Increment</v8:content>
+						</v8:item>
+					</Title>
+					<DefaultButton>true</DefaultButton>
+					<ExtendedTooltip name="FormIncrementРасширеннаяПодсказка" id="68"/>
+				</Button>
+				<Button name="ShowDialog" id="69">
+					<CommandName>Form.Command.ShowDialog</CommandName>
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Show dialog</v8:content>
+						</v8:item>
+					</Title>
+					<ExtendedTooltip name="ShowDialogРасширеннаяПодсказка" id="70"/>
+				</Button>
+				<Button name="Reset" id="71">
+					<CommandName>Form.Command.Reset</CommandName>
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Reset</v8:content>
+						</v8:item>
+					</Title>
+					<ExtendedTooltip name="ResetРасширеннаяПодсказка" id="72"/>
+				</Button>
+				<Button name="Close" id="73">
+					<CommandName>Form.StandardCommand.Close</CommandName>
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Close</v8:content>
+						</v8:item>
+					</Title>
+					<ExtendedTooltip name="CloseРасширеннаяПодсказка" id="74"/>
+				</Button>
+			</ChildItems>
+		</UsualGroup>
+		<UsualGroup name="DocumentFieldsGroup" id="159">
+			<Title><v8:item><v8:lang>ru</v8:lang><v8:content>Document fields</v8:content></v8:item></Title>
+			<Group>Vertical</Group>
+			<ExtendedTooltip name="DocumentFieldsGroupРасширеннаяПодсказка" id="160"/>
+			<ChildItems>
+				<TextDocumentField name="TextDocumentValue" id="161">
+					<DataPath>TextDocumentValue</DataPath>
+					<TitleLocation>None</TitleLocation>
+					<EditMode>EnterOnInput</EditMode>
+					<AutoEditMode>true</AutoEditMode>
+					<ContextMenu name="TextDocumentValueКонтекстноеМеню" id="162"/>
+					<ExtendedTooltip name="TextDocumentValueРасширеннаяПодсказка" id="163"/>
+				</TextDocumentField>
+				<FormattedDocumentField name="FormattedDocumentValue" id="164">
+					<DataPath>FormattedDocumentValue</DataPath>
+					<TitleLocation>None</TitleLocation>
+					<ContextMenu name="FormattedDocumentValueКонтекстноеМеню" id="165"/>
+					<ExtendedTooltip name="FormattedDocumentValueРасширеннаяПодсказка" id="166"/>
+				</FormattedDocumentField>
+				<SpreadSheetDocumentField name="SpreadsheetDocumentValue" id="167">
+					<DataPath>SpreadsheetDocumentValue</DataPath>
+					<TitleLocation>None</TitleLocation>
+					<ContextMenu name="SpreadsheetDocumentValueКонтекстноеМеню" id="168"/>
+					<ExtendedTooltip name="SpreadsheetDocumentValueРасширеннаяПодсказка" id="169"/>
+				</SpreadSheetDocumentField>
+			</ChildItems>
+		</UsualGroup>
+	</ChildItems>
+	<Attributes>
+		<Attribute name="TextValue" id="75">
+			<Type>
+				<v8:Type>xs:string</v8:Type>
+				<v8:StringQualifiers>
+					<v8:Length>0</v8:Length>
+					<v8:AllowedLength>Variable</v8:AllowedLength>
+				</v8:StringQualifiers>
+			</Type>
+		</Attribute>
+		<Attribute name="MultilineValue" id="76">
+			<Type>
+				<v8:Type>xs:string</v8:Type>
+				<v8:StringQualifiers>
+					<v8:Length>0</v8:Length>
+					<v8:AllowedLength>Variable</v8:AllowedLength>
+				</v8:StringQualifiers>
+			</Type>
+		</Attribute>
+		<Attribute name="NumberValue" id="77">
+			<Type>
+				<v8:Type>xs:decimal</v8:Type>
+				<v8:NumberQualifiers>
+					<v8:Digits>15</v8:Digits>
+					<v8:FractionDigits>2</v8:FractionDigits>
+					<v8:AllowedSign>Any</v8:AllowedSign>
+				</v8:NumberQualifiers>
+			</Type>
+		</Attribute>
+		<Attribute name="DateValue" id="78">
+			<Type>
+				<v8:Type>xs:dateTime</v8:Type>
+				<v8:DateQualifiers>
+					<v8:DateFractions>Date</v8:DateFractions>
+				</v8:DateQualifiers>
+			</Type>
+		</Attribute>
+		<Attribute name="DropdownValue" id="79">
+			<Type>
+				<v8:Type>xs:string</v8:Type>
+				<v8:StringQualifiers>
+					<v8:Length>20</v8:Length>
+					<v8:AllowedLength>Variable</v8:AllowedLength>
+				</v8:StringQualifiers>
+			</Type>
+		</Attribute>
+		<Attribute name="FlagValue" id="80">
+			<Type>
+				<v8:Type>xs:boolean</v8:Type>
+			</Type>
+		</Attribute>
+		<Attribute name="ReadOnlyValue" id="81">
+			<Type>
+				<v8:Type>xs:string</v8:Type>
+				<v8:StringQualifiers>
+					<v8:Length>0</v8:Length>
+					<v8:AllowedLength>Variable</v8:AllowedLength>
+				</v8:StringQualifiers>
+			</Type>
+		</Attribute>
+		<Attribute name="DisabledValue" id="82">
+			<Type>
+				<v8:Type>xs:string</v8:Type>
+				<v8:StringQualifiers>
+					<v8:Length>0</v8:Length>
+					<v8:AllowedLength>Variable</v8:AllowedLength>
+				</v8:StringQualifiers>
+			</Type>
+		</Attribute>
+		<Attribute name="Status" id="83">
+			<Type>
+				<v8:Type>xs:string</v8:Type>
+				<v8:StringQualifiers>
+					<v8:Length>0</v8:Length>
+					<v8:AllowedLength>Variable</v8:AllowedLength>
+				</v8:StringQualifiers>
+			</Type>
+		</Attribute>
+		<Attribute name="ClickCount" id="84">
+			<Type>
+				<v8:Type>xs:decimal</v8:Type>
+				<v8:NumberQualifiers>
+					<v8:Digits>10</v8:Digits>
+					<v8:FractionDigits>0</v8:FractionDigits>
+					<v8:AllowedSign>Nonnegative</v8:AllowedSign>
+				</v8:NumberQualifiers>
+			</Type>
+		</Attribute>
+		<Attribute name="GroupValue" id="85">
+			<Type>
+				<v8:Type>xs:string</v8:Type>
+				<v8:StringQualifiers>
+					<v8:Length>0</v8:Length>
+					<v8:AllowedLength>Variable</v8:AllowedLength>
+				</v8:StringQualifiers>
+			</Type>
+		</Attribute>
+		<Attribute name="Rows" id="86">
+			<Type>
+				<v8:Type>v8:ValueTable</v8:Type>
+			</Type>
+			<Columns>
+				<Column name="Key" id="87">
+					<Type>
+						<v8:Type>xs:string</v8:Type>
+						<v8:StringQualifiers>
+							<v8:Length>20</v8:Length>
+							<v8:AllowedLength>Variable</v8:AllowedLength>
+						</v8:StringQualifiers>
+					</Type>
+				</Column>
+				<Column name="Text" id="88">
+					<Type>
+						<v8:Type>xs:string</v8:Type>
+						<v8:StringQualifiers>
+							<v8:Length>100</v8:Length>
+							<v8:AllowedLength>Variable</v8:AllowedLength>
+						</v8:StringQualifiers>
+					</Type>
+				</Column>
+				<Column name="Number" id="89">
+					<Type>
+						<v8:Type>xs:decimal</v8:Type>
+						<v8:NumberQualifiers>
+							<v8:Digits>15</v8:Digits>
+							<v8:FractionDigits>2</v8:FractionDigits>
+							<v8:AllowedSign>Any</v8:AllowedSign>
+						</v8:NumberQualifiers>
+					</Type>
+				</Column>
+			</Columns>
+		</Attribute>
+		<Attribute name="CatalogValue" id="134"><Type><v8:Type>cfg:CatalogRef.CodexUIFixtureCatalog</v8:Type></Type></Attribute>
+		<Attribute name="CatalogChoiceValue" id="135"><Type><v8:Type>cfg:CatalogRef.CodexUIFixtureCatalog</v8:Type></Type></Attribute>
+		<Attribute name="DocumentValue" id="136"><Type><v8:Type>cfg:DocumentRef.CodexUIFixtureDocument</v8:Type></Type></Attribute>
+		<Attribute name="CharacteristicValue" id="137"><Type><v8:Type>cfg:ChartOfCharacteristicTypesRef.CodexUIFixtureCharacteristics</v8:Type></Type></Attribute>
+		<Attribute name="AccountValue" id="138"><Type><v8:Type>cfg:ChartOfAccountsRef.CodexUIFixtureAccounts</v8:Type></Type></Attribute>
+		<Attribute name="CalculationTypeValue" id="139"><Type><v8:Type>cfg:ChartOfCalculationTypesRef.CodexUIFixtureCalculationTypes</v8:Type></Type></Attribute>
+		<Attribute name="EnumValue" id="140"><Type><v8:Type>cfg:EnumRef.CodexUIFixtureStatus</v8:Type></Type></Attribute>
+		<Attribute name="CompositeValue" id="141">
+			<Type>
+				<v8:Type>cfg:CatalogRef.CodexUIFixtureCatalog</v8:Type>
+				<v8:Type>cfg:DocumentRef.CodexUIFixtureDocument</v8:Type>
+				<v8:Type>cfg:ChartOfCharacteristicTypesRef.CodexUIFixtureCharacteristics</v8:Type>
+			</Type>
+		</Attribute>
+		<Attribute name="ReferenceRows" id="142">
+			<Type><v8:Type>v8:ValueTable</v8:Type></Type>
+			<Columns>
+				<Column name="Key" id="143"><Type><v8:Type>xs:string</v8:Type><v8:StringQualifiers><v8:Length>20</v8:Length><v8:AllowedLength>Variable</v8:AllowedLength></v8:StringQualifiers></Type></Column>
+				<Column name="CatalogValue" id="144"><Type><v8:Type>cfg:CatalogRef.CodexUIFixtureCatalog</v8:Type></Type></Column>
+				<Column name="DocumentValue" id="145"><Type><v8:Type>cfg:DocumentRef.CodexUIFixtureDocument</v8:Type></Type></Column>
+				<Column name="CharacteristicValue" id="146"><Type><v8:Type>cfg:ChartOfCharacteristicTypesRef.CodexUIFixtureCharacteristics</v8:Type></Type></Column>
+			</Columns>
+		</Attribute>
+		<Attribute name="TreeRows" id="156">
+			<Type><v8:Type>v8:ValueTree</v8:Type></Type>
+			<Columns>
+				<Column name="Key" id="157"><Type><v8:Type>xs:string</v8:Type><v8:StringQualifiers><v8:Length>20</v8:Length><v8:AllowedLength>Variable</v8:AllowedLength></v8:StringQualifiers></Type></Column>
+				<Column name="Text" id="158"><Type><v8:Type>xs:string</v8:Type><v8:StringQualifiers><v8:Length>100</v8:Length><v8:AllowedLength>Variable</v8:AllowedLength></v8:StringQualifiers></Type></Column>
+			</Columns>
+		</Attribute>
+		<Attribute name="TextDocumentValue" id="170">
+			<Type><v8:Type xmlns:txt="http://v8.1c.ru/8.1/data/txtedt">txt:TextDocument</v8:Type></Type>
+		</Attribute>
+		<Attribute name="FormattedDocumentValue" id="171">
+			<Type><v8:Type xmlns:fd="http://v8.1c.ru/8.2/data/formatted-document">fd:FormattedDocument</v8:Type></Type>
+		</Attribute>
+		<Attribute name="SpreadsheetDocumentValue" id="172">
+			<Type><v8:Type xmlns:mxl="http://v8.1c.ru/8.2/data/spreadsheet">mxl:SpreadsheetDocument</v8:Type></Type>
+		</Attribute>
+	</Attributes>
+	<Commands>
+		<Command name="Increment" id="90">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Increment</v8:content>
+				</v8:item>
+			</Title>
+			<Action>IncrementCommand</Action>
+		</Command>
+		<Command name="ShowDialog" id="91">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Show dialog</v8:content>
+				</v8:item>
+			</Title>
+			<Action>ShowDialogCommand</Action>
+		</Command>
+		<Command name="Reset" id="92">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Reset</v8:content>
+				</v8:item>
+			</Title>
+			<Action>ResetCommand</Action>
+		</Command>
+	</Commands>
+</Form>

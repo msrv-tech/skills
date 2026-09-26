@@ -9,6 +9,7 @@ import copy
 import json
 import os
 import re
+import select
 import socket
 import subprocess
 import sys
@@ -32,6 +33,7 @@ from common.onec_runtime import onec_process_env
 from hidden_desktop_capture import capture_window
 from uia_runner import run_uia_steps
 from agent_ui import diagnose_ui_failure, normalize_ui_report
+from ui_action_catalog import action_names
 
 
 class UiWorkerError(RuntimeError):
@@ -41,17 +43,11 @@ class UiWorkerError(RuntimeError):
 PLACEHOLDER = re.compile(r"\{([A-Za-z][A-Za-z0-9]*)}")
 DEFAULT_SECRET_FLAGS = ["/P", "/N", "/S", "/F", "--password", "--token", "--user", "--server", "--database-path"]
 DEFAULT_1C_STARTUP_FLAGS = ["/DisableStartupDialogs", "/DisableStartupMessages", "/DisableSplash"]
-NATIVE_UI_ACTIONS: set[str] = {
-    "assertConnected", "openNavigationLink", "openClientNavigationLink", "openDataProcessor", "openForm", "openTaskExecutionForm", "executeCommand", "nextWindow", "activateWindow",
-    "waitForm", "waitFormClosed", "waitElement", "assertElement", "inspectUi", "inspectUI", "inspectTable",
-    "inspectCommandInterface", "clickCommandInterface", "activateForm", "activateElement", "clickElement", "setGroupExpanded",
-    "inputText", "selectReference", "selectFromDropdown", "setCheckbox", "openChoice",
-    "selectTableRow", "assertTableRow", "expandTreeRow", "pressKey", "inputTableCell", "click", "invokeFormCommand", "assertField",
-    "handleDialog", "closeForm",
-}
+NATIVE_UI_ACTIONS: set[str] = action_names()
 NATIVE_UI_ROOT_FIELDS = {
     "$schema", "name", "navigationLink", "dismissStartupDialogs", "startupDialogAttempts",
-    "startupDialogButtons", "restartTestClientOnStartup", "startupSettleSeconds", "uiaBeforeSteps", "uiaSteps", "steps",
+    "startupDialogButtons", "restartTestClientOnStartup", "startupSettleSeconds", "uiaBeforeSteps", "uiaSteps",
+    "conformanceCases", "steps",
 }
 NATIVE_UI_STEP_FIELDS = {
     "action", "name", "command", "link", "clientNavigationLink", "uuid", "kind", "metadataKind", "metadataName", "form", "saveAs",
@@ -59,8 +55,9 @@ NATIVE_UI_STEP_FIELDS = {
     "depth", "value", "expected", "contains", "notEmpty", "exists", "visible", "enabled", "readOnly", "checked", "strict",
     "finishRow", "onChangeWait", "replace", "waitClosed", "optional", "elementType", "onPrompt",
     "dialogTitle", "promptTimeout", "row", "expandParents", "key", "choiceRow", "element", "field", "button",
-    "dialogButton", "table", "choiceTable", "targetForm", "choiceForm", "reference", "choiceField",
-    "select", "newForm", "expanded",
+    "dialogButton", "table", "choiceTable", "targetForm", "choiceForm", "reference", "choiceField", "referenceType",
+    "select", "newForm", "expanded", "canExpand", "marked", "expectedCount", "expectedRows", "expectedColumns",
+    "stateContains", "column",
 }
 NATIVE_UI_SELECTOR_FIELDS = {"title", "objectName", "formName", "metadataFullName", "saveAs", "timeout", "pollingInterval"}
 NATIVE_UI_REFERENCE_FIELDS = {"kind", "metadataName", "uuid", "choiceField"}
@@ -87,6 +84,62 @@ def run_uia_bridge_request_isolated(desktop_name: str, process_id: int, request:
         pass
     return {"ok": False, "requestId": request.get("requestId"), "status": "uia-response",
             "error": f"UIA helper returned invalid response (exit {completed.returncode}): {completed.stderr.strip()}"}
+
+
+def run_atspi_bridge_request_isolated(
+    process_id: int,
+    request: dict[str, Any],
+    timeout_seconds: float,
+    environment: dict[str, str],
+) -> dict[str, Any]:
+    """Run potentially blocking Linux AT-SPI work outside the worker process."""
+    helper = Path(__file__).with_name("atspi_bridge_helper.py")
+    payload = json.dumps({"processId": process_id, "request": request}, ensure_ascii=True)
+    env = os.environ.copy()
+    env.update(environment)
+    try:
+        completed = subprocess.run(
+            [sys.executable, str(helper)], input=payload, text=True, encoding="utf-8",
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=max(1.0, timeout_seconds),
+            env=env,
+        )
+    except subprocess.TimeoutExpired:
+        return {"ok": False, "requestId": request.get("requestId"), "status": "uia-response",
+                "error": f"AT-SPI helper timed out after {timeout_seconds:g}s"}
+    try:
+        response = json.loads(completed.stdout)
+        if isinstance(response, dict):
+            return response
+    except (TypeError, json.JSONDecodeError):
+        pass
+    return {"ok": False, "requestId": request.get("requestId"), "status": "uia-response",
+            "error": f"AT-SPI helper returned invalid response (exit {completed.returncode}): {completed.stderr.strip()}"}
+
+
+def run_accessibility_bridge_request(
+    backend: Any,
+    client: Any,
+    request: dict[str, Any],
+    config: dict[str, Any],
+) -> dict[str, Any]:
+    """Dispatch a semantic UI request to the platform-specific accessibility API."""
+    request_id = request.get("requestId")
+    if client is None:
+        return {"ok": False, "requestId": request_id, "status": "uia-response",
+                "error": "Accessibility bridge has no running TestClient"}
+    timeout_seconds = float(
+        config.get("accessibilityBridgeTimeoutSeconds", config.get("uiaBridgeTimeoutSeconds", 45))
+    )
+    if isinstance(backend, WindowsHiddenDesktopBackend):
+        return run_uia_bridge_request_isolated(
+            backend.desktop_name, client.pid, request, timeout_seconds,
+        )
+    if isinstance(backend, XvfbBackend):
+        return run_atspi_bridge_request_isolated(
+            client.pid, request, timeout_seconds, backend.environment,
+        )
+    return {"ok": False, "requestId": request_id, "status": "uia-response",
+            "error": f"Accessibility bridge is unavailable for backend {getattr(backend, 'name', 'unknown')}"}
 
 
 def utc_now() -> datetime:
@@ -138,26 +191,57 @@ def prepare_native_ui_scenario(data: Any) -> dict[str, Any]:
         action = step.get("action")
         if action not in NATIVE_UI_ACTIONS:
             raise UiWorkerError(f"UI scenario step {index} has unsupported action: {action}")
-        if action == "expandTreeRow" and not isinstance(step.get("row"), dict):
-            raise UiWorkerError(f"UI scenario step {index}: expandTreeRow requires row")
+        if action in {"expandTreeRow", "collapseTreeRow", "assertTreeRowState"} and not isinstance(step.get("row"), dict):
+            raise UiWorkerError(f"UI scenario step {index}: {action} requires row")
         if action == "setGroupExpanded" and not isinstance(step.get("expanded", True), bool):
             raise UiWorkerError(f"UI scenario step {index}: setGroupExpanded.expanded must be boolean")
+        if action == "assertGroupState" and not isinstance(step.get("expanded"), bool):
+            raise UiWorkerError(f"UI scenario step {index}: assertGroupState.expanded must be boolean")
+        if action == "assertTreeRowState":
+            assertions = [name for name in ("expanded", "canExpand") if name in step]
+            if not assertions or not all(isinstance(step[name], bool) for name in assertions):
+                raise UiWorkerError(
+                    f"UI scenario step {index}: assertTreeRowState requires boolean expanded or canExpand"
+                )
+        if action == "assertSelectedRows" and (
+            not isinstance(step.get("expectedCount"), int) or step["expectedCount"] < 0
+        ):
+            raise UiWorkerError(
+                f"UI scenario step {index}: assertSelectedRows.expectedCount must be a non-negative integer"
+            )
+        if action == "setTableOrder" and (not isinstance(step.get("column"), str) or not step["column"]):
+            raise UiWorkerError(f"UI scenario step {index}: setTableOrder.column must be a non-empty string")
+        if action == "assertButtonState" and not isinstance(step.get("marked"), bool):
+            raise UiWorkerError(f"UI scenario step {index}: assertButtonState.marked must be boolean")
+        if action == "assertSpreadsheet":
+            assertions = [name for name in ("expectedRows", "expectedColumns", "stateContains") if name in step]
+            if not assertions:
+                raise UiWorkerError(
+                    f"UI scenario step {index}: assertSpreadsheet requires expectedRows, expectedColumns, or stateContains"
+                )
+            for name in ("expectedRows", "expectedColumns"):
+                if name in step and (not isinstance(step[name], int) or step[name] < 0):
+                    raise UiWorkerError(f"UI scenario step {index}: assertSpreadsheet.{name} must be non-negative")
+            if "stateContains" in step and not isinstance(step["stateContains"], str):
+                raise UiWorkerError(f"UI scenario step {index}: assertSpreadsheet.stateContains must be a string")
 
         if action == "pressKey" and (not isinstance(step.get("key"), str) or not step["key"]):
             raise UiWorkerError(f"UI scenario step {index}: pressKey requires key")
-        if action == "assertField":
+        if action in {"assertField", "assertHtml"}:
             assertion_fields = [name for name in ("expected", "contains", "notEmpty") if name in step]
             if len(assertion_fields) != 1:
                 raise UiWorkerError(
-                    f"UI scenario step {index}: assertField requires exactly one of expected, contains, or notEmpty"
+                    f"UI scenario step {index}: {action} requires exactly one of expected, contains, or notEmpty"
                 )
             if "contains" in step and (not isinstance(step["contains"], str) or not step["contains"]):
-                raise UiWorkerError(f"UI scenario step {index}: assertField.contains must be a non-empty string")
+                raise UiWorkerError(f"UI scenario step {index}: {action}.contains must be a non-empty string")
             if "notEmpty" in step and step["notEmpty"] is not True:
-                raise UiWorkerError(f"UI scenario step {index}: assertField.notEmpty must be true")
+                raise UiWorkerError(f"UI scenario step {index}: {action}.notEmpty must be true")
+        if action == "inputHtml" and not isinstance(step.get("value"), str):
+            raise UiWorkerError(f"UI scenario step {index}: inputHtml requires string value")
         if "expandParents" in step:
             parents = step["expandParents"]
-            if action not in {"selectTableRow", "assertTableRow"} or not isinstance(parents, list) or not parents or not all(isinstance(parent, dict) and parent for parent in parents):
+            if action not in {"selectReference", "selectTableRow", "assertTableRow"} or not isinstance(parents, list) or not parents or not all(isinstance(parent, dict) and parent for parent in parents):
                 raise UiWorkerError(f"UI scenario step {index}: expandParents must be a non-empty array of row selectors")
         if action == "openNavigationLink":
             if not step.get("link") and step.get("uuid"):
@@ -200,7 +284,7 @@ def prepare_native_ui_scenario(data: Any) -> dict[str, Any]:
                 raise UiWorkerError(f"UI scenario step {index}: openTaskExecutionForm requires uuid")
             if not isinstance(step.get("metadataName"), str) or not step["metadataName"]:
                 raise UiWorkerError(f"UI scenario step {index}: openTaskExecutionForm requires metadataName")
-        if action in {"openNavigationLink", "openClientNavigationLink", "openDataProcessor", "openForm", "openTaskExecutionForm"}:
+        if action in {"openNavigationLink", "openClientNavigationLink", "openDataProcessor", "openForm", "openTaskExecutionForm", "createReference"}:
             target = step.get("targetForm")
             if not isinstance(target, dict):
                 raise UiWorkerError(f"UI scenario step {index}: {action} requires targetForm")
@@ -217,11 +301,20 @@ def prepare_native_ui_scenario(data: Any) -> dict[str, Any]:
                 raise UiWorkerError(
                     f"UI scenario step {index}: reference has unknown fields: {', '.join(unknown_reference)}"
                 )
-            if reference.get("kind") not in {"catalog", "document"}:
-                raise UiWorkerError(f"UI scenario step {index}: reference.kind must be catalog or document")
+            if reference.get("kind") not in {
+                "catalog", "document", "chartOfCharacteristicTypes", "chartOfAccounts", "chartOfCalculationTypes",
+            }:
+                raise UiWorkerError(
+                    f"UI scenario step {index}: reference.kind must identify a supported reference metadata kind"
+                )
             for required in ("metadataName", "uuid"):
                 if not isinstance(reference.get(required), str) or not reference[required]:
                     raise UiWorkerError(f"UI scenario step {index}: reference.{required} is required")
+        if "referenceType" in step:
+            if action != "selectReference" or not isinstance(step["referenceType"], str) or not step["referenceType"]:
+                raise UiWorkerError(
+                    f"UI scenario step {index}: referenceType is only valid as a non-empty string for selectReference"
+                )
         for selector_name in ("element", "field", "button", "table", "targetForm", "choiceForm"):
             selector = step.get(selector_name)
             if selector is None:
@@ -395,6 +488,40 @@ def isolate_test_client_startup_parameter(command: list[str]) -> list[str]:
     return list(command)
 
 
+def normalize_1c_auth_arguments(command: list[str]) -> list[str]:
+    """Use compact 1C /Sbase, /Nuser and /Ppassword command-line syntax.
+
+    The Linux launcher may reject the Windows-compatible two-argument form
+    (``/N``, ``user``).  For an explicitly empty registry password the compact
+    /P\"\" token prevents the launcher from showing an authentication prompt.
+    """
+    if len(command) < 2 or command[1].casefold() != "enterprise":
+        return list(command)
+    result: list[str] = []
+    index = 0
+    while index < len(command):
+        argument = command[index]
+        lowered = argument.casefold()
+        if lowered in {"/s", "/n", "/p"} and index + 1 < len(command):
+            value = command[index + 1]
+            if lowered == "/p" and value == "":
+                result.append(argument + '\"\"')
+                index += 2
+                continue
+            if lowered == "/p" and value.startswith("/"):
+                result.append(argument + '\"\"')
+                index += 1
+                continue
+            result.append(argument + value)
+            index += 2
+            continue
+        if lowered == "/p":
+            result.append(argument + '\"\"')
+            index += 1
+            continue
+        result.append(command[index])
+        index += 1
+    return result
 class RunningProcess:
     pid: int
 
@@ -667,34 +794,85 @@ def xvfb_process_environment(environment: dict[str, str], display: int) -> dict[
     return onec_process_env(env)
 
 
+class PrivateSessionBus:
+    """Worker-owned D-Bus session used by the Linux accessibility bridge."""
+
+    def __init__(self):
+        try:
+            self.process = subprocess.Popen(
+                ["dbus-daemon", "--session", "--nofork", "--nopidfile", "--print-address=1"],
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL,
+                text=True,
+            )
+        except OSError as exc:
+            raise UiWorkerError(f"Cannot start private D-Bus session: {exc}") from exc
+        if self.process.stdout is None:
+            self.close()
+            raise UiWorkerError("Private D-Bus session has no address stream")
+        ready, _, _ = select.select([self.process.stdout], [], [], 5)
+        address = self.process.stdout.readline().strip() if ready else ""
+        if self.process.poll() is not None or not address:
+            self.close()
+            raise UiWorkerError("Private D-Bus session did not publish an address")
+        self.address = address
+
+    def close(self) -> None:
+        process = getattr(self, "process", None)
+        if process is not None and process.poll() is None:
+            process.terminate()
+            try:
+                process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                process.kill()
+                process.wait(timeout=5)
+
+
 class XvfbBackend(ProcessBackend):
     name = "xvfb"
 
     def __init__(self, environment: dict[str, str], working_directory: str | None, display: int):
         if os.name == "nt":
             raise UiWorkerError("xvfb backend is available only on Unix-like systems")
-        super().__init__(xvfb_process_environment(environment, display), working_directory)
-        self.xvfb = subprocess.Popen(
-            ["Xvfb", f":{display}", "-screen", "0", "1280x1024x24", "-nolisten", "tcp"],
-            stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-        )
-        socket_path = Path(f"/tmp/.X11-unix/X{display}")
-        deadline = time.monotonic() + 15
-        while not socket_path.exists():
-            if self.xvfb.poll() is not None:
-                raise UiWorkerError("Xvfb exited during startup")
-            if time.monotonic() >= deadline:
-                self.xvfb.terminate()
-                raise UiWorkerError("Xvfb startup timed out")
-            time.sleep(0.1)
+        self.session_bus = PrivateSessionBus()
+        accessibility_environment = dict(environment)
+        accessibility_environment.update({
+            "DBUS_SESSION_BUS_ADDRESS": self.session_bus.address,
+            "NO_AT_BRIDGE": "0",
+        })
+        accessibility_environment.pop("AT_SPI_BUS_ADDRESS", None)
+        super().__init__(xvfb_process_environment(accessibility_environment, display), working_directory)
+        try:
+            self.xvfb = subprocess.Popen(
+                ["Xvfb", f":{display}", "-screen", "0", "1280x1024x24", "-nolisten", "tcp"],
+                stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            )
+            socket_path = Path(f"/tmp/.X11-unix/X{display}")
+            deadline = time.monotonic() + 15
+            while True:
+                if self.xvfb.poll() is not None:
+                    raise UiWorkerError(f"Xvfb :{display} exited during startup; the display may already be in use")
+                if socket_path.exists():
+                    break
+                if time.monotonic() >= deadline:
+                    self.xvfb.terminate()
+                    raise UiWorkerError("Xvfb startup timed out")
+                time.sleep(0.1)
+        except Exception:
+            self.session_bus.close()
+            raise
 
     def close(self) -> None:
-        if self.xvfb.poll() is None:
-            self.xvfb.terminate()
-            try:
-                self.xvfb.wait(timeout=5)
-            except subprocess.TimeoutExpired:
-                self.xvfb.kill()
+        try:
+            if self.xvfb.poll() is None:
+                self.xvfb.terminate()
+                try:
+                    self.xvfb.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    self.xvfb.kill()
+        finally:
+            self.session_bus.close()
 
 
 def wait_for_port(host: str, port: int, timeout: float, process: RunningProcess) -> None:
@@ -709,6 +887,14 @@ def wait_for_port(host: str, port: int, timeout: float, process: RunningProcess)
         except OSError:
             time.sleep(0.25)
     raise UiWorkerError(f"Test client did not open {host}:{port} in {timeout:g} seconds")
+
+
+def choose_free_xvfb_display(start: int = 90, end: int = 199) -> int:
+    """Choose a display without an X11 socket or lock file."""
+    for display in range(start, end + 1):
+        if not Path(f"/tmp/.X11-unix/X{display}").exists() and not Path(f"/tmp/.X{display}-lock").exists():
+            return display
+    raise UiWorkerError(f"No free Xvfb display in range {start}-{end}")
 
 
 def choose_free_port(host: str = "127.0.0.1") -> int:
@@ -888,7 +1074,9 @@ def create_backend(config: dict[str, Any], run_id: str) -> ProcessBackend | Wind
     if backend == "windowsDesktop":
         return WindowsHiddenDesktopBackend(environment, working_directory, f"Codex1C-{run_id}")
     if backend == "xvfb":
-        return XvfbBackend(environment, working_directory, int(config.get("display", 99)))
+        configured_display = config.get("display", "auto")
+        display = choose_free_xvfb_display() if configured_display in (None, "", "auto") else int(configured_display)
+        return XvfbBackend(environment, working_directory, display)
     return ProcessBackend(environment, working_directory)
 
 
@@ -934,7 +1122,9 @@ def run_warm_ui_segments(
         "clientLog": str(artifacts / f"client-{suite_id}.log"), "managerLog": str(artifacts / f"manager-{suite_id}.log"),
         "scenario": "", "scenarioBase64": "", **environment_variables,
     }
-    client_command = isolate_test_client_startup_parameter(expand(runtime["clientCommand"], common_variables))
+    client_command = normalize_1c_auth_arguments(
+        isolate_test_client_startup_parameter(expand(runtime["clientCommand"], common_variables))
+    )
     if runtime.get("suppressStartupUi", True):
         client_command = suppress_1c_startup_ui(client_command)
     backend = create_backend(runtime, suite_id)
@@ -942,6 +1132,7 @@ def run_warm_ui_segments(
     results: list[dict[str, Any]] = []
     fail_fast = bool(runtime.get("failFast", False))
     first_item: dict[str, Any] | None = None
+    handled_accessibility_requests: set[str] = set()
 
     try:
         # The platform lifecycle is TestManager first, then TestClient.  The
@@ -1007,7 +1198,7 @@ def run_warm_ui_segments(
                 if index != 1:
                     bridge_command(runtime, {"command": "uiJobCreate", "jobId": job_id, "scenario": json.dumps(scenario, ensure_ascii=True, separators=(",", ":"))})
                 variables = dict(common_variables, runId=job_id, jobId=job_id, scenario=str(artifacts / f"segment-{index}.ui.json"), clientLog=str(artifacts / f"client-{suite_id}.log"), managerLog=str(artifacts / f"manager-{job_id}.log"), scenarioBase64="")
-                manager_command = expand(runtime["managerCommand"], variables)
+                manager_command = normalize_1c_auth_arguments(expand(runtime["managerCommand"], variables))
                 if runtime.get("suppressStartupUi", True): manager_command = suppress_1c_startup_ui(manager_command)
                 manager = backend.start(manager_command)
                 deadline, next_poll, next_heartbeat = time.monotonic() + float(runtime.get("timeoutSeconds", 900)), 0.0, time.monotonic() + float(runtime.get("heartbeatIntervalSeconds", 10))
@@ -1020,6 +1211,24 @@ def run_warm_ui_segments(
                         try:
                             text = bridge_command(runtime, {"command": "uiJobGet", "jobId": job_id}).get("result", "")
                             partial = json.loads(text) if text else None
+                            if isinstance(partial, dict) and partial.get("status") == "uia-request":
+                                request_id = str(partial.get("requestId", ""))
+                                if request_id and request_id not in handled_accessibility_requests:
+                                    handled_accessibility_requests.add(request_id)
+                                    progress(
+                                        "accessibility",
+                                        f"{name}: running accessibility bridge request: {partial.get('action')}",
+                                        scenarioName=name,
+                                        scenarioId=item_id,
+                                        requestId=request_id,
+                                    )
+                                    response = run_accessibility_bridge_request(backend, client, partial, runtime)
+                                    bridge_command(runtime, {
+                                        "command": "uiJobSet", "jobId": job_id,
+                                        "status": "uia-response",
+                                        "result": json.dumps(response, ensure_ascii=True, separators=(",", ":")),
+                                    })
+                                continue
                             if isinstance(partial, dict) and partial.get("status") == "running":
                                 step = partial.get("step") or {}
                                 progress("running", f"{name}: step {partial.get('currentStep', 0)}/{partial.get('totalSteps', 0)}: {step.get('name') or step.get('action') or partial.get('stage')}", scenarioName=name, scenarioId=item_id, currentStep=partial.get("currentStep"), totalSteps=partial.get("totalSteps"), step=step)
@@ -1166,7 +1375,8 @@ def run_ui_worker(config: dict[str, Any], scenario_path: str | Path, artifact_di
         variables[alias] = os.environ[environment_name]
     client_command = expand(config["clientCommand"], variables)
     manager_command = expand(config["managerCommand"], variables)
-    client_command = isolate_test_client_startup_parameter(client_command)
+    client_command = normalize_1c_auth_arguments(isolate_test_client_startup_parameter(client_command))
+    manager_command = normalize_1c_auth_arguments(manager_command)
     if config.get("suppressStartupUi", True):
         client_command = suppress_1c_startup_ui(client_command)
         manager_command = suppress_1c_startup_ui(manager_command)
@@ -1314,22 +1524,16 @@ def run_ui_worker(config: dict[str, Any], scenario_path: str | Path, artifact_di
                             request_id = str(partial.get("requestId", ""))
                             if request_id and request_id not in handled_uia_requests:
                                 handled_uia_requests.add(request_id)
-                                progress("uia", f"Running UIA bridge request: {partial.get('action')}", requestId=request_id)
-                                if isinstance(backend, WindowsHiddenDesktopBackend) and client is not None:
-                                    response = run_uia_bridge_request_isolated(
-                                        backend.desktop_name, client.pid, partial,
-                                        # A click can synchronously create a managed 1C form.  Give the
-                                        # isolated helper time to return after that transition; it remains
-                                        # bounded and cannot block this worker.
-                                        float(config.get("uiaBridgeTimeoutSeconds", 45)),
-                                    )
-                                else:
-                                    response = {
-                                        "ok": False,
-                                        "requestId": request_id,
-                                        "status": "uia-response",
-                                        "error": "UIA bridge requests require windowsDesktop backend",
-                                    }
+                                progress(
+                                    "accessibility",
+                                    f"Running accessibility bridge request: {partial.get('action')}",
+                                    requestId=request_id,
+                                )
+                                # Invoking an element can synchronously create a managed 1C form.
+                                # The isolated helper remains bounded while allowing that transition.
+                                response = run_accessibility_bridge_request(
+                                    backend, client, partial, config,
+                                )
                                 uia_bridge_results.append(response)
                                 bridge_command(runtime_config, {
                                     "command": "uiJobSet",

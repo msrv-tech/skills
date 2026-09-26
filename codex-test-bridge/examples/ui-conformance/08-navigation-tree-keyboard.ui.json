@@ -1,0 +1,46 @@
+{
+  "$schema": "../../ui-scenario.schema.json",
+  "name": "UI conformance: navigation link, hierarchical table and keyboard",
+  "conformanceCases": ["navigation.link", "table.tree", "window.keyboard"],
+  "steps": [
+    {
+      "action": "openForm",
+      "metadataKind": "commonForm",
+      "metadataName": "CodexUIConformance",
+      "targetForm": {"formName": "ОбщаяФорма.CodexUIConformance", "saveAs": "fixture", "timeout": 30}
+    },
+    {"action": "inspectTable", "form": "fixture", "table": {"objectName": "TreeRows"}},
+    {"action": "assertTreeRowState", "form": "fixture", "table": {"objectName": "TreeRows"}, "row": {"Text": "Fixture tree parent"}, "expanded": false, "canExpand": true},
+    {"action": "expandTreeRow", "form": "fixture", "table": {"objectName": "TreeRows"}, "row": {"Text": "Fixture tree parent"}, "attempts": 5},
+    {"action": "assertTreeRowState", "form": "fixture", "table": {"objectName": "TreeRows"}, "row": {"Text": "Fixture tree parent"}, "expanded": true, "canExpand": true},
+    {"action": "collapseTreeRow", "form": "fixture", "table": {"objectName": "TreeRows"}, "row": {"Text": "Fixture tree parent"}},
+    {"action": "assertTreeRowState", "form": "fixture", "table": {"objectName": "TreeRows"}, "row": {"Text": "Fixture tree parent"}, "expanded": false, "canExpand": true},
+    {"action": "expandTreeRow", "form": "fixture", "table": {"objectName": "TreeRows"}, "row": {"Text": "Fixture tree parent"}, "attempts": 5},
+    {"action": "pressKey", "key": "down"},
+    {"action": "assertField", "form": "fixture", "field": {"objectName": "Status"}, "expected": "tree-child"},
+    {"action": "closeForm", "form": "fixture"},
+    {
+      "action": "openNavigationLink",
+      "link": "e1cib/list/Справочник.CodexUIFixtureCatalog",
+      "targetForm": {"title": "Codex UI fixture catalog", "saveAs": "catalogList", "timeout": 30}
+    },
+    {"action": "inspectTable", "form": "catalogList", "table": {"objectName": "Список"}},
+    {"action": "closeForm", "form": "catalogList"},
+    {
+      "action": "openNavigationLink",
+      "kind": "catalog",
+      "metadataName": "CodexUIFixtureCatalog",
+      "uuid": "22222222-2222-4222-8222-222222222222",
+      "targetForm": {"formName": "Справочник.CodexUIFixtureCatalog.Форма.ФормаFixture", "saveAs": "catalogUuid", "timeout": 30}
+    },
+    {"action": "closeForm", "form": "catalogUuid"},
+    {
+      "action": "openNavigationLink",
+      "kind": "document",
+      "metadataName": "CodexUIFixtureDocument",
+      "uuid": "33333333-3333-4333-8333-333333333333",
+      "targetForm": {"formName": "Документ.CodexUIFixtureDocument.Форма.ФормаFixture", "saveAs": "documentUuid", "timeout": 30}
+    },
+    {"action": "closeForm", "form": "documentUuid"}
+  ]
+}

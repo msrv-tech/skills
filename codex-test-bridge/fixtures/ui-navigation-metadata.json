@@ -1,0 +1,28 @@
+[
+  {
+    "type": "DataProcessor",
+    "name": "CodexUIFixtureProcessor",
+    "synonym": "Codex UI fixture processor",
+    "attributes": ["FixtureText: String(100)"]
+  },
+  {
+    "type": "Task",
+    "name": "CodexUIFixtureTask",
+    "synonym": "Codex UI fixture task",
+    "numberLength": 20,
+    "autonumbering": false,
+    "checkUnique": true,
+    "descriptionLength": 100,
+    "attributes": ["FixtureText: String(100)"]
+  },
+  {
+    "type": "BusinessProcess",
+    "name": "CodexUIFixtureProcess",
+    "synonym": "Codex UI fixture process",
+    "task": "Task.CodexUIFixtureTask",
+    "numberLength": 20,
+    "autonumbering": false,
+    "checkUnique": true,
+    "attributes": ["FixtureText: String(100)"]
+  }
+]

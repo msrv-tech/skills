@@ -10,7 +10,9 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from ui_worker import (
     UiWorkerError, expand, navigation_ref_from_uuid, prepare_native_ui_scenario, redact_command,
-    isolate_test_client_startup_parameter, manager_failure_error, failed_ui_steps, resolve_native_ui_references, run_ui_worker,
+    isolate_test_client_startup_parameter, manager_failure_error, failed_ui_steps, normalize_1c_auth_arguments,
+    choose_free_xvfb_display,
+    resolve_native_ui_references, run_ui_worker,
     suppress_1c_startup_ui, validate_worker_config, xvfb_process_environment,
 )
 from agent_ui import diagnose_ui_failure, normalize_ui_tree
@@ -202,9 +204,11 @@ class UiWorkerTests(unittest.TestCase):
             "action": "clickElement",
             "form": "taskCard",
             "elementType": "decoration",
+            "clickMode": "activated",
             "element": {"title": "Перейти в форму для выполнения задачи"},
         }]})
         self.assertEqual(prepared["steps"][0]["elementType"], "decoration")
+        self.assertEqual(prepared["steps"][0]["clickMode"], "activated")
 
     def test_invalid_navigation_example_has_an_explicit_target(self):
         example = Path(__file__).resolve().parents[1] / "examples" / "invalid-navigation.ui.json"
@@ -225,6 +229,42 @@ class UiWorkerTests(unittest.TestCase):
         self.assertEqual(step["value"], "Основная организация")
         self.assertEqual(step["row"], {"Наименование": "Основная организация"})
         self.assertTrue(step["strict"])
+
+    def test_composite_reference_type_is_validated(self):
+        scenario = prepare_native_ui_scenario({"steps": [{
+            "action": "selectReference",
+            "field": {"objectName": "CompositeValue"},
+            "referenceType": "Codex UI fixture catalog",
+            "strategy": "dropdownExact",
+            "value": "Fixture catalog Alpha",
+        }]})
+        self.assertEqual(scenario["steps"][0]["referenceType"], "Codex UI fixture catalog")
+        with self.assertRaisesRegex(UiWorkerError, "referenceType is only valid"):
+            prepare_native_ui_scenario({"steps": [{
+                "action": "assertConnected", "referenceType": "Catalog",
+            }]})
+
+    def test_plan_reference_kinds_are_validated_and_resolved(self):
+        for kind in ("chartOfCharacteristicTypes", "chartOfAccounts", "chartOfCalculationTypes"):
+            with self.subTest(kind=kind):
+                scenario = prepare_native_ui_scenario({"steps": [{
+                    "action": "selectReference", "strategy": "dropdownExact",
+                    "field": {"objectName": "ReferenceValue"},
+                    "reference": {
+                        "kind": kind,
+                        "metadataName": "Fixture",
+                        "uuid": "a14919f5-0dad-11e4-93f4-0050568b4127",
+                    },
+                }]})
+                resolved = resolve_native_ui_references(scenario, lambda request: {
+                    "ok": True, "ref": {"presentation": f"{kind} Alpha"},
+                })
+                self.assertEqual(resolved["steps"][0]["value"], f"{kind} Alpha")
+
+        module = (Path(__file__).resolve().parents[1] / "src/HTTPServices/CodexTestBridge/Ext/Module.bsl").read_text(encoding="utf-8-sig")
+        self.assertIn("ПланыВидовХарактеристик[Имя].ПолучитьСсылку(UUID)", module)
+        self.assertIn("ПланыСчетов[Имя].ПолучитьСсылку(UUID)", module)
+        self.assertIn("ПланыВидовРасчета[Имя].ПолучитьСсылку(UUID)", module)
 
     def test_agent_ui_normalizes_tree_and_failure(self):
         normalized = normalize_ui_tree([
@@ -276,6 +316,7 @@ class UiWorkerTests(unittest.TestCase):
         self.assertIn("formName", schema["$defs"]["selector"]["properties"])
         self.assertIn("choiceTable", step["properties"])
         self.assertIn("choiceRow", step["properties"])
+        self.assertIn("referenceType", step["properties"])
         self.assertIn("onChangeWait", step["properties"])
         self.assertIn("expandParents", step["properties"])
         self.assertIn("replace", step["properties"])
@@ -596,6 +637,24 @@ class UiWorkerTests(unittest.TestCase):
         self.assertEqual(isolate_test_client_startup_parameter(command), command)
         self.assertEqual(isolate_test_client_startup_parameter(["python", "client.py"]), ["python", "client.py"])
 
+    def test_1c_connection_arguments_are_normalized_for_linux_launcher(self):
+        self.assertEqual(
+            normalize_1c_auth_arguments(["1cv8c", "ENTERPRISE", "/S", "host\\base", "/N", "user", "/P", "", "/TestClient"]),
+            ["1cv8c", "ENTERPRISE", "/Shost\\base", "/Nuser", '/P""', "/TestClient"],
+        )
+        self.assertEqual(
+            normalize_1c_auth_arguments(["1cv8c", "ENTERPRISE", "/P", "secret", "/TestClient"]),
+            ["1cv8c", "ENTERPRISE", "/Psecret", "/TestClient"],
+        )
+        self.assertEqual(
+            normalize_1c_auth_arguments(["1cv8c", "ENTERPRISE", "/Nuser", "/P", "/TestClient"]),
+            ["1cv8c", "ENTERPRISE", "/Nuser", '/P""', "/TestClient"],
+        )
+        self.assertEqual(
+            normalize_1c_auth_arguments(["python", "runner.py", "/N", "unchanged"]),
+            ["python", "runner.py", "/N", "unchanged"],
+        )
+
     def test_xvfb_process_environment_uses_x11(self):
         if not sys.platform.startswith("linux"):
             self.skipTest("GTK X11 requirement applies to Linux")
@@ -603,6 +662,20 @@ class UiWorkerTests(unittest.TestCase):
         self.assertEqual(environment["DISPLAY"], ":99")
         self.assertEqual(environment["CUSTOM"], "value")
         self.assertEqual(environment["GDK_BACKEND"], "x11")
+
+    def test_xvfb_auto_display_avoids_existing_socket_and_lock(self):
+        # The chooser uses the real /tmp namespace. Reserve two high,
+        # process-local candidates and remove them in finally.
+        socket = Path("/tmp/.X11-unix/X190")
+        lock = Path("/tmp/.X191-lock")
+        socket.parent.mkdir(parents=True, exist_ok=True)
+        socket.touch()
+        lock.touch()
+        try:
+            self.assertEqual(choose_free_xvfb_display(190, 192), 192)
+        finally:
+            socket.unlink(missing_ok=True)
+            lock.unlink(missing_ok=True)
 
     def test_redacted_command_is_safe_to_serialize_in_report(self):
         command = ["1cv8c", "ENTERPRISE", "/F", "private-database-path", "/N", "private-login", "/P", "private-password"]

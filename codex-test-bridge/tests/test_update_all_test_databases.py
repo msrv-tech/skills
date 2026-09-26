@@ -21,7 +21,8 @@ class UpdateAllTestDatabasesTests(unittest.TestCase):
     def test_variant_boundary(self):
         self.assertEqual(cfe_variant("Version8_3_8"), "legacy")
         self.assertEqual(cfe_variant("Version8_3_11"), "legacy")
-        self.assertEqual(cfe_variant("Version8_3_12"), "full")
+        self.assertEqual(cfe_variant("Version8_3_12"), "legacy")
+        self.assertEqual(cfe_variant("Version8_3_13"), "full")
         self.assertEqual(cfe_variant("Version8_3_27"), "full")
         self.assertEqual(cfe_variant("DontUse"), "full")
 
@@ -54,7 +55,7 @@ class UpdateAllTestDatabasesTests(unittest.TestCase):
                 assert_no_bootstrap_users({})
 
     def test_source_bridge_version_is_read_from_module(self):
-        self.assertEqual(source_bridge_version(), "0.3.2")
+        self.assertEqual(source_bridge_version(), "0.7.0")
 
     def test_only_server_bridge_entries_are_deployable(self):
         deployable = {"Srvr": "server", "Ref": "base", "Bridge": {"BaseUrl": "http://bridge"}}
@@ -99,10 +100,10 @@ class UpdateAllTestDatabasesTests(unittest.TestCase):
 
     def test_health_verification_requires_requested_version(self):
         responses = [
-            {"ok": True}, {"ok": True}, {"ok": True, "bridgeVersion": "0.3.2"},
+            {"ok": True}, {"ok": True}, {"ok": True, "bridgeVersion": "0.5.0"},
         ]
         with patch("update_all_test_databases.request_bridge", side_effect=responses) as request:
-            verify_bridge({}, "0.3.2", timeout=0.1)
+            verify_bridge({}, "0.5.0", timeout=0.1)
         self.assertEqual(request.call_count, 3)
 
     def test_dry_run_skips_non_server_records(self):

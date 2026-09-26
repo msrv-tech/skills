@@ -1,5 +1,5 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<MetaDataObject xmlns="http://v8.1c.ru/8.3/MDClasses" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.20">
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<MetaDataObject xmlns="http://v8.1c.ru/8.3/MDClasses" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" version="2.20">
 	<Configuration uuid="30f337dc-be82-429e-95ab-5d2ed4e38e04">
 		<InternalInfo>
 			<xr:ContainedObject>
@@ -39,10 +39,10 @@
 			<ConfigurationExtensionPurpose>AddOn</ConfigurationExtensionPurpose>
 			<KeepMappingToExtendedConfigurationObjectsByIDs>true</KeepMappingToExtendedConfigurationObjectsByIDs>
 			<NamePrefix>CTB</NamePrefix>
-			<ConfigurationExtensionCompatibilityMode>Version8_3_12</ConfigurationExtensionCompatibilityMode>
+			<ConfigurationExtensionCompatibilityMode>Version8_3_13</ConfigurationExtensionCompatibilityMode>
 			<ScriptVariant>Russian</ScriptVariant>
 			<Vendor />
-			<Version>0.3.2</Version>
+			<Version>0.7.0</Version>
 			<BriefInformation />
 			<DetailedInformation />
 			<Copyright />
@@ -50,10 +50,22 @@
 			<ConfigurationInformationAddress />
 		</Properties>
 		<ChildObjects>
-			<CommonCommand>CodexNavigate</CommonCommand>
+			<Subsystem>CodexUIFixture</Subsystem>
 			<CommonModule>CodexUIJobsServer</CommonModule>
 			<HTTPService>CodexTestBridge</HTTPService>
+			<CommonCommand>CodexNavigate</CommonCommand>
+			<CommonCommand>CodexUIFixtureCommand</CommonCommand>
+			<CommonForm>CodexUIConformance</CommonForm>
+			<Catalog>CodexUIFixtureCatalog</Catalog>
+			<Document>CodexUIFixtureDocument</Document>
+			<Enum>CodexUIFixtureStatus</Enum>
+			<DataProcessor>CodexUIFixtureProcessor</DataProcessor>
 			<InformationRegister>CodexUIJobs</InformationRegister>
+			<ChartOfCharacteristicTypes>CodexUIFixtureCharacteristics</ChartOfCharacteristicTypes>
+			<ChartOfAccounts>CodexUIFixtureAccounts</ChartOfAccounts>
+			<ChartOfCalculationTypes>CodexUIFixtureCalculationTypes</ChartOfCalculationTypes>
+			<BusinessProcess>CodexUIFixtureProcess</BusinessProcess>
+			<Task>CodexUIFixtureTask</Task>
 		</ChildObjects>
 	</Configuration>
 </MetaDataObject>

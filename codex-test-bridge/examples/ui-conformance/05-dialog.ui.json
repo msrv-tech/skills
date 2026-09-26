@@ -1,0 +1,17 @@
+{
+  "$schema": "../../ui-scenario.schema.json",
+  "name": "UI conformance: modal dialog",
+  "conformanceCases": ["dialog.message"],
+  "steps": [
+    {
+      "action": "openForm",
+      "metadataKind": "commonForm",
+      "metadataName": "CodexUIConformance",
+      "targetForm": {"formName": "ОбщаяФорма.CodexUIConformance", "saveAs": "fixture", "timeout": 30}
+    },
+    {"action": "click", "form": "fixture", "button": {"objectName": "ShowDialog"}, "clickMode": "form"},
+    {"action": "handleDialog", "dialogButton": "OK", "timeout": 10},
+    {"action": "assertField", "form": "fixture", "field": {"objectName": "Status"}, "expected": "dialog:closed"},
+    {"action": "closeForm", "form": "fixture"}
+  ]
+}

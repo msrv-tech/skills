@@ -18,7 +18,7 @@ from ui_worker import load_worker_config, run_ui_worker  # noqa: E402
 from ui_suite import run_ui_suite, save_ui_suite_junit  # noqa: E402
 
 
-REQUIRED_FIELDS = ("Srvr", "Ref", "User", "Password")
+REQUIRED_FIELDS = ("Srvr", "Ref", "User")
 
 
 def select_database(registry: dict, selector: str) -> dict:
@@ -61,6 +61,22 @@ def temporary_environment(values: dict[str, str]):
                 os.environ[name] = value
 
 
+def database_environment(database: dict, platform: str) -> dict[str, str]:
+    """Map one validated private-registry entry to worker placeholders."""
+    connection = f"{database['Srvr']}\\{database['Ref']}"
+    bridge_url = str(database["Bridge"]["BaseUrl"])
+    return {
+        "CODEX_1C_EXECUTABLE": str(Path(platform).resolve()),
+        "CODEX_1C_CLIENT_SERVER_CONNECTION": connection,
+        "CODEX_1C_MANAGER_SERVER_CONNECTION": connection,
+        "CODEX_1C_MANAGER_BRIDGE_URL": bridge_url,
+        "CODEX_1C_CLIENT_USERNAME": str(database["User"]),
+        "CODEX_1C_MANAGER_USERNAME": str(database["User"]),
+        "CODEX_1C_CLIENT_PASSWORD": str(database.get("Password", "")),
+        "CODEX_1C_MANAGER_PASSWORD": str(database.get("Password", "")),
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Run UI tests with an existing user from private test-databases.json"
@@ -81,18 +97,7 @@ def main() -> int:
 
     registry = json.loads(Path(args.registry).read_text(encoding="utf-8-sig"))
     database = select_database(registry, args.database)
-    connection = f"{database['Srvr']}\\{database['Ref']}"
-    bridge_url = str(database["Bridge"]["BaseUrl"])
-    environment = {
-        "CODEX_1C_EXECUTABLE": str(Path(args.platform).resolve()),
-        "CODEX_1C_CLIENT_SERVER_CONNECTION": connection,
-        "CODEX_1C_MANAGER_SERVER_CONNECTION": connection,
-        "CODEX_1C_MANAGER_BRIDGE_URL": bridge_url,
-        "CODEX_1C_CLIENT_USERNAME": str(database["User"]),
-        "CODEX_1C_MANAGER_USERNAME": str(database["User"]),
-        "CODEX_1C_CLIENT_PASSWORD": str(database["Password"]),
-        "CODEX_1C_MANAGER_PASSWORD": str(database["Password"]),
-    }
+    environment = database_environment(database, args.platform)
 
     with temporary_environment(environment):
         worker_config = load_worker_config(args.worker_config)

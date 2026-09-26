@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Form xmlns="http://v8.1c.ru/8.3/xcf/logform" xmlns:cfg="http://v8.1c.ru/8.1/data/enterprise/current-config" xmlns:v8="http://v8.1c.ru/8.1/data/core" version="2.20">
+	<Title><v8:item><v8:lang>ru</v8:lang><v8:content>Codex UI fixture task execution</v8:content></v8:item></Title>
+	<AutoTitle>false</AutoTitle>
+	<WindowOpeningMode>Independent</WindowOpeningMode>
+	<AutoCommandBar name="ФормаКоманднаяПанель" id="-1"/>
+	<ChildItems>
+		<InputField name="TaskDescription" id="1">
+			<DataPath>Объект.Description</DataPath>
+			<Title><v8:item><v8:lang>ru</v8:lang><v8:content>Task description</v8:content></v8:item></Title>
+			<ReadOnly>true</ReadOnly>
+			<ContextMenu name="TaskDescriptionКонтекстноеМеню" id="2"/>
+			<ExtendedTooltip name="TaskDescriptionРасширеннаяПодсказка" id="3"/>
+		</InputField>
+		<InputField name="TaskFixtureText" id="4">
+			<DataPath>Объект.FixtureText</DataPath>
+			<Title><v8:item><v8:lang>ru</v8:lang><v8:content>Fixture text</v8:content></v8:item></Title>
+			<ReadOnly>true</ReadOnly>
+			<ContextMenu name="TaskFixtureTextКонтекстноеМеню" id="5"/>
+			<ExtendedTooltip name="TaskFixtureTextРасширеннаяПодсказка" id="6"/>
+		</InputField>
+	</ChildItems>
+	<Attributes>
+		<Attribute name="Объект" id="1">
+			<Type><v8:Type>cfg:TaskObject.CodexUIFixtureTask</v8:Type></Type>
+			<MainAttribute>true</MainAttribute>
+			<SavedData>true</SavedData>
+		</Attribute>
+	</Attributes>
+</Form>

@@ -153,7 +153,7 @@
 		Команды.Добавить(ИмяКоманды);
 	КонецЦикла;
 	ДействияUI = Новый Массив;
-	Для Каждого ИмяДействия Из СтрРазделить("assertConnected,openNavigationLink,openDataProcessor,openForm,executeCommand,nextWindow,activateWindow,waitForm,waitFormClosed,waitElement,assertElement,inspectUi,inspectTable,inspectCommandInterface,clickCommandInterface,activateForm,activateElement,clickElement,setGroupExpanded,inputText,selectReference,selectFromDropdown,setCheckbox,openChoice,selectTableRow,assertTableRow,expandTreeRow,inputTableCell,click,invokeFormCommand,assertField,handleDialog,closeForm", ",") Цикл
+	Для Каждого ИмяДействия Из СтрРазделить("assertConnected,openNavigationLink,openDataProcessor,openForm,openTaskExecutionForm,executeCommand,nextWindow,previousWindow,homeWindow,activateWindow,waitForm,waitFormClosed,waitElement,assertElement,inspectUi,inspectTable,inspectCommandInterface,clickCommandInterface,activateForm,activateElement,clickElement,setGroupExpanded,assertGroupState,inputText,cancelFieldEditing,inputHtml,assertHtml,selectReference,createReference,selectFromDropdown,setCheckbox,openChoice,selectTableRow,assertTableRow,selectAllTableRows,assertSelectedRows,setTableOrder,expandTreeRow,collapseTreeRow,assertTreeRowState,pressKey,inputTableCell,click,assertButtonState,assertSpreadsheet,invokeFormCommand,assertField,handleDialog,closeForm", ",") Цикл
 		ДействияUI.Добавить(ИмяДействия);
 	КонецЦикла;
 	ВозможностиUI = Новый Структура;
@@ -166,7 +166,7 @@
 	ВозможностиUI.Вставить("suite", Истина);
 
 	Результат = КомандаHealth();
-	Результат.Вставить("bridgeVersion", "0.3.2");
+	Результат.Вставить("bridgeVersion", "0.7.0");
 	Результат.Вставить("contractVersion", 2);
 	Результат.Вставить("variant", "full"); // CTB_FULL_VARIANT
 	Результат.Вставить("commands", Команды);
@@ -818,6 +818,12 @@
 		Возврат Документы[Имя].ПолучитьСсылку(UUID);
 	ИначеЕсли ТипСсылки = "enumref" Или ТипСсылки = "enum" Тогда
 		Возврат Перечисления[Имя].ПолучитьСсылку(UUID);
+	ИначеЕсли ТипСсылки = "chartofcharacteristictypesref" Или ТипСсылки = "chartofcharacteristictypes" Тогда
+		Возврат ПланыВидовХарактеристик[Имя].ПолучитьСсылку(UUID);
+	ИначеЕсли ТипСсылки = "chartofaccountsref" Или ТипСсылки = "chartofaccounts" Тогда
+		Возврат ПланыСчетов[Имя].ПолучитьСсылку(UUID);
+	ИначеЕсли ТипСсылки = "chartofcalculationtypesref" Или ТипСсылки = "chartofcalculationtypes" Тогда
+		Возврат ПланыВидовРасчета[Имя].ПолучитьСсылку(UUID);
 	Иначе
 		ВызватьИсключение "Unsupported ref type: " + ТипСсылки;
 	КонецЕсли;
@@ -955,6 +961,12 @@
 		Возврат Метаданные.Документы[Имя];
 	ИначеЕсли ВидНорм = "enum" Или ВидНорм = "enumref" Или ВидНорм = "enumeration" Тогда
 		Возврат Метаданные.Перечисления[Имя];
+	ИначеЕсли ВидНорм = "chartofcharacteristictypes" Или ВидНорм = "chartofcharacteristictypesref" Тогда
+		Возврат Метаданные.ПланыВидовХарактеристик[Имя];
+	ИначеЕсли ВидНорм = "chartofaccounts" Или ВидНорм = "chartofaccountsref" Тогда
+		Возврат Метаданные.ПланыСчетов[Имя];
+	ИначеЕсли ВидНорм = "chartofcalculationtypes" Или ВидНорм = "chartofcalculationtypesref" Тогда
+		Возврат Метаданные.ПланыВидовРасчета[Имя];
 	Иначе
 		ВызватьИсключение "Unsupported metadata kind: " + Строка(Вид);
 	КонецЕсли;

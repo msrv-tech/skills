@@ -1,0 +1,107 @@
+{
+  "title": "Codex UI conformance",
+  "properties": {
+    "autoTitle": false,
+    "commandBarLocation": "None",
+    "saveDataInSettings": "DontUse",
+    "width": 110,
+    "height": 42
+  },
+  "events": {
+    "OnCreateAtServer": "OnCreateAtServer"
+  },
+  "elements": [
+    {
+      "cmdBar": "FixtureCommandBar",
+      "autofill": false,
+      "children": [
+        {"button": "CommandBarIncrement", "command": "Increment", "title": "Increment in command bar"},
+        {"button": "CommandBarReset", "command": "Reset", "title": "Reset fixture"}
+      ]
+    },
+    {
+      "pages": "FixturePages",
+      "pagesRepresentation": "TabsOnTop",
+      "children": [
+        {
+          "page": "FieldsPage",
+          "title": "Fields",
+          "children": [
+            {"input": "TextValue", "path": "TextValue", "title": "Text value", "horizontalStretch": true, "on": ["OnChange"]},
+            {"input": "MultilineValue", "path": "MultilineValue", "title": "Multiline value", "multiLine": true, "height": 4, "horizontalStretch": true, "on": ["OnChange"]},
+            {"input": "NumberValue", "path": "NumberValue", "title": "Number value", "spinButton": true, "on": ["OnChange"]},
+            {"input": "DateValue", "path": "DateValue", "title": "Date value", "on": ["OnChange"]},
+            {"input": "DropdownValue", "path": "DropdownValue", "title": "Dropdown value", "dropListButton": true, "on": ["OnChange"]},
+            {"check": "FlagValue", "path": "FlagValue", "title": "Flag value", "on": ["OnChange"]},
+            {"input": "ReadOnlyValue", "path": "ReadOnlyValue", "title": "Read only value", "readOnly": true},
+            {"input": "DisabledValue", "path": "DisabledValue", "title": "Disabled value", "enabled": false},
+            {"input": "Status", "path": "Status", "title": "Status", "readOnly": true, "horizontalStretch": true},
+            {"input": "ClickCount", "path": "ClickCount", "title": "Click count", "readOnly": true}
+          ]
+        },
+        {
+          "page": "TablesPage",
+          "title": "Tables",
+          "children": [
+            {
+              "table": "Rows",
+              "path": "Rows",
+              "height": 9,
+              "changeRowSet": true,
+              "commandBarLocation": "Top",
+              "searchStringLocation": "Top",
+              "columns": [
+                {"input": "RowsKey", "path": "Rows.Key", "title": "Key", "readOnly": true},
+                {"input": "RowsText", "path": "Rows.Text", "title": "Text", "on": ["OnChange"]},
+                {"input": "RowsNumber", "path": "Rows.Number", "title": "Number", "on": ["OnChange"]}
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "group": "collapsible",
+      "name": "CollapsibleGroup",
+      "title": "Collapsible group",
+      "showTitle": true,
+      "children": [
+        {"label": "ClickableDecoration", "title": "Clickable decoration", "hyperlink": true, "on": ["Click"]},
+        {"input": "GroupValue", "path": "GroupValue", "title": "Group value"}
+      ]
+    },
+    {
+      "group": "horizontal",
+      "name": "ButtonsGroup",
+      "children": [
+        {"button": "FormIncrement", "command": "Increment", "title": "Increment", "defaultButton": true},
+        {"button": "ShowDialog", "command": "ShowDialog", "title": "Show dialog"},
+        {"button": "Reset", "command": "Reset", "title": "Reset"},
+        {"button": "Close", "stdCommand": "Close", "title": "Close"}
+      ]
+    }
+  ],
+  "attributes": [
+    {"name": "TextValue", "type": "string"},
+    {"name": "MultilineValue", "type": "string"},
+    {"name": "NumberValue", "type": "decimal(15,2)"},
+    {"name": "DateValue", "type": "date"},
+    {"name": "DropdownValue", "type": "string(20)"},
+    {"name": "FlagValue", "type": "boolean"},
+    {"name": "ReadOnlyValue", "type": "string"},
+    {"name": "DisabledValue", "type": "string"},
+    {"name": "Status", "type": "string"},
+    {"name": "ClickCount", "type": "decimal(10,0,nonneg)"},
+    {"name": "GroupValue", "type": "string"},
+    {"name": "Rows", "type": "ValueTable", "columns": [
+      {"name": "Key", "type": "string(20)"},
+      {"name": "Text", "type": "string(100)"},
+      {"name": "Number", "type": "decimal(15,2)"}
+    ]}
+  ],
+  "commands": [
+    {"name": "Increment", "title": "Increment", "action": "IncrementCommand"},
+    {"name": "ShowDialog", "title": "Show dialog", "action": "ShowDialogCommand"},
+    {"name": "Reset", "title": "Reset", "action": "ResetCommand"}
+  ]
+}

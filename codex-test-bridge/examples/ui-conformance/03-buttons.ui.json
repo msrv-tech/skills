@@ -1,0 +1,26 @@
+{
+  "$schema": "../../ui-scenario.schema.json",
+  "name": "UI conformance: form buttons and commands",
+  "conformanceCases": ["button.form", "button.form-command", "button.state", "decoration.click"],
+  "steps": [
+    {
+      "action": "openForm",
+      "metadataKind": "commonForm",
+      "metadataName": "CodexUIConformance",
+      "targetForm": {"formName": "ОбщаяФорма.CodexUIConformance", "saveAs": "fixture", "timeout": 30}
+    },
+    {"action": "clickElement", "form": "fixture", "elementType": "decoration", "clickMode": "auto", "element": {"objectName": "ClickableDecoration"}},
+    {"action": "assertField", "form": "fixture", "field": {"objectName": "Status"}, "expected": "decoration:clicked"},
+    {"action": "clickElement", "form": "fixture", "elementType": "decoration", "clickMode": "activated", "element": {"objectName": "ClickableDecoration"}},
+    {"action": "assertField", "form": "fixture", "field": {"objectName": "Status"}, "expected": "decoration:clicked"},
+    {"action": "clickElement", "form": "fixture", "elementType": "group", "clickMode": "activated", "element": {"objectName": "CollapsibleGroup"}},
+    {"action": "clickElement", "form": "fixture", "elementType": "button", "clickMode": "auto", "element": {"objectName": "FormIncrement"}},
+    {"action": "assertButtonState", "form": "fixture", "button": {"objectName": "FormIncrement"}, "marked": false},
+    {"action": "assertField", "form": "fixture", "field": {"objectName": "ClickCount"}, "expected": "1"},
+    {"action": "click", "form": "fixture", "button": {"objectName": "FormIncrement"}, "clickMode": "form"},
+    {"action": "assertField", "form": "fixture", "field": {"objectName": "ClickCount"}, "expected": "2"},
+    {"action": "invokeFormCommand", "form": "fixture", "command": "Increment", "button": {"objectName": "FormIncrement"}},
+    {"action": "assertField", "form": "fixture", "field": {"objectName": "ClickCount"}, "expected": "3"},
+    {"action": "closeForm", "form": "fixture"}
+  ]
+}

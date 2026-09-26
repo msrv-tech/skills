@@ -1,0 +1,81 @@
+[
+  {
+    "type": "Enum",
+    "name": "CodexUIFixtureStatus",
+    "synonym": "Codex UI fixture status",
+    "values": ["Draft", "Ready", "Done"]
+  },
+  {
+    "type": "Catalog",
+    "name": "CodexUIFixtureCatalog",
+    "synonym": "Codex UI fixture catalog",
+    "hierarchical": true,
+    "codeLength": 20,
+    "descriptionLength": 100,
+    "autonumbering": false,
+    "checkUnique": true,
+    "quickChoice": false,
+    "attributes": [
+      "Enabled: Boolean",
+      "FixtureStatus: EnumRef.CodexUIFixtureStatus"
+    ]
+  },
+  {
+    "type": "ChartOfCharacteristicTypes",
+    "name": "CodexUIFixtureCharacteristics",
+    "synonym": "Codex UI fixture characteristics",
+    "codeLength": 20,
+    "descriptionLength": 100,
+    "autonumbering": false,
+    "checkUnique": true,
+    "valueTypes": [
+      "String(100)",
+      "Number(15,2)",
+      "Boolean",
+      "CatalogRef.CodexUIFixtureCatalog"
+    ]
+  },
+  {
+    "type": "ChartOfAccounts",
+    "name": "CodexUIFixtureAccounts",
+    "synonym": "Codex UI fixture accounts",
+    "extDimensionTypes": "ChartOfCharacteristicTypes.CodexUIFixtureCharacteristics",
+    "maxExtDimensionCount": 1,
+    "codeLength": 20,
+    "descriptionLength": 100,
+    "checkUnique": true,
+    "accountingFlags": ["Active"]
+  },
+  {
+    "type": "ChartOfCalculationTypes",
+    "name": "CodexUIFixtureCalculationTypes",
+    "synonym": "Codex UI fixture calculation types",
+    "codeLength": 20,
+    "descriptionLength": 100,
+    "autonumbering": false,
+    "checkUnique": true
+  },
+  {
+    "type": "Document",
+    "name": "CodexUIFixtureDocument",
+    "synonym": "Codex UI fixture document",
+    "numberLength": 20,
+    "numberPeriodicity": "Nonperiodical",
+    "autonumbering": false,
+    "checkUnique": true,
+    "posting": "Deny",
+    "attributes": [
+      "CatalogValue: CatalogRef.CodexUIFixtureCatalog",
+      "CharacteristicValue: ChartOfCharacteristicTypesRef.CodexUIFixtureCharacteristics",
+      "AccountValue: ChartOfAccountsRef.CodexUIFixtureAccounts",
+      "CalculationTypeValue: ChartOfCalculationTypesRef.CodexUIFixtureCalculationTypes",
+      "FixtureStatus: EnumRef.CodexUIFixtureStatus"
+    ],
+    "tabularSections": {
+      "References": [
+        "CatalogValue: CatalogRef.CodexUIFixtureCatalog",
+        "CharacteristicValue: ChartOfCharacteristicTypesRef.CodexUIFixtureCharacteristics"
+      ]
+    }
+  }
+]
