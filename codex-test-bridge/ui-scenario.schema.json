@@ -74,6 +74,8 @@
         "depth": {"type": "integer", "minimum": 1, "maximum": 10},
         "value": {},
         "expected": {},
+        "contains": {"type": "string", "minLength": 1},
+        "notEmpty": {"const": true},
         "exists": {"type": "boolean"},
         "visible": {"type": "boolean"},
         "enabled": {"type": "boolean"},

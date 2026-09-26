@@ -360,6 +360,70 @@ class UiWorkerTests(unittest.TestCase):
         self.assertIn("CTB_НажатьКнопкуФормыИлиКомандногоИнтерфейса", module)
         self.assertIn('"ТестируемаяКнопкаКомандногоИнтерфейса"', module)
         self.assertIn('CTB_Получить(Шаг, "clickMode", "auto")', module)
+        self.assertIn('ОписаниеПоискаКоманды = Новый Структура("title,objectName,timeout"', module)
+        self.assertIn("CTB_ПроверитьКнопкуПередНажатием", module)
+
+    def test_invoke_form_command_uses_synchronous_test_client_command(self):
+        root = Path(__file__).resolve().parents[1]
+        module = (root / "src" / "Ext" / "ManagedApplicationModule.bsl").read_text(encoding="utf-8-sig")
+        start = module.index("Функция CTB_ВыполнитьRuntimeКомандуФормы")
+        end = module.index("Процедура CTB_НажатьЭлементФормы", start)
+        runtime = module[start:end]
+        self.assertIn('ТестКлиент.ВыполнитьКоманду("e1cib/command/ОбщаяКоманда.CodexNavigate")', runtime)
+        self.assertNotIn("РазорватьСоединение", runtime)
+        self.assertIn("transportStage", runtime)
+        command = (root / "src" / "CommonCommands" / "CodexNavigate" / "Ext" / "CommandModule.bsl").read_text(encoding="utf-8-sig")
+        self.assertIn('Задание.status <> "client-runtime-request"', command)
+        self.assertIn("CTB_ВыполнитьRuntimeКоманду", command)
+        self.assertIn('"client-runtime-response"', command)
+
+    def test_hidden_designer_installer_supports_linux_xvfb(self):
+        installer = (
+            Path(__file__).resolve().parents[1]
+            / "scripts" / "install_cfe_designer_hidden.py"
+        ).read_text(encoding="utf-8")
+        self.assertIn("create_backend", installer)
+        self.assertIn('"windowsDesktop" if os.name == "nt" else "xvfb"', installer)
+        self.assertIn("xvfb_display_candidates", installer)
+        self.assertNotIn('os.environ.get("CODEX_XVFB_DISPLAY", "98")', installer)
+        self.assertIn("password_argument = '/P\"\"'", installer)
+        self.assertIn('authentication = [f"/N{args.user}", password_argument]', installer)
+        self.assertIn("submit_linux_authentication", installer)
+        self.assertIn("type_unicode", installer)
+        self.assertIn("XChangeKeyboardMapping", installer)
+        self.assertNotIn("type_unicode(username)", installer)
+        self.assertIn("250 <= width.value <= 700", installer)
+        self.assertNotIn("supported only on Windows", installer)
+
+        bootstrap = (
+            Path(__file__).resolve().parents[1]
+            / "scripts" / "install_cfe_with_bridge_bootstrap.py"
+        ).read_text(encoding="utf-8")
+        self.assertIn("temporary_password = uuid.uuid4().hex", bootstrap)
+        self.assertIn('u.Password=', bootstrap)
+        self.assertIn('installer_password_environment = "CODEX_CTB_BOOTSTRAP_PASSWORD"', bootstrap)
+        self.assertNotIn('"--empty-password"', bootstrap)
+
+    def test_assert_field_supports_dynamic_text_predicates(self):
+        contains = prepare_native_ui_scenario({"steps": [{
+            "action": "assertField", "field": {"objectName": "Json"}, "contains": '"write_fields"',
+        }]})
+        self.assertEqual(contains["steps"][0]["contains"], '"write_fields"')
+        non_empty = prepare_native_ui_scenario({"steps": [{
+            "action": "assertField", "field": {"objectName": "Json"}, "notEmpty": True,
+        }]})
+        self.assertTrue(non_empty["steps"][0]["notEmpty"])
+        with self.assertRaisesRegex(UiWorkerError, "exactly one"):
+            prepare_native_ui_scenario({"steps": [{
+                "action": "assertField", "field": {"objectName": "Json"},
+                "expected": "value", "notEmpty": True,
+            }]})
+        module = (
+            Path(__file__).resolve().parents[1]
+            / "src" / "Ext" / "ManagedApplicationModule.bsl"
+        ).read_text(encoding="utf-8-sig")
+        self.assertIn('CTB_Получить(Шаг, "notEmpty", Ложь)', module)
+        self.assertIn('CTB_Получить(Шаг, "contains", Неопределено)', module)
 
     def test_native_module_has_table_cell_editing_primitives(self):
         module = (

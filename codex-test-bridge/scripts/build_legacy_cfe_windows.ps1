@@ -24,42 +24,9 @@ if (Test-Path -LiteralPath $sourceDir) {
     Remove-Item -LiteralPath $sourceDir -Recurse -Force
 }
 New-Item -ItemType Directory -Force -Path $sourceDir | Out-Null
-Copy-Item -LiteralPath (Join-Path $root "src\Configuration.xml") -Destination $sourceDir
-Copy-Item -LiteralPath (Join-Path $root "src\HTTPServices") -Destination $sourceDir -Recurse
-
-$modulePath = Join-Path $sourceDir "HTTPServices\CodexTestBridge\Ext\Module.bsl"
-$moduleText = Get-Content -LiteralPath $modulePath -Raw -Encoding UTF8
-$moduleText = [regex]::Replace(
-    $moduleText,
-    '(?ms)^[^\r\n]*"uijobcreate"[^\r\n]*\r?\n.*?^[^\r\n]*"uijobdelete"[^\r\n]*\r?\n^[^\r\n]*\r?\n',
-    '')
-$moduleText = [regex]::Replace(
-    $moduleText,
-    '(?ms)^[^\r\n]*UIJobCreate\(.*?(?=^[^\r\n]*Capabilities\(\)[^\r\n]*$)',
-    '')
-$bslFalse = -join ([char[]](0x041B,0x043E,0x0436,0x044C))
-$moduleText = [regex]::Replace($moduleText, '(?m)(^.*"worker", )[^\r\n]+(\); // CTB_FULL_UI.*$)', '${1}' + $bslFalse + '${2}')
-$moduleText = [regex]::Replace($moduleText, '(?m)(^.*"variant", )"full"(\); // CTB_FULL_VARIANT.*$)', '${1}"legacy"${2}')
-$moduleText = $moduleText.Replace(',UIJobCreate,UIJobGet,UIJobSet,UIJobDelete', '')
-[System.IO.File]::WriteAllText($modulePath, $moduleText, [System.Text.UTF8Encoding]::new($false))
-
-$configurationPath = Join-Path $sourceDir "Configuration.xml"
-[xml]$configuration = Get-Content -LiteralPath $configurationPath -Raw -Encoding UTF8
-$namespace = New-Object System.Xml.XmlNamespaceManager($configuration.NameTable)
-$namespace.AddNamespace("md", "http://v8.1c.ru/8.3/MDClasses")
-$properties = $configuration.SelectSingleNode("/md:MetaDataObject/md:Configuration/md:Properties", $namespace)
-$properties.SelectSingleNode("md:ConfigurationExtensionCompatibilityMode", $namespace).InnerText = "Version8_3_8"
-$defaultRoles = $properties.SelectSingleNode("md:DefaultRoles", $namespace)
-if ($defaultRoles) {
-    [void]$properties.RemoveChild($defaultRoles)
-}
-$children = $configuration.SelectSingleNode("/md:MetaDataObject/md:Configuration/md:ChildObjects", $namespace)
-foreach ($child in @($children.ChildNodes)) {
-    if ($child.LocalName -ne "HTTPService") {
-        [void]$children.RemoveChild($child)
-    }
-}
-$configuration.Save($configurationPath)
+& python (Join-Path $root "scripts\prepare_legacy_source.py") `
+    --source (Join-Path $root "src") --output $sourceDir
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 $platform = $PlatformPath
 if (Test-Path -LiteralPath $platform -PathType Container) {

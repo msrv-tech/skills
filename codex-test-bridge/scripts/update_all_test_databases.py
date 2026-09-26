@@ -22,6 +22,7 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 COMPATIBILITY_PATTERN = re.compile(r"Version8_3_(\d+)$", re.IGNORECASE)
+BRIDGE_VERSION_PATTERN = re.compile(r'Вставить\("bridgeVersion",\s*"([^"]+)"\)')
 
 
 class UpdateError(RuntimeError):
@@ -79,6 +80,43 @@ def cfe_variant(compatibility_mode: str) -> str:
     return "full" if int(match.group(1)) >= 12 else "legacy"
 
 
+def source_bridge_version() -> str:
+    module = ROOT / "src" / "HTTPServices" / "CodexTestBridge" / "Ext" / "Module.bsl"
+    match = BRIDGE_VERSION_PATTERN.search(module.read_text(encoding="utf-8-sig"))
+    if match is None:
+        raise UpdateError("Bridge version was not found in the source module")
+    return match.group(1)
+
+
+def unsupported_database_reason(database: dict[str, Any]) -> str | None:
+    if not all(isinstance(database.get(field), str) and database[field] for field in ("Srvr", "Ref")):
+        return "not a server infobase"
+    bridge = database.get("Bridge")
+    if not isinstance(bridge, dict) or not isinstance(bridge.get("BaseUrl"), str) or not bridge["BaseUrl"]:
+        return "Bridge.BaseUrl is not configured"
+    return None
+
+
+def validate_registered_credentials(database: dict[str, Any]) -> None:
+    if not isinstance(database.get("User"), str) or not database["User"]:
+        raise UpdateError("Database entry has no registered User")
+    if "Password" in database and not isinstance(database["Password"], str):
+        raise UpdateError("Database entry Password must be a string")
+
+
+def sanitized_process_error(completed: subprocess.CompletedProcess[str], database: dict[str, Any]) -> str:
+    lines = (completed.stderr or completed.stdout or "").strip().splitlines()
+    detail = lines[-1] if lines else "no child-process diagnostics"
+    sensitive_values = [
+        database.get("User"), database.get("Password"), database.get("Srvr"), database.get("Ref"),
+        (database.get("Bridge") or {}).get("BaseUrl") if isinstance(database.get("Bridge"), dict) else None,
+    ]
+    for value in sensitive_values:
+        if isinstance(value, str) and value:
+            detail = detail.replace(value, "<redacted>")
+    return detail[:1000]
+
+
 def bridge_url(database: dict[str, Any]) -> str:
     bridge = database.get("Bridge")
     value = bridge.get("BaseUrl") if isinstance(bridge, dict) else None
@@ -110,16 +148,20 @@ def request_bridge(database: dict[str, Any], method: str, suffix: str, payload: 
     return result
 
 
-def verify_bridge(database: dict[str, Any], timeout: float = 60) -> None:
+def verify_bridge(database: dict[str, Any], expected_version: str, timeout: float = 60) -> None:
     deadline = time.monotonic() + timeout
     last_error: Exception | None = None
     while time.monotonic() < deadline:
         try:
             get_result = request_bridge(database, "GET", "/health")
             post_result = request_bridge(database, "POST", "/command", {"command": "health"})
-            if get_result.get("ok", True) and post_result.get("ok", True):
+            capabilities = request_bridge(database, "POST", "/command", {"command": "capabilities"})
+            if not get_result.get("ok", True) or not post_result.get("ok", True):
+                last_error = UpdateError("Bridge health response is not successful")
+            elif capabilities.get("bridgeVersion") != expected_version:
+                last_error = UpdateError("Installed bridge version does not match the requested artifact")
+            else:
                 return
-            last_error = UpdateError("Bridge health response is not successful")
         except Exception as exc:  # publication can restart briefly after CFE update
             last_error = exc
         time.sleep(2)
@@ -144,66 +186,16 @@ def assert_no_bootstrap_users(database: dict[str, Any]) -> None:
         raise UpdateError("Temporary bootstrap users exist; stop concurrent installers and clean them explicitly")
 
 
-def validate_install_fields(database: dict[str, Any]) -> None:
-    for field in ("Srvr", "Ref"):
-        if not isinstance(database.get(field), str) or not database[field]:
-            raise UpdateError(f"Database entry has no {field}; only server infobases are supported")
-
-
 def install_database(
     database: dict[str, Any], platform: Path, cfe: Path, timeout: float,
 ) -> None:
-    validate_install_fields(database)
-    password_environment = "CODEX_CTB_MASS_UPDATE_PASSWORD"
-    environment = os.environ.copy()
-    environment[password_environment] = str(database.get("Password", ""))
-    with tempfile.TemporaryDirectory(prefix="ctb-mass-update-") as temporary:
-        log_path = Path(temporary) / "designer.log"
-        command = [
-            sys.executable,
-            str(ROOT / "scripts" / "install_cfe_with_bridge_bootstrap.py"),
-            "--allow-bootstrap-user",
-            "--bridge-base-url", bridge_url(database),
-            "--bridge-user", str(database.get("User", "")),
-            "--bridge-password-env", password_environment,
-            "--platform", str(platform),
-            "--server", database["Srvr"],
-            "--database", database["Ref"],
-            "--cfe", str(cfe),
-            "--log", str(log_path),
-            "--timeout", str(timeout),
-        ]
-        completed = subprocess.run(
-            command,
-            cwd=ROOT,
-            env=environment,
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-            timeout=timeout + 60,
-        )
-        if completed.returncode != 0:
-            raise UpdateError("Hidden CFE installation failed")
-
-
-def install_database_with_registered_user(
-    database: dict[str, Any], platform: Path, cfe: Path, timeout: float,
-) -> None:
-    """Install with the registry user without creating a bootstrap account.
-
-    This preserves another installer's temporary accounts when the registered
-    user already has Designer rights.  It is also useful for a single targeted
-    update: the normal bootstrap path remains the default for registry-wide
-    updates.
-    """
-    validate_install_fields(database)
-    username = str(database.get("User", ""))
-    if not username:
-        raise UpdateError("Database entry has no registered User")
+    if unsupported_database_reason(database) is not None:
+        raise UpdateError("Only server infobases with Bridge.BaseUrl can be installed")
+    validate_registered_credentials(database)
+    username = database["User"]
     password_environment = "CODEX_CTB_REGISTERED_USER_PASSWORD"
     environment = os.environ.copy()
-    environment[password_environment] = str(database.get("Password", ""))
+    environment[password_environment] = database.get("Password", "")
     with tempfile.TemporaryDirectory(prefix="ctb-registered-user-update-") as temporary:
         log_path = Path(temporary) / "designer.log"
         command = [
@@ -225,7 +217,9 @@ def install_database_with_registered_user(
             timeout=timeout + 60,
         )
         if completed.returncode != 0:
-            raise UpdateError("Registered-user CFE installation failed")
+            raise UpdateError(
+                f"Registered-user CFE installation failed: {sanitized_process_error(completed, database)}"
+            )
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -238,8 +232,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--install-attempts", type=int, default=3, help="Retries for transient Designer or publication failures")
     parser.add_argument("--database", action="append", default=[], help="Only update matching Ref, project folder, or Bridge.AppName; repeatable")
     parser.add_argument("--dry-run", action="store_true", help="Detect variants without modifying infobases")
-    parser.add_argument("--allow-bootstrap-user", action="store_true", required=True)
-    parser.add_argument("--use-registered-user", action="store_true", help="Install with the registry user without creating a bootstrap account")
+    parser.add_argument("--expected-version", default=source_bridge_version(), help="Bridge version required after installation")
     args = parser.parse_args(argv)
     if not args.registry:
         parser.error("--registry or CODEX_1C_TEST_DATABASES is required")
@@ -267,38 +260,41 @@ def main(argv: list[str] | None = None) -> int:
                 raise UpdateError(f"{variant} CFE file does not exist")
 
     failures = 0
+    skipped = 0
+    passed = 0
     totals = {"full": 0, "legacy": 0}
     for index, database in enumerate(databases, 1):
         label = f"database {index}/{len(databases)}"
+        unsupported_reason = unsupported_database_reason(database)
+        if unsupported_reason is not None:
+            skipped += 1
+            print(f"[{label}] skipped: {unsupported_reason}", flush=True)
+            continue
         try:
+            validate_registered_credentials(database)
             mode = read_compatibility_mode(database)
             variant = cfe_variant(mode)
             totals[variant] += 1
             print(f"[{label}] compatibility={mode}, variant={variant}", flush=True)
             if args.dry_run:
+                passed += 1
+                print(f"[{label}] ready", flush=True)
                 continue
-            if not args.use_registered_user:
-                assert_no_bootstrap_users(database)
+            assert_no_bootstrap_users(database)
             for attempt in range(1, args.install_attempts + 1):
                 print(f"[{label}] installing, attempt {attempt}/{args.install_attempts}", flush=True)
                 try:
-                    if args.use_registered_user:
-                        install_database_with_registered_user(database, Path(args.platform).resolve(), cfe_files[variant], args.timeout)
-                    else:
-                        install_database(database, Path(args.platform).resolve(), cfe_files[variant], args.timeout)
+                    install_database(database, Path(args.platform).resolve(), cfe_files[variant], args.timeout)
                     break
                 except Exception:
                     if attempt >= args.install_attempts:
                         raise
                     print(f"[{label}] transient installation failure; waiting before retry", flush=True)
-                    try:
-                        verify_bridge(database)
-                    except Exception:
-                        time.sleep(5)
+                    time.sleep(5)
             print(f"[{label}] verifying GET and POST health", flush=True)
-            verify_bridge(database)
-            if not args.use_registered_user:
-                assert_no_bootstrap_users(database)
+            verify_bridge(database, args.expected_version)
+            assert_no_bootstrap_users(database)
+            passed += 1
             print(f"[{label}] passed", flush=True)
         except Exception as exc:
             failures += 1
@@ -306,7 +302,7 @@ def main(argv: list[str] | None = None) -> int:
 
     print(
         f"Summary: total={len(databases)}, full={totals['full']}, legacy={totals['legacy']}, "
-        f"passed={len(databases) - failures}, failed={failures}",
+        f"passed={passed}, skipped={skipped}, failed={failures}",
         flush=True,
     )
     return 1 if failures else 0

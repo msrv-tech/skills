@@ -36,6 +36,7 @@ allowed-tools:
 - `UI_WORKER.md` - контракт управляющей обработки и backends
 - `BRIDGE.md` - подробная спецификация endpoints и команд
 - `scripts/build_cfe_linux.sh` - сборка CFE на Linux через `ibcmd`
+- `scripts/build_legacy_cfe_linux.sh` - сборка server-only legacy CFE на Linux
 - `scripts/install_cfe_linux.sh` - строгая установка CFE в файловую ИБ
 - `scripts/enable_vrd_linux.py` - атомарное включение bridge в существующем VRD
 - `scripts/linux_flow.sh` - Linux doctor и полный smoke от сборки до Xvfb
@@ -126,19 +127,37 @@ Windows PowerShell 5.1 иначе может исказить кирилличе
 
 Массовое обновление выполняется одной командой. Скрипт читает реестр как UTF-8,
 определяет режим совместимости по локальному `Configuration.xml`, выбирает full
-для 8.3.12+ и legacy для 8.3.11 и ниже, устанавливает через одноразового скрытого
-пользователя и проверяет оба health-маршрута. Значения реестра в вывод не попадают:
-Транзиентный отказ Designer или публикации повторяется до трёх раз.
-До и после установки проверяется отсутствие оставшихся `ctb_bootstrap_`
-пользователей; при обнаружении чужая возможная установка не удаляется автоматически.
+для 8.3.12+ и legacy для 8.3.11 и ниже. Установка всегда выполняется под
+`User`/`Password` выбранной записи реестра; временные пользователи не создаются.
+Для каждого результата проверяются GET health, POST health, версия через
+capabilities и отсутствие оставшихся `ctb_bootstrap_` пользователей.
+Транзиентный отказ Designer или публикации повторяется до трёх раз. Записи без
+`Srvr`/`Ref` или `Bridge.BaseUrl` явно учитываются как `skipped`, а отсутствие
+`User` у поддерживаемой записи считается ошибкой реестра. Отсутствующий
+`Password` означает пустой пароль. Значения подключения и учётные данные в
+вывод не попадают.
+`CODEX_1C_EXECUTABLE` должен указывать на клиент, совместимый с версией сервера;
+предупреждение о несовпадении версий считается ошибкой установки, а не успешным
+результатом.
 
 ```powershell
 $codexRoot = if ($env:CODEX_HOME) { $env:CODEX_HOME } else { Join-Path ([Environment]::GetFolderPath('UserProfile')) '.codex' }
 $skillsRoot = Join-Path $codexRoot 'skills'
-$registry = & (Join-Path $skillsRoot 'test-databases\scripts\resolve-registry.ps1')
-python (Join-Path $skillsRoot 'codex-test-bridge\scripts\update_all_test_databases.py') --allow-bootstrap-user `
+$registry = python (Join-Path $skillsRoot 'test-databases\scripts\resolve-registry.py')
+python (Join-Path $skillsRoot 'codex-test-bridge\scripts\update_all_test_databases.py') `
   --registry $registry --platform $env:CODEX_1C_EXECUTABLE
 ```
+
+На Linux тот же сценарий запускается так:
+
+```bash
+registry="$(python3 "$CODEX_HOME/skills/test-databases/scripts/resolve-registry.py")"
+python3 "$CODEX_HOME/skills/codex-test-bridge/scripts/update_all_test_databases.py" \
+  --registry "$registry" --platform "$CODEX_1C_EXECUTABLE"
+```
+
+Перед изменяющим запуском можно выполнить ту же команду с `--dry-run`: она
+проверит полноту реестра и варианты CFE и покажет итог `passed/skipped/failed`.
 
 ## Установка Расширения В Файловую Базу
 
@@ -350,6 +369,7 @@ Linux:
 
 ```bash
 IBCMD="$CODEX_IBCMD" ./scripts/build_cfe_linux.sh
+IBCMD="$CODEX_IBCMD" ./scripts/build_legacy_cfe_linux.sh
 ```
 
 Для платформы 8.5 можно передать точный путь к `ibcmd` или каталог версии.

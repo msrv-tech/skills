@@ -57,13 +57,16 @@ def main() -> int:
 
     bridge_password = os.environ.get(args.bridge_password_env, "")
     temporary_user = "ctb_bootstrap_" + uuid.uuid4().hex
+    temporary_password = uuid.uuid4().hex
     create_marker = "CODEX_BOOTSTRAP_CREATED_" + uuid.uuid4().hex
     delete_marker = "CODEX_BOOTSTRAP_DELETED_" + uuid.uuid4().hex
     quoted_user = temporary_user.replace('"', '""')
+    quoted_password = temporary_password.replace('"', '""')
     create_code = (
         "u=InfoBaseUsers.CreateUser();"
         f'u.Name="{quoted_user}";'
         'u.FullName="Codex temporary bridge installer";'
+        f'u.Password="{quoted_password}";'
         "u.StandardAuthentication=True;u.ShowInList=False;"
         "For Each role In Metadata.Roles Do u.Roles.Add(role); EndDo;"
         f'u.Write();Raise "{create_marker}";'
@@ -78,6 +81,9 @@ def main() -> int:
     try:
         bridge_execute(args.bridge_base_url, create_code, args.bridge_user, bridge_password, create_marker)
         created = True
+        installer_password_environment = "CODEX_CTB_BOOTSTRAP_PASSWORD"
+        installer_environment = os.environ.copy()
+        installer_environment[installer_password_environment] = temporary_password
         command = [
             sys.executable,
             str(ROOT / "scripts" / "install_cfe_designer_hidden.py"),
@@ -85,7 +91,7 @@ def main() -> int:
             "--server", args.server,
             "--database", args.database,
             "--user", temporary_user,
-            "--empty-password",
+            "--password-env", installer_password_environment,
             "--extension", args.extension,
             "--cfe", args.cfe,
             "--log", args.log,
@@ -94,6 +100,7 @@ def main() -> int:
         install = subprocess.run(
             command,
             cwd=ROOT,
+            env=installer_environment,
             capture_output=True,
             text=True,
             encoding="utf-8",

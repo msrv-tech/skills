@@ -56,7 +56,7 @@ NATIVE_UI_ROOT_FIELDS = {
 NATIVE_UI_STEP_FIELDS = {
     "action", "name", "command", "link", "clientNavigationLink", "uuid", "kind", "metadataKind", "metadataName", "form", "saveAs",
     "title", "objectName", "formName", "timeout", "attempts", "strategy", "clickMode", "match", "direction",
-    "depth", "value", "expected", "exists", "visible", "enabled", "readOnly", "checked", "strict",
+    "depth", "value", "expected", "contains", "notEmpty", "exists", "visible", "enabled", "readOnly", "checked", "strict",
     "finishRow", "onChangeWait", "replace", "waitClosed", "optional", "elementType", "onPrompt",
     "dialogTitle", "promptTimeout", "row", "expandParents", "key", "choiceRow", "element", "field", "button",
     "dialogButton", "table", "choiceTable", "targetForm", "choiceForm", "reference", "choiceField",
@@ -143,6 +143,16 @@ def prepare_native_ui_scenario(data: Any) -> dict[str, Any]:
 
         if action == "pressKey" and (not isinstance(step.get("key"), str) or not step["key"]):
             raise UiWorkerError(f"UI scenario step {index}: pressKey requires key")
+        if action == "assertField":
+            assertion_fields = [name for name in ("expected", "contains", "notEmpty") if name in step]
+            if len(assertion_fields) != 1:
+                raise UiWorkerError(
+                    f"UI scenario step {index}: assertField requires exactly one of expected, contains, or notEmpty"
+                )
+            if "contains" in step and (not isinstance(step["contains"], str) or not step["contains"]):
+                raise UiWorkerError(f"UI scenario step {index}: assertField.contains must be a non-empty string")
+            if "notEmpty" in step and step["notEmpty"] is not True:
+                raise UiWorkerError(f"UI scenario step {index}: assertField.notEmpty must be true")
         if "expandParents" in step:
             parents = step["expandParents"]
             if action not in {"selectTableRow", "assertTableRow"} or not isinstance(parents, list) or not parents or not all(isinstance(parent, dict) and parent for parent in parents):

@@ -15,7 +15,7 @@
 			<IncludeHelpInContents>false</IncludeHelpInContents>
 			<CommandParameterType/>
 			<ParameterUseMode>Single</ParameterUseMode>
-			<ModifiesData>false</ModifiesData>
+			<ModifiesData>true</ModifiesData>
 			<OnMainServerUnavalableBehavior>Auto</OnMainServerUnavalableBehavior>
 		</Properties>
 	</CommonCommand>
