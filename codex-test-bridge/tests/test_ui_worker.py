@@ -363,19 +363,32 @@ class UiWorkerTests(unittest.TestCase):
         self.assertIn('ОписаниеПоискаКоманды = Новый Структура("title,objectName,timeout"', module)
         self.assertIn("CTB_ПроверитьКнопкуПередНажатием", module)
 
-    def test_invoke_form_command_uses_synchronous_test_client_command(self):
+    def test_invoke_form_command_uses_testable_form_button(self):
         root = Path(__file__).resolve().parents[1]
         module = (root / "src" / "Ext" / "ManagedApplicationModule.bsl").read_text(encoding="utf-8-sig")
-        start = module.index("Функция CTB_ВыполнитьRuntimeКомандуФормы")
-        end = module.index("Процедура CTB_НажатьЭлементФормы", start)
-        runtime = module[start:end]
-        self.assertIn('ТестКлиент.ВыполнитьКоманду("e1cib/command/ОбщаяКоманда.CodexNavigate")', runtime)
-        self.assertNotIn("РазорватьСоединение", runtime)
-        self.assertIn("transportStage", runtime)
+        start = module.index("Функция CTB_ВыполнитьКомандуФормыЧерезКнопку")
+        end = module.index("Процедура CTB_ПроверитьКнопкуПередНажатием", start)
+        invocation = module[start:end]
+        self.assertIn('CTB_ОбязательноеПоле(Шаг, "command")', invocation)
+        self.assertIn('"ТестируемаяКнопкаФормы"', invocation)
+        self.assertIn("КнопкаФормы.Нажать()", invocation)
+        self.assertNotIn("ТестКлиент.ВыполнитьКоманду(", invocation)
         command = (root / "src" / "CommonCommands" / "CodexNavigate" / "Ext" / "CommandModule.bsl").read_text(encoding="utf-8-sig")
-        self.assertIn('Задание.status <> "client-runtime-request"', command)
-        self.assertIn("CTB_ВыполнитьRuntimeКоманду", command)
-        self.assertIn('"client-runtime-response"', command)
+        self.assertNotIn("client-runtime-request", command)
+        self.assertNotIn("Форма.ВыполнитьКоманду", command)
+
+    def test_group_expansion_is_idempotent(self):
+        scenario = prepare_native_ui_scenario({"steps": [{
+            "action": "setGroupExpanded", "form": "settings",
+            "element": {"objectName": "Advanced"}, "expanded": True,
+        }]})
+        self.assertTrue(scenario["steps"][0]["expanded"])
+        module = (
+            Path(__file__).resolve().parents[1] / "src" / "Ext" / "ManagedApplicationModule.bsl"
+        ).read_text(encoding="utf-8-sig")
+        self.assertIn('Действие = "setgroupexpanded"', module)
+        self.assertIn("Группа.Развернуть()", module)
+        self.assertIn("Группа.Свернуть()", module)
 
     def test_hidden_designer_installer_supports_linux_xvfb(self):
         installer = (
@@ -424,6 +437,12 @@ class UiWorkerTests(unittest.TestCase):
         ).read_text(encoding="utf-8-sig")
         self.assertIn('CTB_Получить(Шаг, "notEmpty", Ложь)', module)
         self.assertIn('CTB_Получить(Шаг, "contains", Неопределено)', module)
+        text_reader_start = module.index("Функция CTB_ПолучитьТекстПоля")
+        text_reader_end = module.index("Процедура CTB_ВвестиТекстВТабличноеПоле", text_reader_start)
+        text_reader = module[text_reader_start:text_reader_end]
+        self.assertIn("Поле.ПолучитьТекстРедактирования()", text_reader)
+        self.assertIn("Поле.НачатьРедактированиеТекущейОбласти()", text_reader)
+        self.assertIn('"field.activatedEditText: "', text_reader)
 
     def test_native_module_has_table_cell_editing_primitives(self):
         module = (

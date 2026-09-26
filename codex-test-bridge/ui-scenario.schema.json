@@ -50,7 +50,7 @@
       "type": "object",
       "required": ["action"],
       "properties": {
-        "action": {"enum": ["assertConnected", "openNavigationLink", "openDataProcessor", "openForm", "openTaskExecutionForm", "executeCommand", "nextWindow", "activateWindow", "waitForm", "waitFormClosed", "waitElement", "assertElement", "inspectUi", "inspectUI", "inspectTable", "inspectCommandInterface", "clickCommandInterface", "activateForm", "activateElement", "clickElement", "inputText", "selectReference", "selectFromDropdown", "setCheckbox", "openChoice", "selectTableRow", "assertTableRow", "expandTreeRow", "pressKey", "inputTableCell", "click", "invokeFormCommand", "assertField", "handleDialog", "closeForm"]},
+        "action": {"enum": ["assertConnected", "openNavigationLink", "openDataProcessor", "openForm", "openTaskExecutionForm", "executeCommand", "nextWindow", "activateWindow", "waitForm", "waitFormClosed", "waitElement", "assertElement", "inspectUi", "inspectUI", "inspectTable", "inspectCommandInterface", "clickCommandInterface", "activateForm", "activateElement", "clickElement", "setGroupExpanded", "inputText", "selectReference", "selectFromDropdown", "setCheckbox", "openChoice", "selectTableRow", "assertTableRow", "expandTreeRow", "pressKey", "inputTableCell", "click", "invokeFormCommand", "assertField", "handleDialog", "closeForm"]},
         "name": {"type": "string"},
         "command": {"type": "string"},
         "link": {"type": "string", "minLength": 1},
@@ -79,6 +79,7 @@
         "exists": {"type": "boolean"},
         "visible": {"type": "boolean"},
         "enabled": {"type": "boolean"},
+        "expanded": {"type": "boolean", "default": true},
         "readOnly": {"type": "boolean"},
         "checked": {"type": "boolean"},
         "strict": {"type": "boolean"},

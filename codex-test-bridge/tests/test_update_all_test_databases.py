@@ -13,7 +13,7 @@ from unittest.mock import patch
 from update_all_test_databases import (
     UpdateError, assert_no_bootstrap_users, cfe_variant, install_database, load_registry, main,
     read_compatibility_mode, source_bridge_version, unsupported_database_reason,
-    sanitized_process_error, validate_registered_credentials, verify_bridge,
+    sanitized_process_error, sync_local_skills, validate_registered_credentials, verify_bridge,
 )
 
 
@@ -54,7 +54,7 @@ class UpdateAllTestDatabasesTests(unittest.TestCase):
                 assert_no_bootstrap_users({})
 
     def test_source_bridge_version_is_read_from_module(self):
-        self.assertEqual(source_bridge_version(), "0.3.1")
+        self.assertEqual(source_bridge_version(), "0.3.2")
 
     def test_only_server_bridge_entries_are_deployable(self):
         deployable = {"Srvr": "server", "Ref": "base", "Bridge": {"BaseUrl": "http://bridge"}}
@@ -99,10 +99,10 @@ class UpdateAllTestDatabasesTests(unittest.TestCase):
 
     def test_health_verification_requires_requested_version(self):
         responses = [
-            {"ok": True}, {"ok": True}, {"ok": True, "bridgeVersion": "0.3.1"},
+            {"ok": True}, {"ok": True}, {"ok": True, "bridgeVersion": "0.3.2"},
         ]
         with patch("update_all_test_databases.request_bridge", side_effect=responses) as request:
-            verify_bridge({}, "0.3.1", timeout=0.1)
+            verify_bridge({}, "0.3.2", timeout=0.1)
         self.assertEqual(request.call_count, 3)
 
     def test_dry_run_skips_non_server_records(self):
@@ -117,9 +117,50 @@ class UpdateAllTestDatabasesTests(unittest.TestCase):
             ]}), encoding="utf-8")
             output = io.StringIO()
             with redirect_stdout(output):
-                result = main(["--registry", str(registry), "--dry-run"])
+                result = main(["--registry", str(registry), "--dry-run", "--skip-local-skills-sync"])
         self.assertEqual(result, 0)
         self.assertIn("passed=1, skipped=1, failed=0", output.getvalue())
+
+    def test_syncs_bridge_registry_skill_and_common_runtime_for_both_agents(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source = root / "source"
+            for component in ("codex-test-bridge", "test-databases", "common"):
+                (source / component).mkdir(parents=True)
+                (source / component / "content.txt").write_text(component, encoding="utf-8")
+            (source / "codex-test-bridge" / "__pycache__").mkdir()
+            (source / "codex-test-bridge" / "__pycache__" / "cached.pyc").write_bytes(b"cache")
+            (source / "common" / "runtime.pyc").write_bytes(b"cache")
+
+            codex = root / "codex" / "skills"
+            cursor = root / "cursor" / "skills"
+            agents = sync_local_skills(source, {"Codex": codex, "Cursor": cursor})
+
+            self.assertEqual(agents, ["Codex", "Cursor"])
+            for destination in (codex, cursor):
+                for component in ("codex-test-bridge", "test-databases", "common"):
+                    self.assertEqual(
+                        (destination / component / "content.txt").read_text(encoding="utf-8"),
+                        component,
+                    )
+                self.assertFalse((destination / "codex-test-bridge" / "__pycache__").exists())
+                self.assertFalse((destination / "common" / "runtime.pyc").exists())
+
+    def test_local_skills_dry_run_validates_sources_without_writing(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source = root / "source"
+            for component in ("codex-test-bridge", "test-databases", "common"):
+                (source / component).mkdir(parents=True)
+            destination = root / "destination"
+
+            self.assertEqual(sync_local_skills(source, {"Codex": destination}, dry_run=True), ["Codex"])
+            self.assertFalse(destination.exists())
+
+    def test_local_skills_sync_rejects_incomplete_source(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            with self.assertRaisesRegex(UpdateError, "test-databases, common"):
+                sync_local_skills(Path(temporary), {"Codex": Path(temporary) / "target"})
 
 
 if __name__ == "__main__":

@@ -44,7 +44,7 @@ DEFAULT_1C_STARTUP_FLAGS = ["/DisableStartupDialogs", "/DisableStartupMessages",
 NATIVE_UI_ACTIONS: set[str] = {
     "assertConnected", "openNavigationLink", "openClientNavigationLink", "openDataProcessor", "openForm", "openTaskExecutionForm", "executeCommand", "nextWindow", "activateWindow",
     "waitForm", "waitFormClosed", "waitElement", "assertElement", "inspectUi", "inspectUI", "inspectTable",
-    "inspectCommandInterface", "clickCommandInterface", "activateForm", "activateElement", "clickElement",
+    "inspectCommandInterface", "clickCommandInterface", "activateForm", "activateElement", "clickElement", "setGroupExpanded",
     "inputText", "selectReference", "selectFromDropdown", "setCheckbox", "openChoice",
     "selectTableRow", "assertTableRow", "expandTreeRow", "pressKey", "inputTableCell", "click", "invokeFormCommand", "assertField",
     "handleDialog", "closeForm",
@@ -60,7 +60,7 @@ NATIVE_UI_STEP_FIELDS = {
     "finishRow", "onChangeWait", "replace", "waitClosed", "optional", "elementType", "onPrompt",
     "dialogTitle", "promptTimeout", "row", "expandParents", "key", "choiceRow", "element", "field", "button",
     "dialogButton", "table", "choiceTable", "targetForm", "choiceForm", "reference", "choiceField",
-    "select", "newForm",
+    "select", "newForm", "expanded",
 }
 NATIVE_UI_SELECTOR_FIELDS = {"title", "objectName", "formName", "metadataFullName", "saveAs", "timeout", "pollingInterval"}
 NATIVE_UI_REFERENCE_FIELDS = {"kind", "metadataName", "uuid", "choiceField"}
@@ -140,6 +140,8 @@ def prepare_native_ui_scenario(data: Any) -> dict[str, Any]:
             raise UiWorkerError(f"UI scenario step {index} has unsupported action: {action}")
         if action == "expandTreeRow" and not isinstance(step.get("row"), dict):
             raise UiWorkerError(f"UI scenario step {index}: expandTreeRow requires row")
+        if action == "setGroupExpanded" and not isinstance(step.get("expanded", True), bool):
+            raise UiWorkerError(f"UI scenario step {index}: setGroupExpanded.expanded must be boolean")
 
         if action == "pressKey" and (not isinstance(step.get("key"), str) or not step["key"]):
             raise UiWorkerError(f"UI scenario step {index}: pressKey requires key")

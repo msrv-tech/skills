@@ -8,6 +8,7 @@ import base64
 import json
 import os
 import re
+import shutil
 import ssl
 import subprocess
 import sys
@@ -21,12 +22,61 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
+SKILLS_ROOT = ROOT.parent
+LOCAL_COMPONENTS = ("codex-test-bridge", "test-databases", "common")
 COMPATIBILITY_PATTERN = re.compile(r"Version8_3_(\d+)$", re.IGNORECASE)
 BRIDGE_VERSION_PATTERN = re.compile(r'Вставить\("bridgeVersion",\s*"([^"]+)"\)')
 
 
 class UpdateError(RuntimeError):
     pass
+
+
+def default_codex_skills_dir() -> Path:
+    codex_home = os.environ.get("CODEX_HOME")
+    return (Path(codex_home).expanduser() if codex_home else Path.home() / ".codex") / "skills"
+
+
+def default_cursor_skills_dir() -> Path:
+    return Path.home() / ".cursor" / "skills"
+
+
+def _ignore_local_skill_artifacts(_directory: str, names: list[str]) -> set[str]:
+    ignored = {".git", ".mypy_cache", ".pytest_cache", "__pycache__"}
+    return {name for name in names if name in ignored or name.endswith((".pyc", ".pyo"))}
+
+
+def sync_local_skills(
+    source_skills_root: Path,
+    destinations: dict[str, Path],
+    *,
+    dry_run: bool = False,
+) -> list[str]:
+    """Copy the bridge, its registry skill and shared runtime to local agents."""
+    sources = {component: source_skills_root / component for component in LOCAL_COMPONENTS}
+    missing = [component for component, source in sources.items() if not source.is_dir()]
+    if missing:
+        raise UpdateError(f"Local skill source is incomplete: {', '.join(missing)}")
+
+    synced: list[str] = []
+    for agent, destination_root in destinations.items():
+        destination_root = destination_root.expanduser().resolve()
+        if not dry_run:
+            destination_root.mkdir(parents=True, exist_ok=True)
+        for component, source in sources.items():
+            destination = destination_root / component
+            if source.resolve() == destination.resolve():
+                continue
+            if not dry_run:
+                shutil.copytree(
+                    source,
+                    destination,
+                    dirs_exist_ok=True,
+                    copy_function=shutil.copy2,
+                    ignore=_ignore_local_skill_artifacts,
+                )
+        synced.append(agent)
+    return synced
 
 
 def load_registry(path: str | Path) -> list[dict[str, Any]]:
@@ -233,6 +283,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--database", action="append", default=[], help="Only update matching Ref, project folder, or Bridge.AppName; repeatable")
     parser.add_argument("--dry-run", action="store_true", help="Detect variants without modifying infobases")
     parser.add_argument("--expected-version", default=source_bridge_version(), help="Bridge version required after installation")
+    parser.add_argument("--codex-skills-dir", default=str(default_codex_skills_dir()), help="Local Codex skills directory")
+    parser.add_argument("--cursor-skills-dir", default=str(default_cursor_skills_dir()), help="Local Cursor skills directory")
+    parser.add_argument("--skip-local-skills-sync", action="store_true", help="Do not update local Codex and Cursor skills")
     args = parser.parse_args(argv)
     if not args.registry:
         parser.error("--registry or CODEX_1C_TEST_DATABASES is required")
@@ -258,6 +311,18 @@ def main(argv: list[str] | None = None) -> int:
         for variant, cfe in cfe_files.items():
             if not cfe.is_file():
                 raise UpdateError(f"{variant} CFE file does not exist")
+
+    if not args.skip_local_skills_sync:
+        agents = sync_local_skills(
+            SKILLS_ROOT,
+            {
+                "Codex": Path(args.codex_skills_dir),
+                "Cursor": Path(args.cursor_skills_dir),
+            },
+            dry_run=args.dry_run,
+        )
+        action = "ready" if args.dry_run else "updated"
+        print(f"[local skills] {action}: {', '.join(agents)}", flush=True)
 
     failures = 0
     skipped = 0

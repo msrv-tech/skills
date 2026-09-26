@@ -153,7 +153,7 @@
 		Команды.Добавить(ИмяКоманды);
 	КонецЦикла;
 	ДействияUI = Новый Массив;
-	Для Каждого ИмяДействия Из СтрРазделить("assertConnected,openNavigationLink,openDataProcessor,openForm,executeCommand,nextWindow,activateWindow,waitForm,waitFormClosed,waitElement,assertElement,inspectUi,inspectTable,inspectCommandInterface,clickCommandInterface,activateForm,activateElement,clickElement,inputText,selectReference,selectFromDropdown,setCheckbox,openChoice,selectTableRow,assertTableRow,expandTreeRow,inputTableCell,click,invokeFormCommand,assertField,handleDialog,closeForm", ",") Цикл
+	Для Каждого ИмяДействия Из СтрРазделить("assertConnected,openNavigationLink,openDataProcessor,openForm,executeCommand,nextWindow,activateWindow,waitForm,waitFormClosed,waitElement,assertElement,inspectUi,inspectTable,inspectCommandInterface,clickCommandInterface,activateForm,activateElement,clickElement,setGroupExpanded,inputText,selectReference,selectFromDropdown,setCheckbox,openChoice,selectTableRow,assertTableRow,expandTreeRow,inputTableCell,click,invokeFormCommand,assertField,handleDialog,closeForm", ",") Цикл
 		ДействияUI.Добавить(ИмяДействия);
 	КонецЦикла;
 	ВозможностиUI = Новый Структура;
@@ -166,7 +166,7 @@
 	ВозможностиUI.Вставить("suite", Истина);
 
 	Результат = КомандаHealth();
-	Результат.Вставить("bridgeVersion", "0.3.1");
+	Результат.Вставить("bridgeVersion", "0.3.2");
 	Результат.Вставить("contractVersion", 2);
 	Результат.Вставить("variant", "full"); // CTB_FULL_VARIANT
 	Результат.Вставить("commands", Команды);
