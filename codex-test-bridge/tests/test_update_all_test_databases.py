@@ -145,6 +145,9 @@ class UpdateAllTestDatabasesTests(unittest.TestCase):
             for destination in (codex, cursor):
                 (destination / "cf-init").mkdir(parents=True)
                 (destination / "cf-init" / "SKILL.md").write_text("obsolete", encoding="utf-8")
+                stale = destination / "forms" / "scripts" / "edit.py"
+                stale.parent.mkdir(parents=True)
+                stale.write_text("obsolete", encoding="utf-8")
                 private = destination / "test-databases" / "private-registry.json"
                 private.parent.mkdir(parents=True, exist_ok=True)
                 private.write_text('{"keep":true}', encoding="utf-8")
@@ -161,6 +164,7 @@ class UpdateAllTestDatabasesTests(unittest.TestCase):
                 self.assertFalse((destination / "common" / "runtime.pyc").exists())
                 self.assertFalse((destination / "ui-testing" / "scripts" / "node_modules").exists())
                 self.assertFalse((destination / "cf-init").exists())
+                self.assertFalse((destination / "forms" / "scripts" / "edit.py").exists())
                 self.assertEqual(
                     {"keep": True},
                     json.loads((destination / "test-databases" / "private-registry.json").read_text(encoding="utf-8")),

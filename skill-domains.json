@@ -134,7 +134,7 @@
       }
     },
     "forms": {
-      "description": "Создание, анализ, изменение, удаление и проверка управляемых форм 1С.",
+      "description": "Создание, анализ, удаление и проверка управляемых форм 1С.",
       "modes": {
         "add": {
           "reference": "references/add.md",
@@ -155,13 +155,6 @@
           "scripts": [
             "scripts/inspect-form.ps1",
             "scripts/inspect-form.py"
-          ]
-        },
-        "edit": {
-          "reference": "references/edit.md",
-          "scripts": [
-            "scripts/edit.ps1",
-            "scripts/edit.py"
           ]
         },
         "remove": {

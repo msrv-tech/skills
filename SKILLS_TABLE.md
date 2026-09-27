@@ -8,7 +8,7 @@
 | 1 | `configuration` | Конфигурации 1С | `configuration:create-empty`, `configuration:create-project`, `configuration:add-object`, `configuration:inspect`, `configuration:edit`, `configuration:validate` |
 | 2 | `extension` | Расширения CFE | `extension:create`, `extension:full-cycle`, `extension:borrow`, `extension:patch-method`, `extension:inspect`, `extension:validate` |
 | 3 | `metadata` | Объекты метаданных и справка | `metadata:create`, `metadata:inspect`, `metadata:edit`, `metadata:remove`, `metadata:validate`, `metadata:add-help` |
-| 4 | `forms` | Управляемые формы | `forms:add`, `forms:create`, `forms:inspect`, `forms:edit`, `forms:remove`, `forms:validate`, `forms:patterns` |
+| 4 | `forms` | Управляемые формы | `forms:add`, `forms:create`, `forms:inspect`, `forms:remove`, `forms:validate`, `forms:patterns` |
 | 5 | `layouts` | Макеты и MXL | `layouts:mxl-create`, `layouts:mxl-decompile`, `layouts:mxl-inspect`, `layouts:mxl-validate`, `layouts:attach`, `layouts:remove` |
 | 6 | `reports` | СКД и запросы | `reports:skd-create`, `reports:skd-decompile`, `reports:skd-inspect`, `reports:skd-edit`, `reports:skd-validate`, `reports:query` |
 | 7 | `access-and-navigation` | Роли, подсистемы, интерфейс | `role-create`, `role-inspect`, `role-validate`, `subsystem-create`, `subsystem-inspect`, `subsystem-edit`, `subsystem-validate`, `interface-edit`, `interface-validate` |

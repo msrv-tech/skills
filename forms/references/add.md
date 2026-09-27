@@ -69,6 +69,6 @@ powershell.exe -NoProfile -File <skills-root>/forms/scripts/add.ps1 -ObjectPath 
 ## Workflow
 
 1. `/forms:add` — создать каркас формы
-2. `/forms:create` или `/forms:edit` — наполнить Form.xml элементами
+2. `/forms:create` — сформировать наполненный Form.xml из полного определения
 3. `/forms:validate` — проверить корректность
 4. `/forms:inspect` — проанализировать результат

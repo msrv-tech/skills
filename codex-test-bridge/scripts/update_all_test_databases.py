@@ -116,6 +116,14 @@ def sync_local_skills(
             if source.resolve() == destination.resolve():
                 continue
             if not dry_run:
+                # Canonical components are mirrored so deleted files cannot survive
+                # an update. Keep test-databases as an overlay because it may contain
+                # a private registry that must never be replaced by repository data.
+                if component != "test-databases" and (destination.exists() or destination.is_symlink()):
+                    if destination.is_symlink() or destination.is_file():
+                        destination.unlink()
+                    else:
+                        shutil.rmtree(destination)
                 shutil.copytree(
                     source,
                     destination,
