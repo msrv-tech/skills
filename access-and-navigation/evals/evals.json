@@ -1,0 +1,356 @@
+{
+  "skill_name": "access-and-navigation",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Создай роль МенеджерПродаж. Нужен доступ к справочнику Контрагенты (чтение), документу РеализацияТоваровУслуг (чтение + проведение) и регистру накопления Продажи (чтение). Конфигурация в <project-root>/Projects/ERP/src/.",
+      "expected_output": "В папке <project-root>/Projects/ERP/src/Roles/ созданы файлы МенеджерПродаж.xml и МенеджерПродаж/Ext/Rights.xml. Роль добавлена в Configuration.xml.",
+      "expectations": [
+        "Создан файл Roles/МенеджерПродаж.xml с корректным UUID и элементом <Role>",
+        "Создан файл Roles/МенеджерПродаж/Ext/Rights.xml с namespace http://v8.1c.ru/8.2/roles",
+        "В Rights.xml присутствует блок <object> для Catalog.Контрагенты с правами Read, View, InputByString",
+        "В Rights.xml присутствует блок <object> для Document.РеализацияТоваровУслуг с правами Read, View, Posting, InteractivePosting",
+        "В Configuration.xml добавлена строка <Role>МенеджерПродаж</Role>",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/access-and-navigation/scripts/role-create.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/role-create.ps1"
+      ],
+      "mode": "role-create"
+    },
+    {
+      "id": 2,
+      "prompt": "Создай роль ПолныйДоступ с правами администратора: администрирование конфигурации, все права на справочник Номенклатура и справочник Склады. Выгрузка в <project-root>/1C/Configs/UT/src/.",
+      "expected_output": "Файлы роли ПолныйДоступ созданы. Rights.xml содержит блок для Configuration с правами Administration и DataAdministration, а также полные права на оба справочника.",
+      "expectations": [
+        "Создан файл Roles/ПолныйДоступ.xml с корректным элементом <Role> и непустым <Synonym>",
+        "В Rights.xml присутствует блок <object> для Configuration с правами Administration и DataAdministration",
+        "Блоки для Catalog.Номенклатура и Catalog.Склады содержат полный набор прав: Read, Insert, Update, Delete, View, Edit, InteractiveInsert",
+        "UUID сгенерирован командой [guid]::NewGuid() и уникален",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/access-and-navigation/scripts/role-create.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/role-create.ps1"
+      ],
+      "mode": "role-create"
+    },
+    {
+      "id": 3,
+      "prompt": "Создай роль ЧтениеСКД с RLS-ограничением на справочник Организации: читать только те организации, которые доступны текущему пользователю через шаблон ДляПользователя. Конфигурация в <project-root>/EDT/MyProject/src/.",
+      "expected_output": "Создана роль ЧтениеСКД. В Rights.xml для Catalog.Организации право Read содержит блок <restrictionByCondition> с ссылкой на шаблон. В конце файла присутствует блок <restrictionTemplate> с именем ДляПользователя.",
+      "expectations": [
+        "В Rights.xml право Read для Catalog.Организации содержит дочерний элемент <restrictionByCondition> с непустым <condition>",
+        "В конце Rights.xml присутствует блок <restrictionTemplate> с <name>ДляПользователя</name>",
+        "Амперсанды в тексте шаблона экранированы как &amp;",
+        "Файл Roles/ЧтениеСКД.xml создан с корректным UUID",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/access-and-navigation/scripts/role-create.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/role-create.ps1"
+      ],
+      "mode": "role-create"
+    },
+    {
+      "id": 4,
+      "prompt": "Покажи сводку по роли БухгалтерБазовый. Права находятся в <project-root>/Projects/BP/src/Roles/БухгалтерБазовый/Ext/Rights.xml.",
+      "expected_output": "Компактная сводка роли: объекты сгруппированы по типам (Catalog, Document, InformationRegister), показаны разрешённые права. Выведена статистика итогов.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/access-and-navigation/scripts/role-inspect.py на Linux или powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/role-inspect.ps1 на Windows вызван с параметром -RightsPath, указывающим на Rights.xml",
+        "Параметр -OutFile использован для записи результата в файл, результат прочитан через Read tool",
+        "Вывод содержит секцию 'Allowed rights:' с объектами, сгруппированными по типам (Catalog, Document и т.д.)",
+        "Вывод содержит строку 'Total:' с количеством разрешённых и запрещённых прав",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/access-and-navigation/scripts/role-inspect.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/role-inspect.ps1"
+      ],
+      "mode": "role-inspect"
+    },
+    {
+      "id": 5,
+      "prompt": "Покажи сводку роли АдминистраторСистемы из <project-root>/1C/ERP/src/Roles/АдминистраторСистемы/Ext/Rights.xml. Роль большая — хочу видеть все права включая запрещённые.",
+      "expected_output": "Вывод сводки с разрешёнными и запрещёнными правами. Если вывод обрезан — показана строка [TRUNCATED] с подсказкой по пагинации.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/access-and-navigation/scripts/role-inspect.py на Linux или powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/role-inspect.ps1 на Windows вызван с флагом -ShowDenied для отображения запрещённых прав",
+        "В выводе присутствует секция с отрицательными правами (помечены как -View, -Edit или аналогично)",
+        "При превышении лимита строк вывод содержит [TRUNCATED] с подсказкой использовать -Offset",
+        "Вывод содержит информацию о RLS-ограничениях и шаблонах (если есть)",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/access-and-navigation/scripts/role-inspect.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/role-inspect.ps1"
+      ],
+      "mode": "role-inspect"
+    },
+    {
+      "id": 6,
+      "prompt": "Мне нужно посмотреть права роли МенеджерЗакупок, файл <project-root>/EDT/UT/src/Roles/МенеджерЗакупок/Ext/Rights.xml. Роль большая, покажи сначала первые 150 строк, потом следующие.",
+      "expected_output": "Первый вызов: вывод первых 150 строк сводки. Второй вызов с -Offset 150: следующий блок строк.",
+      "expectations": [
+        "Первый вызов python3 <skills-root>/access-and-navigation/scripts/role-inspect.py на Linux или powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/role-inspect.ps1 на Windows выполнен без -Offset (или с -Offset 0)",
+        "Второй вызов python3 <skills-root>/access-and-navigation/scripts/role-inspect.py на Linux или powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/role-inspect.ps1 на Windows выполнен с параметром -Offset 150 для пагинации",
+        "Вывод содержит объекты с нотацией вложенных объектов (например, Contractor.Attribute.TIN) если они присутствуют в роли",
+        "Права с RLS помечены маркером [RLS] рядом с именем права",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/access-and-navigation/scripts/role-inspect.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/role-inspect.ps1"
+      ],
+      "mode": "role-inspect"
+    },
+    {
+      "id": 7,
+      "prompt": "Проверь роль МенеджерПродаж после создания. Rights.xml находится в <project-root>/Projects/ERP/src/Roles/МенеджерПродаж/Ext/Rights.xml, метаданные в <project-root>/Projects/ERP/src/Roles/МенеджерПродаж.xml.",
+      "expected_output": "Результат валидации: XML корректен, namespace верный, все объекты и права распознаны, UUID и имя в метаданных валидны. Итог: 0 errors, 0 warnings.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/access-and-navigation/scripts/role-validate.py на Linux или powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/role-validate.ps1 на Windows вызван с параметрами -RightsPath и -MetadataPath",
+        "Вывод содержит строку 'OK  XML well-formed'",
+        "Вывод содержит строку 'OK  Root element: <Rights> with correct namespace'",
+        "Вывод содержит проверку метаданных: 'OK  Metadata: UUID valid' и 'OK  Metadata: Name'",
+        "Итоговая строка содержит '0 error(s)'",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/access-and-navigation/scripts/role-validate.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/role-validate.ps1"
+      ],
+      "mode": "role-validate"
+    },
+    {
+      "id": 8,
+      "prompt": "Проверь Rights.xml роли БухгалтерБазовый: <project-root>/1C/BP/src/Roles/БухгалтерБазовый/Ext/Rights.xml. Я недавно добавлял права вручную и хочу убедиться что не допустил опечаток в именах прав.",
+      "expected_output": "Валидация выявляет предупреждения или ошибки при опечатках в именах прав. При корректном файле — итог без ошибок.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/access-and-navigation/scripts/role-validate.py на Linux или powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/role-validate.ps1 на Windows вызван с параметром -RightsPath",
+        "При наличии ошибки в имени права вывод содержит строку с маркером WARN и подсказку 'Did you mean: <корректное имя>?'",
+        "Вывод содержит проверку трёх глобальных флагов: setForNewObjects, setForAttributesByDefault, independentRightsOfChildObjects",
+        "Итоговая строка содержит количество ошибок и предупреждений в формате 'Result: N error(s), N warning(s)'",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/access-and-navigation/scripts/role-validate.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/role-validate.ps1"
+      ],
+      "mode": "role-validate"
+    },
+    {
+      "id": 9,
+      "prompt": "После /access-and-navigation:role-create для роли ЧтениеСКД проверь что RLS-ограничения и шаблоны корректны. Путь: <project-root>/EDT/MyProject/src/Roles/ЧтениеСКД/Ext/Rights.xml.",
+      "expected_output": "Валидация RLS: в блоках restrictionByCondition присутствует непустой condition, все шаблоны restrictionTemplate имеют непустые name и condition. Ошибок нет.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/access-and-navigation/scripts/role-validate.py на Linux или powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/role-validate.ps1 на Windows вызван с -RightsPath для указанного файла",
+        "Вывод содержит строку с результатом проверки RLS-ограничений (OK или ERR для условий)",
+        "Вывод содержит строку с результатом проверки шаблонов restrictionTemplate",
+        "Код возврата скрипта: 0 при отсутствии ошибок, 1 при наличии ошибок",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/access-and-navigation/scripts/role-validate.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/role-validate.ps1"
+      ],
+      "mode": "role-validate"
+    },
+    {
+      "id": 10,
+      "prompt": "Создай подсистему Продажи с синонимом 'Управление продажами'. В состав включи: Catalog.Контрагенты, Catalog.Номенклатура, Document.РеализацияТоваровУслуг, Report.ПродажиПоМенеджерам. Картинка: CommonPicture.Продажи. Конфигурация в <project-root>/Projects/ERP/src/.",
+      "expected_output": "Создан файл <project-root>/Projects/ERP/src/Subsystems/Продажи.xml. Подсистема добавлена в <ChildObjects> файла Configuration.xml.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/access-and-navigation/scripts/subsystem-create.py на Linux или powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/subsystem-create.ps1 на Windows вызван с параметрами -OutputDir и -Value или -DefinitionFile",
+        "Создан файл Subsystems/Продажи.xml с элементами <Subsystem> и корректным UUID",
+        "В XML-файле присутствуют ссылки на объекты состава: Catalog.Контрагенты, Document.РеализацияТоваровУслуг и другие",
+        "В Configuration.xml в секции <ChildObjects> добавлена строка <Subsystem>Продажи</Subsystem>",
+        "В файле подсистемы присутствует ссылка на картинку CommonPicture.Продажи",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/access-and-navigation/scripts/subsystem-create.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/subsystem-create.ps1"
+      ],
+      "mode": "subsystem-create"
+    },
+    {
+      "id": 11,
+      "prompt": "Добавь дочернюю подсистему НормативноСправочнаяИнформация внутрь существующей подсистемы Склад. Родительская подсистема в <project-root>/1C/UT/src/Subsystems/Склад.xml. Конфигурация в <project-root>/1C/UT/src/.",
+      "expected_output": "Создан файл <project-root>/1C/UT/src/Subsystems/Склад/НормативноСправочнаяИнформация.xml. В файл Склад.xml добавлена ссылка на дочернюю подсистему.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/access-and-navigation/scripts/subsystem-create.py на Linux или powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/subsystem-create.ps1 на Windows вызван с параметром -Parent, указывающим на Subsystems/Склад.xml",
+        "Создан файл в папке Subsystems/Склад/НормативноСправочнаяИнформация.xml",
+        "В родительскую подсистему Склад.xml добавлена ссылка на дочернюю подсистему в <ChildObjects>",
+        "Созданный XML содержит корректную структуру метаданных подсистемы с уникальным UUID",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/access-and-navigation/scripts/subsystem-create.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/subsystem-create.ps1"
+      ],
+      "mode": "subsystem-create"
+    },
+    {
+      "id": 12,
+      "prompt": "Создай минимальную подсистему Отчётность только с именем (без состава и картинки) и добавь её в конфигурацию <project-root>/EDT/BP/src/.",
+      "expected_output": "Создан Subsystems/Отчётность.xml с минимальными данными (только name). Подсистема зарегистрирована в Configuration.xml.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/access-and-navigation/scripts/subsystem-create.py на Linux или powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/subsystem-create.ps1 на Windows вызван с JSON-определением содержащим только поле name: 'Отчётность'",
+        "Создан файл Subsystems/Отчётность.xml",
+        "В Configuration.xml добавлена запись <Subsystem>Отчётность</Subsystem>",
+        "Автоматическая валидация (если не указан -NoValidate) выполнена после генерации",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/access-and-navigation/scripts/subsystem-create.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/subsystem-create.ps1"
+      ],
+      "mode": "subsystem-create"
+    },
+    {
+      "id": 13,
+      "prompt": "Покажи состав подсистемы Продажи — что входит в неё. Файл подсистемы: <project-root>/Projects/App/src/Subsystems/Продажи.xml.",
+      "expected_output": "Скрипт python3 <skills-root>/access-and-navigation/scripts/subsystem-inspect.py на Linux или powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/subsystem-inspect.ps1 на Windows вызван в режиме content, вывод содержит список объектов подсистемы Продажи, сгруппированных по типам (Catalog, Document, Report и т.д.).",
+      "expectations": [
+        "Скрипт python3 <skills-root>/access-and-navigation/scripts/subsystem-inspect.py на Linux или powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/subsystem-inspect.ps1 на Windows вызван с параметром -SubsystemPath, указывающим на Продажи.xml",
+        "Параметр -Mode content или overview использован для получения состава",
+        "Вывод содержит список объектов подсистемы, сгруппированных по типам",
+        "Claude интерпретирует результат и поясняет структуру пользователю",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/access-and-navigation/scripts/subsystem-inspect.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/subsystem-inspect.ps1"
+      ],
+      "mode": "subsystem-inspect"
+    },
+    {
+      "id": 14,
+      "prompt": "Покажи дерево всех подсистем конфигурации. Исходники в <project-root>/Projects/ERP/src/Subsystems/.",
+      "expected_output": "Скрипт python3 <skills-root>/access-and-navigation/scripts/subsystem-inspect.py на Linux или powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/subsystem-inspect.ps1 на Windows вызван в режиме tree, вывод содержит иерархическое дерево подсистем с маркерами [CI], [OneCmd], [Скрыт].",
+      "expectations": [
+        "Скрипт python3 <skills-root>/access-and-navigation/scripts/subsystem-inspect.py на Linux или powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/subsystem-inspect.ps1 на Windows вызван с параметром -Mode tree",
+        "Параметр -SubsystemPath указывает на каталог Subsystems",
+        "Вывод содержит иерархическое дерево подсистем с отступами или дочерними элементами",
+        "В дереве присутствуют маркеры или признаки видимости подсистем",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/access-and-navigation/scripts/subsystem-inspect.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/subsystem-inspect.ps1"
+      ],
+      "mode": "subsystem-inspect"
+    },
+    {
+      "id": 15,
+      "prompt": "Проверь командный интерфейс подсистемы Администрирование — какие команды и в каком порядке. Путь: src/Subsystems/Администрирование.xml.",
+      "expected_output": "Скрипт python3 <skills-root>/access-and-navigation/scripts/subsystem-inspect.py на Linux или powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/subsystem-inspect.ps1 на Windows вызван в режиме ci, вывод содержит разбор CommandInterface.xml: порядок команд, видимость, размещение в подсистемах.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/access-and-navigation/scripts/subsystem-inspect.py на Linux или powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/subsystem-inspect.ps1 на Windows вызван с параметром -Mode ci",
+        "Параметр -SubsystemPath указывает на Администрирование.xml",
+        "Вывод содержит данные о командном интерфейсе: команды, порядок, видимость",
+        "Claude интерпретирует результат и поясняет структуру командного интерфейса",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/access-and-navigation/scripts/subsystem-inspect.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/subsystem-inspect.ps1"
+      ],
+      "mode": "subsystem-inspect"
+    },
+    {
+      "id": 16,
+      "prompt": "Добавь документ ЗаказКлиента и справочник Контрагенты в подсистему Продажи. Конфигурация в <project-root>/Projects/MyApp/src/.",
+      "expected_output": "Скрипт python3 <skills-root>/access-and-navigation/scripts/subsystem-edit.py на Linux или powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/subsystem-edit.ps1 на Windows вызван с операцией add-content, объекты Document.ЗаказКлиента и Catalog.Контрагенты добавлены в Content подсистемы Продажи.xml.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/access-and-navigation/scripts/subsystem-edit.py на Linux или powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/subsystem-edit.ps1 на Windows вызван с параметром -Operation add-content",
+        "Параметр -Value содержит [\"Document.ЗаказКлиента\",\"Catalog.Контрагенты\"] или оба объекта",
+        "Параметр -SubsystemPath указывает на файл подсистемы Продажи.xml",
+        "После выполнения Claude сообщает об успешном добавлении объектов",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/access-and-navigation/scripts/subsystem-edit.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/subsystem-edit.ps1"
+      ],
+      "mode": "subsystem-edit"
+    },
+    {
+      "id": 17,
+      "prompt": "Удали отчёт СтарыйОтчёт из подсистемы Администрирование. Путь к XML-файлу подсистемы: src/Subsystems/Администрирование.xml.",
+      "expected_output": "Скрипт python3 <skills-root>/access-and-navigation/scripts/subsystem-edit.py на Linux или powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/subsystem-edit.ps1 на Windows вызван с операцией remove-content, Report.СтарыйОтчёт удалён из Content подсистемы.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/access-and-navigation/scripts/subsystem-edit.py на Linux или powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/subsystem-edit.ps1 на Windows вызван с параметром -Operation remove-content",
+        "Параметр -Value содержит Report.СтарыйОтчёт",
+        "Параметр -SubsystemPath указывает на src/Subsystems/Администрирование.xml",
+        "Claude сообщает об успешном удалении объекта из состава подсистемы",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/access-and-navigation/scripts/subsystem-edit.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/subsystem-edit.ps1"
+      ],
+      "mode": "subsystem-edit"
+    },
+    {
+      "id": 18,
+      "prompt": "Добавь дочернюю подсистему НастройкиЗП в подсистему Зарплата. Файл подсистемы: <project-root>/Config/src/Subsystems/Зарплата.xml. После добавления проверь корректность.",
+      "expected_output": "Скрипт python3 <skills-root>/access-and-navigation/scripts/subsystem-edit.py на Linux или powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/subsystem-edit.ps1 на Windows вызван с операцией add-child, подсистема НастройкиЗП добавлена в ChildObjects. Затем вызвана валидация.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/access-and-navigation/scripts/subsystem-edit.py на Linux или powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/subsystem-edit.ps1 на Windows вызван с параметром -Operation add-child",
+        "Параметр -Value содержит НастройкиЗП",
+        "Параметр -SubsystemPath указывает на файл Зарплата.xml",
+        "После редактирования вызвана валидация подсистемы (python3 <skills-root>/access-and-navigation/scripts/subsystem-validate.py на Linux или access-and-navigation:subsystem-validate.ps1 на Windows) либо явно упомянут шаг проверки",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/access-and-navigation/scripts/subsystem-edit.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/subsystem-edit.ps1"
+      ],
+      "mode": "subsystem-edit"
+    },
+    {
+      "id": 19,
+      "prompt": "Проверь корректность подсистемы Продажи после того как я добавил новые объекты. Файл: <project-root>/Projects/App/src/Subsystems/Продажи.xml.",
+      "expected_output": "Скрипт python3 <skills-root>/access-and-navigation/scripts/subsystem-validate.py на Linux или powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/subsystem-validate.ps1 на Windows вызван, подсистема прошла валидацию — 13 проверок пройдены без ошибок, или обнаружены конкретные ошибки с описанием.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/access-and-navigation/scripts/subsystem-validate.py на Linux или powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/subsystem-validate.ps1 на Windows вызван с параметром -SubsystemPath, указывающим на Продажи.xml",
+        "Вывод содержит результат валидации: PASSED или список найденных ошибок",
+        "Упомянуты конкретные проверки (XML-структура, Content, ChildObjects, свойства)",
+        "Claude информирует пользователя об итоге — прошла или не прошла валидация",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/access-and-navigation/scripts/subsystem-validate.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/subsystem-validate.ps1"
+      ],
+      "mode": "subsystem-validate"
+    },
+    {
+      "id": 20,
+      "prompt": "Подсистема Зарплата содержит UseOneCommand=true, но у неё несколько объектов в составе. Проверь, найдёт ли это валидатор. Файл: src/Subsystems/Зарплата.xml.",
+      "expected_output": "Скрипт python3 <skills-root>/access-and-navigation/scripts/subsystem-validate.py на Linux или powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/subsystem-validate.ps1 на Windows вызван, валидатор находит ошибку — UseOneCommand=true требует ровно 1 элемент в Content, а найдено несколько.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/access-and-navigation/scripts/subsystem-validate.py на Linux или powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/subsystem-validate.ps1 на Windows вызван с параметром -SubsystemPath, указывающим на Зарплата.xml",
+        "Вывод содержит ошибку, связанную с нарушением правила UseOneCommand=true",
+        "Claude поясняет пользователю в чём заключается ошибка и как её исправить",
+        "Валидация завершилась с результатом FAILED или эквивалентным статусом ошибки",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/access-and-navigation/scripts/subsystem-validate.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/subsystem-validate.ps1"
+      ],
+      "mode": "subsystem-validate"
+    },
+    {
+      "id": 21,
+      "prompt": "Проверь подсистему Администрирование — есть ли в ней ссылки на несуществующие дочерние подсистемы. Путь: <project-root>/Config/src/Subsystems/Администрирование.xml.",
+      "expected_output": "Скрипт python3 <skills-root>/access-and-navigation/scripts/subsystem-validate.py на Linux или powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/subsystem-validate.ps1 на Windows вызван, проверка ChildObjects выполнена — найдены или не найдены битые ссылки на файлы дочерних подсистем.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/access-and-navigation/scripts/subsystem-validate.py на Linux или powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/subsystem-validate.ps1 на Windows вызван с параметром -SubsystemPath, указывающим на Администрирование.xml",
+        "Выполнена проверка 10 (ChildObjects → файлы существуют)",
+        "Вывод содержит информацию о наличии или отсутствии битых ссылок на дочерние подсистемы",
+        "Claude сообщает итог валидации и рекомендации при наличии ошибок",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/access-and-navigation/scripts/subsystem-validate.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/subsystem-validate.ps1"
+      ],
+      "mode": "subsystem-validate"
+    },
+    {
+      "id": 22,
+      "prompt": "Скрой команду Catalog.Контрагенты.Create в командном интерфейсе подсистемы Продажи. Файл: upload/acc_8.3.24/Subsystems/Продажи/Ext/CommandInterface.xml",
+      "expected_output": "Команда Catalog.Контрагенты.Create скрыта в CommandInterface.xml подсистемы Продажи через операцию hide.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/access-and-navigation/scripts/interface-edit.py на Linux или powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/interface-edit.ps1 на Windows вызван с параметрами -CIPath, -Operation hide и -Value 'Catalog.Контрагенты.Create'",
+        "В CommandInterface.xml для команды Catalog.Контрагенты.Create установлено значение Visibility=false",
+        "XML-файл CommandInterface.xml сохранён с изменениями",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/access-and-navigation/scripts/interface-edit.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/interface-edit.ps1"
+      ],
+      "mode": "interface-edit"
+    },
+    {
+      "id": 23,
+      "prompt": "Размести команду Document.ЗаказКлиента.Create в группу ДокументыПродаж командного интерфейса. Файл: src/Subsystems/Продажи/Ext/CommandInterface.xml",
+      "expected_output": "Команда Document.ЗаказКлиента.Create помещена в группу ДокументыПродаж через операцию place.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/access-and-navigation/scripts/interface-edit.py на Linux или powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/interface-edit.ps1 на Windows вызван с параметром -Operation place",
+        "В CommandInterface.xml добавлена или обновлена секция CommandsPlacement для Document.ЗаказКлиента.Create",
+        "Указана группа CommandGroup=ДокументыПродаж",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/access-and-navigation/scripts/interface-edit.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/interface-edit.ps1"
+      ],
+      "mode": "interface-edit"
+    },
+    {
+      "id": 24,
+      "prompt": "Установи порядок подсистем в корневом CommandInterface: сначала Продажи, потом Закупки, потом Склад. Файл: upload/my_config/Ext/CommandInterface.xml",
+      "expected_output": "Порядок подсистем в секции SubsystemsOrder обновлён: Продажи, Закупки, Склад.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/access-and-navigation/scripts/interface-edit.py на Linux или powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/interface-edit.ps1 на Windows вызван с параметром -Operation subsystem-order",
+        "Секция SubsystemsOrder в CommandInterface.xml содержит подсистемы в указанном порядке",
+        "Формат ссылок на подсистемы соответствует Subsystem.X",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/access-and-navigation/scripts/interface-edit.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/interface-edit.ps1"
+      ],
+      "mode": "interface-edit"
+    },
+    {
+      "id": 25,
+      "prompt": "Проверь командный интерфейс подсистемы Продажи после того, как я вручную добавил несколько команд. Файл: upload/acc_8.3.24/Subsystems/Продажи/Ext/CommandInterface.xml",
+      "expected_output": "Все 13 проверок пройдены: структура XML корректна, секции присутствуют в правильном порядке, ссылки на команды валидны, дубликатов нет.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/access-and-navigation/scripts/interface-validate.py на Linux или powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/interface-validate.ps1 на Windows вызван с параметром -CIPath",
+        "Вывод содержит заголовок '=== Validation: CommandInterface'",
+        "Все строки вывода содержат '[OK]' без '[ERROR]' или '[WARN]'",
+        "Вывод содержит итоговую строку 'Errors: 0, Warnings: 0'",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/access-and-navigation/scripts/interface-validate.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/interface-validate.ps1"
+      ],
+      "mode": "interface-validate"
+    },
+    {
+      "id": 26,
+      "prompt": "После редактирования CommandInterface.xml подозреваю, что появились дублирующиеся команды в секции CommandsVisibility. Запусти валидацию и проверь. Файл: <project-root>/Projects/Config/Ext/CommandInterface.xml",
+      "expected_output": "Валидация обнаружила предупреждение о дубликатах в CommandsVisibility, вывод содержит [WARN] для проверки #6.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/access-and-navigation/scripts/interface-validate.py на Linux или powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/interface-validate.ps1 на Windows вызван с параметром -CIPath",
+        "Вывод содержит '[WARN]' для проверки CommandsVisibility (дубликаты)",
+        "Итоговая строка содержит ненулевое количество предупреждений 'Warnings: N'",
+        "Код возврата скрипта равен 1",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/access-and-navigation/scripts/interface-validate.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/interface-validate.ps1"
+      ],
+      "mode": "interface-validate"
+    },
+    {
+      "id": 27,
+      "prompt": "Сгенерировал новый CommandInterface.xml для подсистемы Закупки и хочу убедиться в корректности структуры XML, порядка секций и формата ссылок на команды. Файл: src/Subsystems/Закупки/Ext/CommandInterface.xml",
+      "expected_output": "Валидация проверила 13 пунктов: корневой элемент, порядок секций, формат ссылок на команды — все проверки пройдены.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/access-and-navigation/scripts/interface-validate.py на Linux или powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/interface-validate.ps1 на Windows вызван с параметром -CIPath",
+        "Вывод содержит '[OK]    1. Root structure: CommandInterface, version 2.17'",
+        "Вывод содержит '[OK]    3. Section order: correct'",
+        "Вывод содержит '[OK]    13. Command reference format: all valid'",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/access-and-navigation/scripts/interface-validate.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/access-and-navigation/scripts/interface-validate.ps1"
+      ],
+      "mode": "interface-validate"
+    }
+  ]
+}

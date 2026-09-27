@@ -1,0 +1,63 @@
+# inspect — Анализ расширения конфигурации
+
+<!-- docs-evals:python-entrypoint:start -->
+## Запуск скрипта
+
+Основной запуск на Linux выполняется Python 3 с аргументами CLI скрипта:
+
+```bash
+python3 "<skills-root>/extension/scripts/inspect-extension.py" -ConfigPath <project-root>/src -ExtensionPath <project-root>/extension
+```
+
+Windows PowerShell остаётся отдельным вариантом запуска:
+
+```powershell
+powershell.exe -NoProfile -File "<skills-root>/extension/scripts/inspect-extension.ps1" -ConfigPath <project-root>/src -ExtensionPath <project-root>/extension
+```
+<!-- docs-evals:python-entrypoint:end -->
+
+Анализирует расширение в двух режимах: обзор изменений (Mode A) или проверка переноса (Mode B).
+
+## Параметры
+
+| Параметр | Описание | По умолчанию |
+|----------|----------|--------------|
+| `ExtensionPath` | Путь к расширению (обязат.) | — |
+| `ConfigPath` | Путь к конфигурации (обязат.) | — |
+| `Mode` | `A` (обзор) / `B` (проверка переноса) | `A` |
+
+## Команда
+
+```powershell
+powershell.exe -NoProfile -File <skills-root>/extension/scripts/inspect-extension.ps1 -ExtensionPath src -ConfigPath C:\cfsrc\erp -Mode A
+```
+
+## Mode A — обзор расширения
+
+Для каждого объекта показывает:
+- `[BORROWED]` — заимствованный: перехватчики (`&Перед`, `&После`, `&ИзменениеИКонтроль`, `&Вместо`), собственные реквизиты/ТЧ/формы
+- `[OWN]` — собственный: количество реквизитов, ТЧ, форм
+
+Для каждой формы заимствованного объекта показывается:
+- `(borrowed)` / `(own)` — заимствованная или собственная форма
+- callType-события формы и элементов
+- callType на командах
+
+## Mode B — проверка переноса
+
+Для каждого `&ИзменениеИКонтроль` извлекает блоки `#Вставка`/`#КонецВставки` из расширения и ищет их в соответствующем модуле конфигурации.
+
+Статусы:
+- `[TRANSFERRED]` — код найден в конфигурации
+- `[NOT_TRANSFERRED]` — код не найден
+- `[NEEDS_REVIEW]` — нет блоков `#Вставка` или модуль конфигурации не найден
+
+## Примеры
+
+```powershell
+# Обзор — что изменено в расширении
+... -ExtensionPath src -ConfigPath C:\cfsrc\erp -Mode A
+
+# Проверка переноса — все ли #Вставка перенесены
+... -ExtensionPath src -ConfigPath C:\cfsrc\erp -Mode B
+```

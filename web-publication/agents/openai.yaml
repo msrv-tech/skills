@@ -1,0 +1,6 @@
+interface:
+  display_name: "1C Web Publication"
+  short_description: "Публикация информационных баз 1С через Apache"
+  default_prompt: "Use $web-publication for this 1C web publication task."
+policy:
+  allow_implicit_invocation: true

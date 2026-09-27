@@ -22,7 +22,7 @@ class XmlValidatorSmokeTests(unittest.TestCase):
 
     def test_extension_validator_on_bridge_sources(self):
         self.run_validator(
-            str(ROOT / "cfe-validate" / "scripts" / "cfe-validate.py"),
+            str(ROOT / "extension" / "scripts" / "validate.py"),
             "-ExtensionPath",
             str(BRIDGE_SOURCE),
             "-Detailed",
@@ -35,7 +35,7 @@ class XmlValidatorSmokeTests(unittest.TestCase):
             BRIDGE_SOURCE / "InformationRegisters" / "CodexUIJobs.xml",
         ]
         self.run_validator(
-            str(ROOT / "meta-validate" / "scripts" / "meta-validate.py"),
+            str(ROOT / "metadata" / "scripts" / "validate.py"),
             "-ObjectPath",
             "|".join(map(str, objects)),
             "-Detailed",

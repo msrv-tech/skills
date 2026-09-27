@@ -23,7 +23,39 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 SKILLS_ROOT = ROOT.parent
-LOCAL_COMPONENTS = ("codex-test-bridge", "test-databases", "common")
+LOCAL_SKILLS = (
+    "access-and-navigation",
+    "codex-test-bridge",
+    "configuration",
+    "database",
+    "extension",
+    "external-artifacts",
+    "forms",
+    "layouts",
+    "metadata",
+    "reports",
+    "test-databases",
+    "ui-testing",
+    "web-publication",
+)
+LOCAL_COMPONENTS = (*LOCAL_SKILLS, "common")
+LEGACY_SKILL_DIRECTORIES = (
+    "cf-add-object", "cf-edit", "cf-info", "cf-init", "cf-new-project", "cf-validate",
+    "cfe-borrow", "cfe-diff", "cfe-full-cycle", "cfe-init", "cfe-patch-method", "cfe-validate",
+    "db-create", "db-dump-cf", "db-dump-xml", "db-list", "db-load-cf", "db-load-git",
+    "db-load-xml", "db-run", "db-update", "repo-update",
+    "epf", "epf-bsp-add-command", "epf-bsp-init", "epf-build", "epf-dump", "epf-full-cycle",
+    "epf-init", "epf-validate", "erf", "erf-init",
+    "form-add", "form-compile", "form-edit", "form-info", "form-patterns", "form-remove", "form-validate",
+    "help-add", "ibcmd-1c-builds", "inspect", "interface-edit", "interface-validate",
+    "meta-compile", "meta-edit", "meta-info", "meta-remove", "meta-validate",
+    "mxl", "mxl-compile", "mxl-decompile", "mxl-info", "mxl-validate", "playwright-test",
+    "query-optimization", "role-compile", "role-info", "role-validate",
+    "skd-compile", "skd-decompile", "skd-edit", "skd-info", "skd-validate",
+    "subsystem", "subsystem-compile", "subsystem-edit", "subsystem-info", "subsystem-validate",
+    "template-add", "template-remove", "validate",
+    "web-info", "web-publish", "web-session", "web-stop", "web-test", "web-unpublish",
+)
 COMPATIBILITY_PATTERN = re.compile(r"Version8_3_(\d+)$", re.IGNORECASE)
 BRIDGE_VERSION_PATTERN = re.compile(r'Вставить\("bridgeVersion",\s*"([^"]+)"\)')
 
@@ -42,8 +74,18 @@ def default_cursor_skills_dir() -> Path:
 
 
 def _ignore_local_skill_artifacts(_directory: str, names: list[str]) -> set[str]:
-    ignored = {".git", ".mypy_cache", ".pytest_cache", "__pycache__"}
+    ignored = {".browser-session.json", ".git", ".mypy_cache", ".pytest_cache", "__pycache__", "node_modules"}
     return {name for name in names if name in ignored or name.endswith((".pyc", ".pyo"))}
+
+
+def _remove_generated_local_artifacts(destination: Path) -> None:
+    for directory_name in ("__pycache__", "node_modules", ".mypy_cache", ".pytest_cache"):
+        for directory in destination.rglob(directory_name):
+            if directory.is_dir():
+                shutil.rmtree(directory)
+    for generated in destination.rglob("*"):
+        if generated.is_file() and (generated.name == ".browser-session.json" or generated.suffix in {".pyc", ".pyo"}):
+            generated.unlink()
 
 
 def sync_local_skills(
@@ -52,7 +94,7 @@ def sync_local_skills(
     *,
     dry_run: bool = False,
 ) -> list[str]:
-    """Copy the bridge, its registry skill and shared runtime to local agents."""
+    """Install the canonical domain set and remove obsolete skill entrypoints."""
     sources = {component: source_skills_root / component for component in LOCAL_COMPONENTS}
     missing = [component for component, source in sources.items() if not source.is_dir()]
     if missing:
@@ -63,6 +105,12 @@ def sync_local_skills(
         destination_root = destination_root.expanduser().resolve()
         if not dry_run:
             destination_root.mkdir(parents=True, exist_ok=True)
+            for legacy_name in LEGACY_SKILL_DIRECTORIES:
+                legacy = destination_root / legacy_name
+                if legacy.is_dir():
+                    shutil.rmtree(legacy)
+                elif legacy.exists():
+                    legacy.unlink()
         for component, source in sources.items():
             destination = destination_root / component
             if source.resolve() == destination.resolve():
@@ -75,6 +123,7 @@ def sync_local_skills(
                     copy_function=shutil.copy2,
                     ignore=_ignore_local_skill_artifacts,
                 )
+                _remove_generated_local_artifacts(destination)
         synced.append(agent)
     return synced
 

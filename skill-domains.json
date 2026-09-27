@@ -1,0 +1,538 @@
+{
+  "schemaVersion": 2,
+  "skills": {
+    "configuration": {
+      "description": "Создание, анализ, изменение и проверка конфигураций 1С.",
+      "modes": {
+        "create-empty": {
+          "reference": "references/create-empty.md",
+          "scripts": [
+            "scripts/create.ps1",
+            "scripts/create.py"
+          ]
+        },
+        "create-project": {
+          "reference": "references/create-project.md",
+          "scripts": []
+        },
+        "add-object": {
+          "reference": "references/add-object.md",
+          "scripts": []
+        },
+        "inspect": {
+          "reference": "references/inspect.md",
+          "scripts": [
+            "scripts/inspect-configuration.ps1",
+            "scripts/inspect-configuration.py"
+          ]
+        },
+        "edit": {
+          "reference": "references/edit.md",
+          "scripts": [
+            "scripts/edit.ps1",
+            "scripts/edit.py"
+          ]
+        },
+        "validate": {
+          "reference": "references/validate.md",
+          "scripts": [
+            "scripts/validate.ps1",
+            "scripts/validate.py"
+          ]
+        }
+      }
+    },
+    "extension": {
+      "description": "Создание, заимствование, перехват методов, анализ и проверка расширений 1С CFE.",
+      "modes": {
+        "create": {
+          "reference": "references/create.md",
+          "scripts": [
+            "scripts/create.ps1",
+            "scripts/create.py"
+          ]
+        },
+        "full-cycle": {
+          "reference": "references/full-cycle.md",
+          "scripts": []
+        },
+        "borrow": {
+          "reference": "references/borrow.md",
+          "scripts": [
+            "scripts/borrow.ps1",
+            "scripts/borrow.py"
+          ]
+        },
+        "patch-method": {
+          "reference": "references/patch-method.md",
+          "scripts": [
+            "scripts/patch-method.ps1",
+            "scripts/patch-method.py"
+          ]
+        },
+        "inspect": {
+          "reference": "references/inspect.md",
+          "scripts": [
+            "scripts/inspect-extension.ps1",
+            "scripts/inspect-extension.py"
+          ]
+        },
+        "validate": {
+          "reference": "references/validate.md",
+          "scripts": [
+            "scripts/validate.ps1",
+            "scripts/validate.py"
+          ]
+        }
+      }
+    },
+    "metadata": {
+      "description": "Создание, анализ, изменение, удаление и проверка объектов метаданных 1С, включая встроенную справку.",
+      "modes": {
+        "create": {
+          "reference": "references/create.md",
+          "scripts": [
+            "scripts/create.ps1",
+            "scripts/create.py"
+          ]
+        },
+        "inspect": {
+          "reference": "references/inspect.md",
+          "scripts": [
+            "scripts/inspect-metadata.ps1",
+            "scripts/inspect-metadata.py"
+          ]
+        },
+        "edit": {
+          "reference": "references/edit.md",
+          "scripts": [
+            "scripts/edit.ps1",
+            "scripts/edit.py"
+          ]
+        },
+        "remove": {
+          "reference": "references/remove.md",
+          "scripts": [
+            "scripts/remove.ps1",
+            "scripts/remove.py"
+          ]
+        },
+        "validate": {
+          "reference": "references/validate.md",
+          "scripts": [
+            "scripts/validate.ps1",
+            "scripts/validate.py"
+          ]
+        },
+        "add-help": {
+          "reference": "references/add-help.md",
+          "scripts": [
+            "scripts/add-help.ps1",
+            "scripts/add-help.py"
+          ]
+        }
+      }
+    },
+    "forms": {
+      "description": "Создание, анализ, изменение, удаление и проверка управляемых форм 1С.",
+      "modes": {
+        "add": {
+          "reference": "references/add.md",
+          "scripts": [
+            "scripts/add.ps1",
+            "scripts/add.py"
+          ]
+        },
+        "create": {
+          "reference": "references/create.md",
+          "scripts": [
+            "scripts/create.ps1",
+            "scripts/create.py"
+          ]
+        },
+        "inspect": {
+          "reference": "references/inspect.md",
+          "scripts": [
+            "scripts/inspect-form.ps1",
+            "scripts/inspect-form.py"
+          ]
+        },
+        "edit": {
+          "reference": "references/edit.md",
+          "scripts": [
+            "scripts/edit.ps1",
+            "scripts/edit.py"
+          ]
+        },
+        "remove": {
+          "reference": "references/remove.md",
+          "scripts": [
+            "scripts/remove.ps1",
+            "scripts/remove.py"
+          ]
+        },
+        "validate": {
+          "reference": "references/validate.md",
+          "scripts": [
+            "scripts/validate.ps1",
+            "scripts/validate.py"
+          ]
+        },
+        "patterns": {
+          "reference": "references/patterns.md",
+          "scripts": []
+        }
+      }
+    },
+    "layouts": {
+      "description": "Создание, декомпиляция и проверка MXL, а также подключение макетов к объектам 1С.",
+      "modes": {
+        "mxl-create": {
+          "reference": "references/mxl-create.md",
+          "scripts": [
+            "scripts/mxl-create.ps1",
+            "scripts/mxl-create.py"
+          ]
+        },
+        "mxl-decompile": {
+          "reference": "references/mxl-decompile.md",
+          "scripts": [
+            "scripts/mxl-decompile.ps1",
+            "scripts/mxl-decompile.py"
+          ]
+        },
+        "mxl-inspect": {
+          "reference": "references/mxl-inspect.md",
+          "scripts": [
+            "scripts/mxl-inspect.ps1",
+            "scripts/mxl-inspect.py"
+          ]
+        },
+        "mxl-validate": {
+          "reference": "references/mxl-validate.md",
+          "scripts": [
+            "scripts/mxl-validate.ps1",
+            "scripts/mxl-validate.py"
+          ]
+        },
+        "attach": {
+          "reference": "references/attach.md",
+          "scripts": [
+            "scripts/attach.ps1",
+            "scripts/attach.py"
+          ]
+        },
+        "remove": {
+          "reference": "references/remove.md",
+          "scripts": [
+            "scripts/remove.ps1",
+            "scripts/remove.py"
+          ]
+        }
+      }
+    },
+    "reports": {
+      "description": "Создание и изменение СКД, анализ отчётов и разработка запросов 1С.",
+      "modes": {
+        "skd-create": {
+          "reference": "references/skd-create.md",
+          "scripts": [
+            "scripts/skd-create.ps1",
+            "scripts/skd-create.py"
+          ]
+        },
+        "skd-decompile": {
+          "reference": "references/skd-decompile.md",
+          "scripts": [
+            "scripts/skd-decompile.ps1",
+            "scripts/skd-decompile.py"
+          ]
+        },
+        "skd-inspect": {
+          "reference": "references/skd-inspect.md",
+          "scripts": [
+            "scripts/skd-inspect.ps1",
+            "scripts/skd-inspect.py"
+          ]
+        },
+        "skd-edit": {
+          "reference": "references/skd-edit.md",
+          "scripts": [
+            "scripts/skd-edit.ps1",
+            "scripts/skd-edit.py"
+          ]
+        },
+        "skd-validate": {
+          "reference": "references/skd-validate.md",
+          "scripts": [
+            "scripts/skd-validate.ps1",
+            "scripts/skd-validate.py"
+          ]
+        },
+        "query": {
+          "reference": "references/query.md",
+          "scripts": []
+        }
+      }
+    },
+    "access-and-navigation": {
+      "description": "Роли, RLS, подсистемы и командный интерфейс 1С: создание, анализ, изменение и проверка.",
+      "modes": {
+        "role-create": {
+          "reference": "references/role-create.md",
+          "scripts": [
+            "scripts/role-create.ps1",
+            "scripts/role-create.py"
+          ]
+        },
+        "role-inspect": {
+          "reference": "references/role-inspect.md",
+          "scripts": [
+            "scripts/role-inspect.ps1",
+            "scripts/role-inspect.py"
+          ]
+        },
+        "role-validate": {
+          "reference": "references/role-validate.md",
+          "scripts": [
+            "scripts/role-validate.ps1",
+            "scripts/role-validate.py"
+          ]
+        },
+        "subsystem-create": {
+          "reference": "references/subsystem-create.md",
+          "scripts": [
+            "scripts/subsystem-create.ps1",
+            "scripts/subsystem-create.py"
+          ]
+        },
+        "subsystem-inspect": {
+          "reference": "references/subsystem-inspect.md",
+          "scripts": [
+            "scripts/subsystem-inspect.ps1",
+            "scripts/subsystem-inspect.py"
+          ]
+        },
+        "subsystem-edit": {
+          "reference": "references/subsystem-edit.md",
+          "scripts": [
+            "scripts/subsystem-edit.ps1",
+            "scripts/subsystem-edit.py"
+          ]
+        },
+        "subsystem-validate": {
+          "reference": "references/subsystem-validate.md",
+          "scripts": [
+            "scripts/subsystem-validate.ps1",
+            "scripts/subsystem-validate.py"
+          ]
+        },
+        "interface-edit": {
+          "reference": "references/interface-edit.md",
+          "scripts": [
+            "scripts/interface-edit.ps1",
+            "scripts/interface-edit.py"
+          ]
+        },
+        "interface-validate": {
+          "reference": "references/interface-validate.md",
+          "scripts": [
+            "scripts/interface-validate.ps1",
+            "scripts/interface-validate.py"
+          ]
+        }
+      }
+    },
+    "external-artifacts": {
+      "description": "Создание, сборка, разборка и проверка внешних обработок EPF и отчётов ERF.",
+      "modes": {
+        "epf-create": {
+          "reference": "references/epf-create.md",
+          "scripts": [
+            "scripts/epf-create.ps1",
+            "scripts/epf-create.py"
+          ]
+        },
+        "epf-full-cycle": {
+          "reference": "references/epf-full-cycle.md",
+          "scripts": []
+        },
+        "erf-create": {
+          "reference": "references/erf-create.md",
+          "scripts": [
+            "scripts/erf-create.ps1",
+            "scripts/erf-create.py"
+          ]
+        },
+        "build": {
+          "reference": "references/build.md",
+          "scripts": [
+            "scripts/build.ps1",
+            "scripts/build.py"
+          ]
+        },
+        "dump": {
+          "reference": "references/dump.md",
+          "scripts": [
+            "scripts/dump.ps1",
+            "scripts/dump.py"
+          ]
+        },
+        "validate": {
+          "reference": "references/validate.md",
+          "scripts": [
+            "scripts/validate.ps1",
+            "scripts/validate.py"
+          ]
+        },
+        "bsp-register": {
+          "reference": "references/bsp-register.md",
+          "scripts": []
+        },
+        "bsp-command": {
+          "reference": "references/bsp-command.md",
+          "scripts": []
+        }
+      }
+    },
+    "database": {
+      "description": "Создание, запуск, обновление, загрузка и выгрузка информационных баз 1С, Git и ibcmd.",
+      "modes": {
+        "create": {
+          "reference": "references/create.md",
+          "scripts": [
+            "scripts/create.ps1",
+            "scripts/create.py"
+          ]
+        },
+        "project-settings": {
+          "reference": "references/project-settings.md",
+          "scripts": []
+        },
+        "run": {
+          "reference": "references/run.md",
+          "scripts": [
+            "scripts/run.ps1",
+            "scripts/run.py"
+          ]
+        },
+        "update": {
+          "reference": "references/update.md",
+          "scripts": [
+            "scripts/update.ps1",
+            "scripts/update.py"
+          ]
+        },
+        "load-xml": {
+          "reference": "references/load-xml.md",
+          "scripts": [
+            "scripts/load-xml.ps1",
+            "scripts/load-xml.py"
+          ]
+        },
+        "dump-xml": {
+          "reference": "references/dump-xml.md",
+          "scripts": [
+            "scripts/dump-xml.ps1",
+            "scripts/dump-xml.py"
+          ]
+        },
+        "load-cf": {
+          "reference": "references/load-cf.md",
+          "scripts": [
+            "scripts/load-cf.ps1",
+            "scripts/load-cf.py"
+          ]
+        },
+        "dump-cf": {
+          "reference": "references/dump-cf.md",
+          "scripts": [
+            "scripts/dump-cf.ps1",
+            "scripts/dump-cf.py"
+          ]
+        },
+        "load-git": {
+          "reference": "references/load-git.md",
+          "scripts": [
+            "scripts/load-git.ps1",
+            "scripts/load-git.py"
+          ]
+        },
+        "repository-update": {
+          "reference": "references/repository-update.md",
+          "scripts": [
+            "scripts/repository-update.ps1",
+            "scripts/repository-update.py"
+          ]
+        },
+        "ibcmd": {
+          "reference": "references/ibcmd.md",
+          "scripts": []
+        }
+      }
+    },
+    "web-publication": {
+      "description": "Публикация информационных баз 1С через Apache, проверка состояния и удаление публикаций.",
+      "modes": {
+        "publish": {
+          "reference": "references/publish.md",
+          "scripts": [
+            "scripts/publish.ps1",
+            "scripts/publish.py"
+          ]
+        },
+        "inspect": {
+          "reference": "references/inspect.md",
+          "scripts": [
+            "scripts/inspect-publication.ps1",
+            "scripts/inspect-publication.py"
+          ]
+        },
+        "unpublish": {
+          "reference": "references/unpublish.md",
+          "scripts": [
+            "scripts/unpublish.ps1",
+            "scripts/unpublish.py"
+          ]
+        },
+        "stop": {
+          "reference": "references/stop.md",
+          "scripts": [
+            "scripts/stop.ps1",
+            "scripts/stop.py"
+          ]
+        }
+      }
+    },
+    "ui-testing": {
+      "description": "Playwright-сессии и браузерные UI-тесты веб-клиента 1С; нативный UI остаётся в codex-test-bridge.",
+      "modes": {
+        "session": {
+          "reference": "references/session.md",
+          "scripts": [
+            "scripts/session-login.js",
+            "scripts/session-snapshot.js"
+          ]
+        },
+        "test": {
+          "reference": "references/test.md",
+          "scripts": [
+            "scripts/web-run.mjs"
+          ]
+        },
+        "scaffold": {
+          "reference": "references/scaffold.md",
+          "scripts": []
+        }
+      }
+    },
+    "codex-test-bridge": {
+      "description": "HTTP bridge для тестовых баз 1С и нативные UI-тесты через TestClient/TestManager.",
+      "modes": {}
+    },
+    "test-databases": {
+      "description": "Единственный разрешённый источник подключений к тестовым информационным базам 1С.",
+      "modes": {}
+    }
+  }
+}

@@ -11,13 +11,18 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 from unittest.mock import patch
 
 from update_all_test_databases import (
-    UpdateError, assert_no_bootstrap_users, cfe_variant, install_database, load_registry, main,
+    LOCAL_COMPONENTS, LOCAL_SKILLS, UpdateError, assert_no_bootstrap_users, cfe_variant, install_database, load_registry, main,
     read_compatibility_mode, source_bridge_version, unsupported_database_reason,
     sanitized_process_error, sync_local_skills, validate_registered_credentials, verify_bridge,
 )
 
 
 class UpdateAllTestDatabasesTests(unittest.TestCase):
+    def test_local_sync_contains_the_complete_domain_set(self):
+        self.assertEqual(13, len(LOCAL_SKILLS))
+        self.assertEqual(len(LOCAL_SKILLS), len(set(LOCAL_SKILLS)))
+        self.assertEqual("common", LOCAL_COMPONENTS[-1])
+
     def test_variant_boundary(self):
         self.assertEqual(cfe_variant("Version8_3_8"), "legacy")
         self.assertEqual(cfe_variant("Version8_3_11"), "legacy")
@@ -122,36 +127,50 @@ class UpdateAllTestDatabasesTests(unittest.TestCase):
         self.assertEqual(result, 0)
         self.assertIn("passed=1, skipped=1, failed=0", output.getvalue())
 
-    def test_syncs_bridge_registry_skill_and_common_runtime_for_both_agents(self):
+    def test_syncs_domain_set_and_common_runtime_for_both_agents(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             source = root / "source"
-            for component in ("codex-test-bridge", "test-databases", "common"):
+            for component in LOCAL_COMPONENTS:
                 (source / component).mkdir(parents=True)
                 (source / component / "content.txt").write_text(component, encoding="utf-8")
             (source / "codex-test-bridge" / "__pycache__").mkdir()
             (source / "codex-test-bridge" / "__pycache__" / "cached.pyc").write_bytes(b"cache")
             (source / "common" / "runtime.pyc").write_bytes(b"cache")
+            (source / "ui-testing" / "scripts" / "node_modules").mkdir(parents=True)
+            (source / "ui-testing" / "scripts" / "node_modules" / "package.json").write_text("{}", encoding="utf-8")
 
             codex = root / "codex" / "skills"
             cursor = root / "cursor" / "skills"
+            for destination in (codex, cursor):
+                (destination / "cf-init").mkdir(parents=True)
+                (destination / "cf-init" / "SKILL.md").write_text("obsolete", encoding="utf-8")
+                private = destination / "test-databases" / "private-registry.json"
+                private.parent.mkdir(parents=True, exist_ok=True)
+                private.write_text('{"keep":true}', encoding="utf-8")
             agents = sync_local_skills(source, {"Codex": codex, "Cursor": cursor})
 
             self.assertEqual(agents, ["Codex", "Cursor"])
             for destination in (codex, cursor):
-                for component in ("codex-test-bridge", "test-databases", "common"):
+                for component in LOCAL_COMPONENTS:
                     self.assertEqual(
                         (destination / component / "content.txt").read_text(encoding="utf-8"),
                         component,
                     )
                 self.assertFalse((destination / "codex-test-bridge" / "__pycache__").exists())
                 self.assertFalse((destination / "common" / "runtime.pyc").exists())
+                self.assertFalse((destination / "ui-testing" / "scripts" / "node_modules").exists())
+                self.assertFalse((destination / "cf-init").exists())
+                self.assertEqual(
+                    {"keep": True},
+                    json.loads((destination / "test-databases" / "private-registry.json").read_text(encoding="utf-8")),
+                )
 
     def test_local_skills_dry_run_validates_sources_without_writing(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             source = root / "source"
-            for component in ("codex-test-bridge", "test-databases", "common"):
+            for component in LOCAL_COMPONENTS:
                 (source / component).mkdir(parents=True)
             destination = root / "destination"
 
@@ -160,7 +179,7 @@ class UpdateAllTestDatabasesTests(unittest.TestCase):
 
     def test_local_skills_sync_rejects_incomplete_source(self):
         with tempfile.TemporaryDirectory() as temporary:
-            with self.assertRaisesRegex(UpdateError, "test-databases, common"):
+            with self.assertRaisesRegex(UpdateError, "configuration"):
                 sync_local_skills(Path(temporary), {"Codex": Path(temporary) / "target"})
 
 

@@ -1,0 +1,6 @@
+interface:
+  display_name: "1C Database"
+  short_description: "Жизненный цикл информационных баз и сборки 1С"
+  default_prompt: "Use $database for this 1C infobase task."
+policy:
+  allow_implicit_invocation: true

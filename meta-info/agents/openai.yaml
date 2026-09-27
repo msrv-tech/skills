@@ -1,6 +1,0 @@
-interface:
-  display_name: "Meta Info"
-  short_description: "Анализ структуры объекта метаданных 1С из XML-выгрузки — реквизиты, табличные части, форм..."
-  default_prompt: "Use $meta-info for this task."
-policy:
-  allow_implicit_invocation: true

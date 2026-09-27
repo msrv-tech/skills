@@ -2,8 +2,8 @@
 name: test-databases
 description: >-
   Единственный источник параметров подключения к информационным базам 1С.
-  Используй всегда, когда нужна база для Designer, ibcmd, web-publish, repo-update,
-  db-dump-xml, db-load-xml, codex-test-bridge или любых других операций с ИБ.
+  Используй всегда, когда нужна база для Designer, ibcmd, web-publication:publish, database:repository-update,
+  database:dump-xml, database:load-xml, codex-test-bridge или любых других операций с ИБ.
   Запрещено подключаться к базам вне реестра test-databases.json.
 allowed-tools:
   - Read
@@ -148,10 +148,10 @@ Resolver возвращает проверенный абсолютный пут
 
 | Задача | Скил |
 |--------|------|
-| Обновить из хранилища | `repo-update` |
-| Выгрузить конфигурацию в XML | `db-dump-xml` |
-| Загрузить XML в базу | `db-load-xml` |
-| Запустить 1С | `db-run` |
+| Обновить из хранилища | `database:repository-update` |
+| Выгрузить конфигурацию в XML | `database:dump-xml` |
+| Загрузить XML в базу | `database:load-xml` |
+| Запустить 1С | `database:run` |
 | HTTP-тесты через bridge | `codex-test-bridge` |
 
 Во всех случаях параметры подключения бери **только** из `test-databases.json`.

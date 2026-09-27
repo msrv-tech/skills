@@ -133,10 +133,12 @@ Windows PowerShell 5.1 иначе может исказить кирилличе
 для 8.3.13+ и legacy для 8.3.12 и ниже. Установка всегда выполняется под
 `User`/`Password` выбранной записи реестра; временные пользователи не создаются.
 Перед изменением ИБ скрипт обновляет локальные каталоги скиллов Codex и Cursor:
-копирует `codex-test-bridge`, `test-databases` и общий runtime `common` в
-`$CODEX_HOME/skills` (либо `~/.codex/skills`) и `~/.cursor/skills`. Каталоги
-можно переопределить через `--codex-skills-dir` и `--cursor-skills-dir`, а
-синхронизацию отключить только явно через `--skip-local-skills-sync`.
+устанавливает все 13 доменных skills и общий runtime `common` в
+`$CODEX_HOME/skills` (либо `~/.codex/skills`) и `~/.cursor/skills`, удаляя
+устаревшие каталоги операций. Локальные приватные файлы в `test-databases`
+сохраняются. Каталоги можно переопределить через `--codex-skills-dir` и
+`--cursor-skills-dir`, а синхронизацию отключить только явно через
+`--skip-local-skills-sync`.
 Для каждого результата проверяются GET health, POST health, версия через
 capabilities и отсутствие оставшихся `ctb_bootstrap_` пользователей.
 Транзиентный отказ Designer или публикации повторяется до трёх раз. Записи без
@@ -209,7 +211,7 @@ Bridge доступен только если опубликованы HTTP-се
 </httpServices>
 ```
 
-Обычный `web-publish` генерирует безопасную публикацию без HTTP-сервисов
+Обычный `web-publication:publish` генерирует безопасную публикацию без HTTP-сервисов
 расширений. Для bridge после публикации базы включи сервис отдельным helper:
 
 ```powershell

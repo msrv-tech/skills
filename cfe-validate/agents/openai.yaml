@@ -1,6 +1,0 @@
-interface:
-  display_name: "CFE Validate"
-  short_description: "Валидация расширения конфигурации 1С (CFE). Используй после создания или модификации расш..."
-  default_prompt: "Use $cfe-validate for this task."
-policy:
-  allow_implicit_invocation: true

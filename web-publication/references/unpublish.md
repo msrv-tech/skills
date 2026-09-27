@@ -1,0 +1,80 @@
+# unpublish — Удаление веб-публикации 1С из Apache
+
+<!-- docs-evals:python-entrypoint:start -->
+## Запуск скрипта
+
+Основной запуск на Linux выполняется Python 3 с аргументами CLI скрипта:
+
+```bash
+python3 "<skills-root>/web-publication/scripts/unpublish.py" -AppName <publication-name>
+```
+
+Windows PowerShell остаётся отдельным вариантом запуска:
+
+```powershell
+powershell.exe -NoProfile -File "<skills-root>/web-publication/scripts/unpublish.ps1" -AppName <publication-name>
+```
+<!-- docs-evals:python-entrypoint:end -->
+
+Удаляет блок публикации из `httpd.conf` и каталог `publish/{appname}` внутри Apache. Если других публикаций не осталось — удаляет глобальный блок 1C и останавливает Apache. С флагом `--all` удаляет все публикации разом.
+
+> **Внимание:** этот навык управляет только веб-публикациями в Apache (блоки в `httpd.conf` + каталог `publish/`). Он **НЕ** удаляет каталоги проекта, `upload/`, базы данных или исходники.
+
+## Usage
+
+```
+/web-publication:unpublish <appname>
+/web-publication:unpublish bpdemo
+/web-publication:unpublish --all
+```
+
+## Параметры подключения
+
+Прочитай `.v8-project.json` из корня проекта. Если задан `webPath` — используй как `-ApachePath`.
+По умолчанию `tools/apache24` от корня проекта.
+
+Если пользователь не указал `appname` и не указал `--all`, выполни `/web-publication:inspect` чтобы показать список публикаций и спроси какую удалить.
+
+Если пользователь просит удалить **все** публикации — используй `-All`.
+
+## Команда
+
+Ubuntu:
+
+```bash
+python3 <skills-root>/web-publication/scripts/unpublish.py -AppName mydb
+python3 <skills-root>/web-publication/scripts/unpublish.py -All
+```
+
+Удаляются только управляемые файлы `1c-skills-publication-*.conf` и
+соответствующие каталоги в `/var/www/1c-publications`. `-All` не затрагивает
+чужие Apache-конфиги. Перед reload выполняется `apache2ctl configtest`.
+
+Windows:
+
+```powershell
+powershell.exe -NoProfile -File <skills-root>/web-publication/scripts/unpublish.ps1 <параметры>
+```
+
+### Параметры скрипта
+
+| Параметр | Обязательный | Описание |
+|----------|:------------:|----------|
+| `-AppName <имя>` | * | Имя публикации |
+| `-All` | * | Удалить все публикации |
+| `-ApachePath <путь>` | нет | Корень Apache (по умолчанию `tools/apache24`) |
+
+> `*` — нужен либо `-AppName`, либо `-All`
+
+## Примеры
+
+```powershell
+# Удалить одну публикацию
+powershell.exe -NoProfile -File <skills-root>/web-publication/scripts/unpublish.ps1 -AppName "bpdemo"
+
+# Удалить все публикации
+powershell.exe -NoProfile -File <skills-root>/web-publication/scripts/unpublish.ps1 -All
+
+# С указанием пути
+powershell.exe -NoProfile -File <skills-root>/web-publication/scripts/unpublish.ps1 -AppName "mydb" -ApachePath "C:\tools\apache24"
+```

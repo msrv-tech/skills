@@ -16,7 +16,7 @@ NS_STRIP = re.compile(r'\s+xmlns(?::\w+)?="[^"]*"')
 def load_cfe_borrow():
     spec = importlib.util.spec_from_file_location(
         "cfe_borrow",
-        ROOT / "cfe-borrow" / "scripts" / "cfe-borrow.py",
+        ROOT / "extension" / "scripts" / "borrow.py",
     )
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module

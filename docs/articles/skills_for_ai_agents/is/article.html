@@ -8,18 +8,18 @@
 
 <p><a href="https://github.com/msrv-tech/skills">https://github.com/msrv-tech/skills</a></p>
 
-<p>Это не один большой промпт, а каталог из 82 специализированных навыков. Каждый skill лежит в отдельной папке, содержит <code>SKILL.md</code>, а для практических сценариев еще и скрипты, reference-файлы, evals и примеры. Такой формат можно использовать в Codex, Claude Code и других агентных средах, где есть локальные инструкции и инструменты.</p>
+<p>Это не один большой промпт, а 13 доменных наборов. Каждый skill лежит в отдельной папке: <code>SKILL.md</code> маршрутизирует задачу, <code>references/</code> содержит инструкции режимов, <code>scripts/</code> — исполняемые инструменты, а <code>evals/</code> — проверочные сценарии. Такой формат можно использовать в Codex, Claude Code и других агентных средах, где есть локальные инструкции и инструменты.</p>
 
 <h2>Что внутри</h2>
 
 <p>Репозиторий закрывает основные рабочие сценарии 1С-разработчика:</p>
 
 <ul>
-	<li>конфигурации: <code>cf-init</code>, <code>cf-info</code>, <code>cf-edit</code>, <code>cf-validate</code>, <code>cf-new-project</code>, <code>cf-add-object</code>;</li>
-	<li>расширения: <code>cfe-init</code>, <code>cfe-borrow</code>, <code>cfe-patch-method</code>, <code>cfe-diff</code>, <code>cfe-validate</code>;</li>
-	<li>метаданные: <code>meta-compile</code>, <code>meta-edit</code>, <code>meta-info</code>, <code>meta-remove</code>, <code>meta-validate</code>;</li>
+	<li>конфигурации: <code>configuration:create-empty</code>, <code>configuration:inspect</code>, <code>configuration:edit</code>, <code>configuration:validate</code>;</li>
+	<li>расширения: <code>extension:create</code>, <code>extension:borrow</code>, <code>extension:patch-method</code>, <code>extension:inspect</code>, <code>extension:validate</code>;</li>
+	<li>метаданные: <code>metadata:create</code>, <code>metadata:edit</code>, <code>metadata:inspect</code>, <code>metadata:remove</code>, <code>metadata:validate</code>;</li>
 	<li>управляемые формы, макеты, роли, подсистемы, СКД и MXL;</li>
-	<li>внешние обработки и отчеты: <code>epf-*</code>, <code>erf-*</code>;</li>
+	<li>внешние обработки и отчеты: единый блок <code>external-artifacts</code>;</li>
 	<li>информационные базы: создание, загрузка XML/CF, выгрузка XML/CF, обновление, запуск;</li>
 	<li>веб-публикация через Apache и браузерные smoke-тесты через Playwright;</li>
 	<li>отдельное расширение <code>codex-test-bridge</code>, которое дает HTTP API для тестовых баз 1С.</li>
@@ -36,7 +36,7 @@
 
 <p>В 1С много локальных правил, которые трудно держать в голове агента все время: формат XML-выгрузки, имена коллекций метаданных и вложенных объектов, права ролей, структура управляемых форм, особенности MXL и СКД, команды Конфигуратора и <code>ibcmd</code>, различия между CF, CFE, EPF и ERF.</p>
 
-<p>Если все это положить в один системный промпт, он станет тяжелым и неуправляемым. Skills решают задачу иначе: агент подтягивает конкретный навык тогда, когда он нужен. Например, для создания справочника используется <code>meta-compile</code>, для проверки формы - <code>form-validate</code>, для публикации базы - <code>web-publish</code>.</p>
+<p>Если все это положить в один системный промпт, он станет тяжелым и неуправляемым. Skills решают задачу иначе: агент подтягивает нужный домен и читает только инструкцию выбранного режима. Например, для создания справочника используется <code>metadata:create</code>, для проверки формы — <code>forms:validate</code>, для публикации базы — <code>web-publication:publish</code>.</p>
 
 <h2>Главная фишка: Test Bridge для 1С</h2>
 
@@ -161,7 +161,7 @@ http://&lt;host&gt;/&lt;publication&gt;/hs/codex-test/command</code></pre>
 
 <p>Его нельзя подключать к боевым базам и нельзя публиковать наружу. API выполняет серверные операции в базе, включая выполнение BSL-кода и запись объектов. Это сознательно сделано для тестового контура, где агенту нужно быстро проверить результат разработки.</p>
 
-<p>Обычный <code>web-publish</code> в наборе skills публикует базу безопаснее, без HTTP-сервисов расширений. Для bridge HTTP-сервис включается отдельным helper-скриптом: <a href="https://github.com/msrv-tech/skills/blob/main/codex-test-bridge/scripts/enable_vrd_windows.ps1">enable_vrd_windows.ps1</a>.</p>
+<p>Режим <code>web-publication:publish</code> публикует базу без HTTP-сервисов расширений. Для bridge HTTP-сервис включается отдельным helper-скриптом: <a href="https://github.com/msrv-tech/skills/blob/main/codex-test-bridge/scripts/enable_vrd_windows.ps1">enable_vrd_windows.ps1</a>.</p>
 
 <h2>Как установить</h2>
 

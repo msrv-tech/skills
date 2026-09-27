@@ -1,0 +1,245 @@
+{
+  "skill_name": "metadata",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Создай справочник Контрагенты с реквизитами ИНН (строка 12), КПП (строка 9), ЮридическийАдрес (строка 255). Выгрузка конфигурации в папке src/.",
+      "expected_output": "В папке src/Catalogs/Контрагенты/ созданы XML-файлы (Catalog.xml, Ext/ObjectModule.bsl и др.), справочник зарегистрирован в src/Configuration.xml.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/metadata/scripts/create.py на Linux или powershell.exe -NoProfile -File <skills-root>/metadata/scripts/create.ps1 на Windows вызван с параметрами -JsonPath и -OutputDir",
+        "Создана папка Catalogs/Контрагенты/ (или аналогичное имя)",
+        "Файл Catalog.xml содержит элемент с именем Контрагенты",
+        "Реквизит ИНН присутствует в XML-определении объекта",
+        "Справочник добавлен в Configuration.xml",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/metadata/scripts/create.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/metadata/scripts/create.ps1"
+      ],
+      "mode": "create"
+    },
+    {
+      "id": 2,
+      "prompt": "Добавь документ ПоступлениеТоваров с шапочными реквизитами Склад (ссылка на справочник Склады) и Контрагент (ссылка на справочник Контрагенты), и табличной частью Товары с реквизитами Номенклатура, Количество (число 15,3), Цена (число 15,2), Сумма (число 15,2). Выгрузка в <project-root>/Config/src/.",
+      "expected_output": "В <project-root>/Config/src/Documents/ПоступлениеТоваров/ созданы файлы документа, включая XML с описанием табличной части Товары и реквизитами.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/metadata/scripts/create.py на Linux или powershell.exe -NoProfile -File <skills-root>/metadata/scripts/create.ps1 на Windows вызван с корректным путём к OutputDir",
+        "Создана папка Documents/ПоступлениеТоваров/",
+        "Document.xml содержит определение табличной части Товары",
+        "Реквизиты Количество и Цена определены с числовым типом",
+        "Документ зарегистрирован в Configuration.xml",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/metadata/scripts/create.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/metadata/scripts/create.ps1"
+      ],
+      "mode": "create"
+    },
+    {
+      "id": 3,
+      "prompt": "Создай регистр сведений КурсыВалют с измерением Валюта (ссылка на справочник Валюты), измерением Период (дата) и ресурсом Курс (число 15,4). Без регистратора, периодичность — по позиции регистратора. Конфигурация в <project-root>/Projects/Erp/src/.",
+      "expected_output": "В <project-root>/Projects/Erp/src/InformationRegisters/КурсыВалют/ созданы файлы регистра сведений.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/metadata/scripts/create.py на Linux или powershell.exe -NoProfile -File <skills-root>/metadata/scripts/create.ps1 на Windows вызван с типом объекта InformationRegister или регистр сведений",
+        "Создана папка InformationRegisters/КурсыВалют/",
+        "Измерение Валюта определено в XML-файле",
+        "Ресурс Курс определён с числовым типом",
+        "Регистр добавлен в Configuration.xml",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/metadata/scripts/create.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/metadata/scripts/create.ps1"
+      ],
+      "mode": "create"
+    },
+    {
+      "id": 4,
+      "prompt": "Покажи структуру документа АвансовыйОтчет: реквизиты, табличные части и движения. Выгрузка в папке <project-root>/Config/src/.",
+      "expected_output": "Вывод содержит компактное описание структуры документа АвансовыйОтчет: заголовок, реквизиты, список табличных частей с колонками, список регистров-движений и формы.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/metadata/scripts/inspect-metadata.py на Linux или powershell.exe -NoProfile -File <skills-root>/metadata/scripts/inspect-metadata.ps1 на Windows вызван с параметром -ObjectPath, указывающим на Documents/АвансовыйОтчет/АвансовыйОтчет.xml",
+        "Вывод содержит перечень реквизитов шапки документа",
+        "Вывод содержит список табличных частей с их колонками (режим full или drill-down по ТЧ)",
+        "Вывод содержит информацию о движениях документа по регистрам",
+        "Вывод содержит список форм объекта",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/metadata/scripts/inspect-metadata.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/metadata/scripts/inspect-metadata.ps1"
+      ],
+      "mode": "inspect"
+    },
+    {
+      "id": 5,
+      "prompt": "Хочу посмотреть краткую сводку по регистру сведений КурсыВалют — только имена измерений и ресурсов. Конфигурация в <project-root>/Projects/Acc/src/.",
+      "expected_output": "Краткий вывод (режим brief) по регистру сведений КурсыВалют: имена измерений и ресурсов одной-двумя строками.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/metadata/scripts/inspect-metadata.py на Linux или powershell.exe -NoProfile -File <skills-root>/metadata/scripts/inspect-metadata.ps1 на Windows вызван с параметром -Mode brief",
+        "Параметр -ObjectPath указывает на InformationRegisters/КурсыВалют/КурсыВалют.xml",
+        "Вывод содержит имена измерений регистра",
+        "Вывод содержит имена ресурсов регистра",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/metadata/scripts/inspect-metadata.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/metadata/scripts/inspect-metadata.ps1"
+      ],
+      "mode": "inspect"
+    },
+    {
+      "id": 6,
+      "prompt": "Раскрой табличную часть Товары документа ЗаказКлиента — покажи все колонки с типами. Выгрузка в src/.",
+      "expected_output": "Drill-down по табличной части Товары: список колонок с типами данных.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/metadata/scripts/inspect-metadata.py на Linux или powershell.exe -NoProfile -File <skills-root>/metadata/scripts/inspect-metadata.ps1 на Windows вызван с параметром -Name Товары",
+        "Параметр -ObjectPath указывает на Documents/ЗаказКлиента",
+        "Вывод содержит список колонок табличной части Товары",
+        "Для каждой колонки указан тип данных",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/metadata/scripts/inspect-metadata.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/metadata/scripts/inspect-metadata.ps1"
+      ],
+      "mode": "inspect"
+    },
+    {
+      "id": 7,
+      "prompt": "Добавь реквизиты Комментарий (Строка 200) и ДатаОплаты (Дата) в справочник Контрагенты. XML объекта: src/Catalogs/Контрагенты/Контрагенты.xml",
+      "expected_output": "Скрипт python3 <skills-root>/metadata/scripts/edit.py на Linux или powershell.exe -NoProfile -File <skills-root>/metadata/scripts/edit.ps1 на Windows вызван с операцией add-attribute, реквизиты Комментарий и ДатаОплаты добавлены в XML-определение справочника Контрагенты.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/metadata/scripts/edit.py на Linux или powershell.exe -NoProfile -File <skills-root>/metadata/scripts/edit.ps1 на Windows вызван с параметром -ObjectPath, указывающим на Контрагенты.xml",
+        "Параметр -Operation содержит 'add-attribute'",
+        "Параметр -Value содержит 'Комментарий: Строка(200) ;; ДатаОплаты: Дата'",
+        "После выполнения запускается metadata:validate для верификации результата",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/metadata/scripts/edit.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/metadata/scripts/edit.ps1"
+      ],
+      "mode": "edit"
+    },
+    {
+      "id": 8,
+      "prompt": "Добавь табличную часть Товары в документ СчётНаОплату с колонками: Номенклатура (CatalogRef.Номенклатура, обязательный), Количество (Число 15,3), Цена (Число 15,2), Сумма (Число 15,2). Объект: <project-root>/Config/src/Documents/СчётНаОплату/",
+      "expected_output": "Табличная часть Товары с четырьмя колонками добавлена в XML документа СчётНаОплату.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/metadata/scripts/edit.py на Linux или powershell.exe -NoProfile -File <skills-root>/metadata/scripts/edit.ps1 на Windows вызван с параметром -ObjectPath, указывающим на директорию СчётНаОплату/",
+        "Параметр -Operation содержит 'add-ts'",
+        "Значение параметра -Value содержит описание ТЧ Товары с колонками Номенклатура, Количество, Цена, Сумма",
+        "Атрибут Номенклатура помечен как обязательный (req)",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/metadata/scripts/edit.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/metadata/scripts/edit.ps1"
+      ],
+      "mode": "edit"
+    },
+    {
+      "id": 9,
+      "prompt": "Переименуй реквизит СтарыйКод в НовыйКодСКЛАД и смени его тип с Строка(10) на Строка(20) в справочнике Склады. Объект: <project-root>/Projects/ERP/src/Catalogs/Склады/Склады.xml",
+      "expected_output": "Реквизит СтарыйКод переименован в НовыйКодСКЛАД с изменением типа на Строка(20) через операцию modify-attribute.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/metadata/scripts/edit.py на Linux или powershell.exe -NoProfile -File <skills-root>/metadata/scripts/edit.ps1 на Windows вызван с параметром -ObjectPath",
+        "Параметр -Operation содержит 'modify-attribute'",
+        "Параметр -Value содержит 'СтарыйКод: name=НовыйКодСКЛАД, type=Строка(20)'",
+        "После выполнения запускается metadata:validate или выводится инструкция по верификации",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/metadata/scripts/edit.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/metadata/scripts/edit.ps1"
+      ],
+      "mode": "edit"
+    },
+    {
+      "id": 10,
+      "prompt": "Удали справочник УстаревшийКонтрагент из конфигурации. Выгрузка в <project-root>/Config/src/.",
+      "expected_output": "Справочник УстаревшийКонтрагент удалён: файлы удалены, запись убрана из Configuration.xml и подсистем.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/metadata/scripts/remove.py на Linux или powershell.exe -NoProfile -File <skills-root>/metadata/scripts/remove.ps1 на Windows вызван с параметрами -ConfigDir и -Object \"Catalog.УстаревшийКонтрагент\"",
+        "Вывод содержит результат проверки ссылок на объект",
+        "Вывод содержит подтверждение удаления из Configuration.xml (строка с Removed from ChildObjects)",
+        "Вывод содержит информацию об удалении файлов объекта",
+        "Код возврата скрипта равен 0 (успешно)",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/metadata/scripts/remove.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/metadata/scripts/remove.ps1"
+      ],
+      "mode": "remove"
+    },
+    {
+      "id": 11,
+      "prompt": "Хочу удалить документ СтарыйАкт, но сначала проверь, нет ли на него ссылок — используй dry run. Конфигурация в <project-root>/WS/cfsrc/.",
+      "expected_output": "Dry run выполнен: показано что будет удалено и список найденных ссылок (если есть), без фактического удаления файлов.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/metadata/scripts/remove.py на Linux или powershell.exe -NoProfile -File <skills-root>/metadata/scripts/remove.ps1 на Windows вызван с флагом -DryRun",
+        "Параметр -Object содержит \"Document.СтарыйАкт\"",
+        "Вывод содержит секцию Reference check с результатом проверки ссылок",
+        "Файлы объекта не удалены (dry run)",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/metadata/scripts/remove.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/metadata/scripts/remove.ps1"
+      ],
+      "mode": "remove"
+    },
+    {
+      "id": 12,
+      "prompt": "Удали общий модуль УстаревшиеФункции из конфигурации в src/. На него есть ссылки, но нужно удалить принудительно.",
+      "expected_output": "Общий модуль УстаревшиеФункции удалён принудительно, несмотря на найденные ссылки.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/metadata/scripts/remove.py на Linux или powershell.exe -NoProfile -File <skills-root>/metadata/scripts/remove.ps1 на Windows вызван с флагом -Force",
+        "Параметр -Object содержит \"CommonModule.УстаревшиеФункции\"",
+        "Вывод содержит предупреждение о найденных ссылках",
+        "Вывод содержит подтверждение успешного удаления объекта",
+        "Модуль убран из Configuration.xml",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/metadata/scripts/remove.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/metadata/scripts/remove.ps1"
+      ],
+      "mode": "remove"
+    },
+    {
+      "id": 13,
+      "prompt": "Проверь корректность только что созданного справочника Номенклатура в выгрузке <project-root>/Config/src/Catalogs/Номенклатура/Номенклатура.xml.",
+      "expected_output": "Вывод валидации содержит результаты по каждой из 11 проверок. При наличии ошибок — перечень с типом и описанием.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/metadata/scripts/validate.py на Linux или powershell.exe -NoProfile -File <skills-root>/metadata/scripts/validate.ps1 на Windows вызван с параметром -ObjectPath, указывающим на XML-файл справочника",
+        "Вывод содержит строки с результатами каждой проверки (OK, ERROR или WARN)",
+        "Вывод содержит итоговую строку с количеством ошибок и предупреждений",
+        "При ошибках: код возврата скрипта равен 1",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/metadata/scripts/validate.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/metadata/scripts/validate.ps1"
+      ],
+      "mode": "validate"
+    },
+    {
+      "id": 14,
+      "prompt": "Нужно убедиться что документ ПоступлениеТоваров корректен после ручного редактирования XML. Папка объекта: src/Documents/ПоступлениеТоваров.",
+      "expected_output": "Валидация завершена. Авторезолв нашёл XML-файл в директории. Все структурные проверки выполнены.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/metadata/scripts/validate.py на Linux или powershell.exe -NoProfile -File <skills-root>/metadata/scripts/validate.ps1 на Windows вызван с путём к директории (авторезолв)",
+        "Скрипт самостоятельно нашёл файл Documents/ПоступлениеТоваров/ПоступлениеТоваров.xml",
+        "Вывод содержит результаты проверок корневой структуры и InternalInfo",
+        "Вывод содержит результаты проверки реквизитов и TabularSections",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/metadata/scripts/validate.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/metadata/scripts/validate.ps1"
+      ],
+      "mode": "validate"
+    },
+    {
+      "id": 15,
+      "prompt": "Проверь регистр сведений КурсыВалют и останови проверку после первых 5 ошибок. Путь: upload/Acc/InformationRegisters/КурсыВалют/КурсыВалют.xml.",
+      "expected_output": "Валидация выполнена с лимитом 5 ошибок. После достижения лимита проверка прекращена.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/metadata/scripts/validate.py на Linux или powershell.exe -NoProfile -File <skills-root>/metadata/scripts/validate.ps1 на Windows вызван с параметром -MaxErrors 5",
+        "Параметр -ObjectPath указывает на файл регистра сведений",
+        "При наличии более 5 ошибок — вывод остановлен на 5-й ошибке",
+        "Вывод содержит итоговую строку с количеством найденных ошибок",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/metadata/scripts/validate.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/metadata/scripts/validate.ps1"
+      ],
+      "mode": "validate"
+    },
+    {
+      "id": 16,
+      "prompt": "Добавь встроенную справку для обработки ЗагрузкаКонтрагентов. Исходники в папке src/.",
+      "expected_output": "Созданы файл Help.xml и страница ru.html с HTML-шаблоном справки для обработки ЗагрузкаКонтрагентов.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/metadata/scripts/add-help.py на Linux или powershell.exe -NoProfile -File <skills-root>/metadata/scripts/add-help.ps1 на Windows вызван с параметром -ProcessorName 'ЗагрузкаКонтрагентов'",
+        "Создан файл src/ЗагрузкаКонтрагентов/Ext/Help.xml с секцией <Page>ru</Page>",
+        "Создан файл src/ЗагрузкаКонтрагентов/Ext/Help/ru.html с HTML-разметкой",
+        "HTML-файл содержит ссылку на таблицу стилей v8help://service_book/service_style",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/metadata/scripts/add-help.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/metadata/scripts/add-help.ps1"
+      ],
+      "mode": "add-help"
+    },
+    {
+      "id": 17,
+      "prompt": "Нужно добавить справку для обработки ВыгрузкаДанных, исходники лежат в <project-root>/Projects/MyConfig/src/. Язык справки — русский.",
+      "expected_output": "Файлы Help.xml и ru.html созданы по пути <project-root>/Projects/MyConfig/src/ВыгрузкаДанных/Ext/.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/metadata/scripts/add-help.py на Linux или powershell.exe -NoProfile -File <skills-root>/metadata/scripts/add-help.ps1 на Windows вызван с параметрами -ProcessorName 'ВыгрузкаДанных' и -SrcDir '<project-root>/Projects/MyConfig/src'",
+        "Создан файл <project-root>/Projects/MyConfig/src/ВыгрузкаДанных/Ext/Help.xml",
+        "Создан файл <project-root>/Projects/MyConfig/src/ВыгрузкаДанных/Ext/Help/ru.html",
+        "Help.xml содержит namespace http://v8.1c.ru/8.3/xcf/extrnprops",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/metadata/scripts/add-help.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/metadata/scripts/add-help.ps1"
+      ],
+      "mode": "add-help"
+    },
+    {
+      "id": 18,
+      "prompt": "Добавь справку для обработки АнализПродаж и обнови метаданные формы, чтобы справка была доступна пользователям через кнопку помощи.",
+      "expected_output": "Созданы Help.xml и ru.html, в метаданные формы добавлен элемент IncludeHelpInContents, выведена инструкция по добавлению кнопки Help на форму.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/metadata/scripts/add-help.py на Linux или powershell.exe -NoProfile -File <skills-root>/metadata/scripts/add-help.ps1 на Windows вызван с параметром -ProcessorName 'АнализПродаж'",
+        "Создан файл Help.xml в Ext/ объекта",
+        "Создан файл Help/ru.html с HTML-шаблоном",
+        "Вывод содержит инструкцию по добавлению кнопки Form.StandardCommand.Help на форму",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/metadata/scripts/add-help.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/metadata/scripts/add-help.ps1"
+      ],
+      "mode": "add-help"
+    }
+  ]
+}

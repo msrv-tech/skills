@@ -1,0 +1,6 @@
+interface:
+  display_name: "1C External Artifacts"
+  short_description: "Создание и сборка внешних обработок EPF и отчётов ERF"
+  default_prompt: "Use $external-artifacts for this 1C EPF or ERF task."
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,6 @@
+interface:
+  display_name: "1C Access & Navigation"
+  short_description: "Роли, RLS, подсистемы и командный интерфейс 1С"
+  default_prompt: "Use $access-and-navigation for this 1C access or navigation task."
+policy:
+  allow_implicit_invocation: true

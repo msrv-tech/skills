@@ -1,6 +1,0 @@
-interface:
-  display_name: "EPF Build"
-  short_description: "Собрать внешнюю обработку 1С (EPF/ERF) из XML-исходников. Используй когда пользователь пр..."
-  default_prompt: "Use $epf-build for this task."
-policy:
-  allow_implicit_invocation: true

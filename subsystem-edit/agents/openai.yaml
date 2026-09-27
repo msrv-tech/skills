@@ -1,6 +1,0 @@
-interface:
-  display_name: "Subsystem Edit"
-  short_description: "Точечное редактирование подсистемы 1С. Используй когда нужно добавить или удалить объекты..."
-  default_prompt: "Use $subsystem-edit for this task."
-policy:
-  allow_implicit_invocation: true

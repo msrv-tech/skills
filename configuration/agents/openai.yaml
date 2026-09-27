@@ -1,0 +1,6 @@
+interface:
+  display_name: "1C Configuration"
+  short_description: "Создание, анализ, изменение и проверка конфигураций 1С"
+  default_prompt: "Use $configuration for this 1C configuration task."
+policy:
+  allow_implicit_invocation: true

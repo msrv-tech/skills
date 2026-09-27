@@ -1,0 +1,6 @@
+interface:
+  display_name: "1C Metadata"
+  short_description: "Создание и сопровождение объектов метаданных 1С"
+  default_prompt: "Use $metadata for this 1C metadata task."
+policy:
+  allow_implicit_invocation: true

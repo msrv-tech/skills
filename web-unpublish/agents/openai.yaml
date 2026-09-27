@@ -1,6 +1,0 @@
-interface:
-  display_name: "WEB Unpublish"
-  short_description: "Удаление веб-публикации 1С из Apache. Используй когда пользователь просит убрать публикац..."
-  default_prompt: "Use $web-unpublish for this task."
-policy:
-  allow_implicit_invocation: true

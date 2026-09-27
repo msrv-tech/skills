@@ -1,0 +1,236 @@
+{
+  "skill_name": "configuration",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Создай пустую конфигурацию с именем УчётЗаявок, синоним «Учёт заявок». Исходники сложи в src/.",
+      "expected_output": "Скрипт python3 <skills-root>/configuration/scripts/create.py на Linux или powershell.exe -NoProfile -File <skills-root>/configuration/scripts/create.ps1 на Windows создал файлы src/Configuration.xml и src/Languages/Русский.xml. Configuration.xml содержит имя УчётЗаявок и синоним «Учёт заявок».",
+      "expectations": [
+        "Скрипт python3 <skills-root>/configuration/scripts/create.py на Linux или powershell.exe -NoProfile -File <skills-root>/configuration/scripts/create.ps1 на Windows вызван с параметром -Name УчётЗаявок",
+        "Скрипт python3 <skills-root>/configuration/scripts/create.py на Linux или powershell.exe -NoProfile -File <skills-root>/configuration/scripts/create.ps1 на Windows вызван с параметром -Synonym «Учёт заявок»",
+        "Файл src/Configuration.xml создан",
+        "Файл src/Languages/Русский.xml создан",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/configuration/scripts/create.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/configuration/scripts/create.ps1"
+      ],
+      "mode": "create-empty"
+    },
+    {
+      "id": 2,
+      "prompt": "Создай новую конфигурацию МоёРешение версии 1.0.0.1, поставщик «ООО Разработчик». Каталог вывода: <project-root>/Projects/MySolution/src/.",
+      "expected_output": "Скрипт python3 <skills-root>/configuration/scripts/create.py на Linux или powershell.exe -NoProfile -File <skills-root>/configuration/scripts/create.ps1 на Windows создал Configuration.xml со свойствами Version=1.0.0.1 и Vendor=ООО Разработчик в каталоге <project-root>/Projects/MySolution/src/.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/configuration/scripts/create.py на Linux или powershell.exe -NoProfile -File <skills-root>/configuration/scripts/create.ps1 на Windows вызван с параметром -Name МоёРешение",
+        "Скрипт python3 <skills-root>/configuration/scripts/create.py на Linux или powershell.exe -NoProfile -File <skills-root>/configuration/scripts/create.ps1 на Windows вызван с параметром -Version 1.0.0.1",
+        "Скрипт python3 <skills-root>/configuration/scripts/create.py на Linux или powershell.exe -NoProfile -File <skills-root>/configuration/scripts/create.ps1 на Windows вызван с параметром -Vendor «ООО Разработчик»",
+        "Скрипт python3 <skills-root>/configuration/scripts/create.py на Linux или powershell.exe -NoProfile -File <skills-root>/configuration/scripts/create.ps1 на Windows вызван с параметром -OutputDir <project-root>/Projects/MySolution/src/",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/configuration/scripts/create.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/configuration/scripts/create.ps1"
+      ],
+      "mode": "create-empty"
+    },
+    {
+      "id": 3,
+      "prompt": "Создай конфигурацию TestConfig с режимом совместимости Version8_3_27 в папке test-tmp/cf3.",
+      "expected_output": "Скрипт python3 <skills-root>/configuration/scripts/create.py на Linux или powershell.exe -NoProfile -File <skills-root>/configuration/scripts/create.ps1 на Windows создал Configuration.xml с CompatibilityMode=Version8_3_27 в каталоге test-tmp/cf3.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/configuration/scripts/create.py на Linux или powershell.exe -NoProfile -File <skills-root>/configuration/scripts/create.ps1 на Windows вызван с параметром -Name TestConfig",
+        "Скрипт python3 <skills-root>/configuration/scripts/create.py на Linux или powershell.exe -NoProfile -File <skills-root>/configuration/scripts/create.ps1 на Windows вызван с параметром -CompatibilityMode Version8_3_27",
+        "Скрипт python3 <skills-root>/configuration/scripts/create.py на Linux или powershell.exe -NoProfile -File <skills-root>/configuration/scripts/create.ps1 на Windows вызван с параметром -OutputDir test-tmp/cf3",
+        "Файл test-tmp/cf3/Configuration.xml создан",
+        "Файл test-tmp/cf3/Languages/Русский.xml создан",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/configuration/scripts/create.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/configuration/scripts/create.ps1"
+      ],
+      "mode": "create-empty"
+    },
+    {
+      "id": 4,
+      "prompt": "Создай конфигурацию УчётЗаявок с нуля: справочник Клиенты (Наименование, ИНН), документ Заявка (Клиент, Сумма), подсистема Основная, роль Администратор. Исходники в src/.",
+      "expected_output": "Выполнена полная цепочка: configuration:create-empty создал scaffold, metadata:create создал справочник и документ, configuration:edit добавил оба объекта, access-and-navigation:subsystem-create создала подсистему, access-and-navigation:role-create создала роль, форма скомпилирована, configuration:validate завершил проверку без ошибок.",
+      "expectations": [
+        "Рекомендован скил configuration:create-empty для создания scaffold конфигурации УчётЗаявок",
+        "Рекомендован скил metadata:create для создания Catalog.Клиенты и Document.Заявка",
+        "Рекомендован скил configuration:edit для добавления объектов в состав конфигурации",
+        "Рекомендован скил access-and-navigation:subsystem-create для создания подсистемы Основная",
+        "Рекомендован скил configuration:validate для финальной проверки"
+      ],
+      "mode": "create-project"
+    },
+    {
+      "id": 5,
+      "prompt": "Создай с нуля конфигурацию СкладскойУчёт: справочники Товары и Склады, документ ПеремещениеТоваров, регистр накопления ОстаткиТоваров. Каталог <project-root>/Projects/Warehouse/src/.",
+      "expected_output": "Полный workflow: scaffold конфигурации, создание справочников (Товары, Склады) до документа, создание регистра накопления, документ с движениями, все объекты добавлены в конфигурацию, выполнена валидация.",
+      "expectations": [
+        "Рекомендован скил configuration:create-empty для scaffold конфигурации СкладскойУчёт",
+        "Справочники Товары и Склады создаются через metadata:create до документа ПеремещениеТоваров",
+        "Рекомендован скил metadata:create для регистра накопления ОстаткиТоваров",
+        "Рекомендован скил access-and-navigation:role-create для создания ролей доступа",
+        "Рекомендован скил configuration:validate последним шагом"
+      ],
+      "mode": "create-project"
+    },
+    {
+      "id": 6,
+      "prompt": "Создай конфигурацию ДоговорнаяРабота: справочники Контрагенты и Договоры, документ АктВыполненныхРабот с ТЧ Услуги, регистр сведений ЦеныДоговоров. Подсистемы: НСИ и Документы. Роли: Пользователь и Администратор.",
+      "expected_output": "Создана конфигурация с двумя подсистемами, двумя ролями, справочниками, документом с ТЧ и регистром сведений. Все шаги workflow выполнены в правильном порядке.",
+      "expectations": [
+        "Справочники создаются через metadata:create раньше документа (на них зависит АктВыполненныхРабот)",
+        "Рекомендован скил access-and-navigation:subsystem-create для создания двух подсистем НСИ и Документы",
+        "Рекомендован скил access-and-navigation:role-create для создания ролей Пользователь и Администратор",
+        "Рекомендован скил forms:add и forms:create для формы документа АктВыполненныхРабот",
+        "Рекомендован скил configuration:validate завершающим шагом"
+      ],
+      "mode": "create-project"
+    },
+    {
+      "id": 7,
+      "prompt": "Добавь справочник Контрагенты с реквизитами ИНН (строка 12), КПП (строка 9) в конфигурацию. Исходники в src/, подсистема Основная.",
+      "expected_output": "Выполнена цепочка: metadata:create создал XML-файлы справочника, configuration:edit добавил в Configuration.xml, access-and-navigation:subsystem-edit включил в подсистему Основная, создана и скомпилирована форма, выполнена валидация.",
+      "expectations": [
+        "Рекомендован скил metadata:create для создания XML-исходников справочника Контрагенты",
+        "Рекомендован скил configuration:edit для добавления Catalog.Контрагенты в состав конфигурации",
+        "Рекомендован скил access-and-navigation:subsystem-edit для включения объекта в подсистему Основная",
+        "Рекомендован скил configuration:validate для проверки корректности конфигурации после добавления"
+      ],
+      "mode": "add-object"
+    },
+    {
+      "id": 8,
+      "prompt": "Добавь документ Заявка с реквизитами Клиент (справочник Контрагенты), Сумма (число), и табличной частью Товары в конфигурацию в папке <project-root>/Config/src/. Подсистема Продажи.",
+      "expected_output": "Полный workflow: создан XML документа Заявка, объект добавлен в Configuration.xml, включён в подсистему Продажи, создана управляемая форма документа, выполнена валидация.",
+      "expectations": [
+        "Рекомендован скил metadata:create для Document.Заявка с табличной частью Товары",
+        "Рекомендован скил configuration:edit с операцией add-childObject для Document.Заявка",
+        "Рекомендован скил access-and-navigation:subsystem-edit для добавления Document.Заявка в подсистему Продажи",
+        "Рекомендован скил forms:add для создания формы документа",
+        "Рекомендован скил configuration:validate для финальной проверки"
+      ],
+      "mode": "add-object"
+    },
+    {
+      "id": 9,
+      "prompt": "Добавь общий модуль РаботаСКонтрагентами в конфигурацию. Конфигурация в <project-root>/WS/MySolution/src/. Подсистема не нужна.",
+      "expected_output": "Создан XML общего модуля, добавлен в Configuration.xml. Шаги forms:add и forms:create пропущены (общий модуль не имеет формы).",
+      "expectations": [
+        "Рекомендован скил metadata:create для создания CommonModule.РаботаСКонтрагентами",
+        "Рекомендован скил configuration:edit для добавления CommonModule.РаботаСКонтрагентами в состав",
+        "Шаги forms:add и forms:create пропущены — для общего модуля форма не нужна",
+        "Рекомендован скил configuration:validate для финальной проверки"
+      ],
+      "mode": "add-object"
+    },
+    {
+      "id": 10,
+      "prompt": "Покажи состав конфигурации в папке src/. Сколько справочников, документов, общих модулей?",
+      "expected_output": "Скрипт python3 <skills-root>/configuration/scripts/inspect-configuration.py на Linux или powershell.exe -NoProfile -File <skills-root>/configuration/scripts/inspect-configuration.ps1 на Windows запущен в режиме overview, выведена таблица счётчиков объектов по типам с указанием количества справочников, документов, общих модулей.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/configuration/scripts/inspect-configuration.py на Linux или powershell.exe -NoProfile -File <skills-root>/configuration/scripts/inspect-configuration.ps1 на Windows вызван с параметром -ConfigPath src/",
+        "Параметр -Mode не указан или равен overview (режим по умолчанию)",
+        "Ответ содержит таблицу счётчиков объектов по типам (Catalog, Document, CommonModule и др.)",
+        "Ответ содержит ключевые свойства конфигурации: имя, синоним, версию",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/configuration/scripts/inspect-configuration.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/configuration/scripts/inspect-configuration.ps1"
+      ],
+      "mode": "inspect"
+    },
+    {
+      "id": 11,
+      "prompt": "Дай краткую сводку по конфигурации из папки <project-root>/WS/acc_8.3.24 — одной строкой.",
+      "expected_output": "Скрипт python3 <skills-root>/configuration/scripts/inspect-configuration.py на Linux или powershell.exe -NoProfile -File <skills-root>/configuration/scripts/inspect-configuration.ps1 на Windows запущен в режиме brief, вывод содержит одну строку: Имя — «Синоним» vВерсия | N объектов | совместимость.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/configuration/scripts/inspect-configuration.py на Linux или powershell.exe -NoProfile -File <skills-root>/configuration/scripts/inspect-configuration.ps1 на Windows вызван с параметром -ConfigPath <project-root>/WS/acc_8.3.24",
+        "Параметр -Mode равен brief",
+        "Ответ содержит одну строку с именем конфигурации, версией и числом объектов",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/configuration/scripts/inspect-configuration.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/configuration/scripts/inspect-configuration.ps1"
+      ],
+      "mode": "inspect"
+    },
+    {
+      "id": 12,
+      "prompt": "Покажи полную информацию о конфигурации из <project-root>/Tasks/МояКонфигурация/src/, включая все свойства и роли по умолчанию.",
+      "expected_output": "Скрипт python3 <skills-root>/configuration/scripts/inspect-configuration.py на Linux или powershell.exe -NoProfile -File <skills-root>/configuration/scripts/inspect-configuration.ps1 на Windows запущен в режиме full, выведены все свойства конфигурации по категориям, полный список ChildObjects и DefaultRoles.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/configuration/scripts/inspect-configuration.py на Linux или powershell.exe -NoProfile -File <skills-root>/configuration/scripts/inspect-configuration.ps1 на Windows вызван с параметром -ConfigPath <project-root>/Tasks/МояКонфигурация/src/",
+        "Параметр -Mode равен full",
+        "Ответ содержит полный список ChildObjects (все зарегистрированные объекты)",
+        "Ответ содержит секцию DefaultRoles с ролями по умолчанию",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/configuration/scripts/inspect-configuration.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/configuration/scripts/inspect-configuration.ps1"
+      ],
+      "mode": "inspect"
+    },
+    {
+      "id": 13,
+      "prompt": "Измени версию конфигурации на 2.0.0.1 и поставщика на «ООО Ромашка» в конфигурации, которая лежит в src/.",
+      "expected_output": "Скрипт python3 <skills-root>/configuration/scripts/edit.py на Linux или powershell.exe -NoProfile -File <skills-root>/configuration/scripts/edit.ps1 на Windows вызван с операцией modify-property, в Configuration.xml обновлены поля Version и Vendor.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/configuration/scripts/edit.py на Linux или powershell.exe -NoProfile -File <skills-root>/configuration/scripts/edit.ps1 на Windows вызван с параметром -Operation modify-property",
+        "Параметр -Value содержит Version=2.0.0.1",
+        "Параметр -Value содержит Vendor=ООО Ромашка (batch через ;;)",
+        "Параметр -ConfigPath указывает на src/ или Configuration.xml внутри src/",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/configuration/scripts/edit.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/configuration/scripts/edit.ps1"
+      ],
+      "mode": "edit"
+    },
+    {
+      "id": 14,
+      "prompt": "Добавь справочники Товары и Контрагенты в состав конфигурации. Путь к исходникам: <project-root>/WS/Erp/src/.",
+      "expected_output": "Скрипт python3 <skills-root>/configuration/scripts/edit.py на Linux или powershell.exe -NoProfile -File <skills-root>/configuration/scripts/edit.ps1 на Windows вызван с операцией add-childObject, в Configuration.xml в секцию ChildObjects добавлены записи для Catalog.Товары и Catalog.Контрагенты.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/configuration/scripts/edit.py на Linux или powershell.exe -NoProfile -File <skills-root>/configuration/scripts/edit.ps1 на Windows вызван с параметром -Operation add-childObject",
+        "Параметр -Value содержит Catalog.Товары",
+        "Параметр -Value содержит Catalog.Контрагенты (batch через ;;)",
+        "Параметр -ConfigPath указывает на <project-root>/WS/Erp/src/",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/configuration/scripts/edit.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/configuration/scripts/edit.ps1"
+      ],
+      "mode": "edit"
+    },
+    {
+      "id": 15,
+      "prompt": "Добавь роль ПолныеПрава в список ролей по умолчанию конфигурации. Конфигурация в <project-root>/Projects/MyCfg/src/.",
+      "expected_output": "Скрипт python3 <skills-root>/configuration/scripts/edit.py на Linux или powershell.exe -NoProfile -File <skills-root>/configuration/scripts/edit.ps1 на Windows вызван с операцией add-defaultRole, в Configuration.xml добавлена роль ПолныеПрава в секцию DefaultRoles.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/configuration/scripts/edit.py на Linux или powershell.exe -NoProfile -File <skills-root>/configuration/scripts/edit.ps1 на Windows вызван с параметром -Operation add-defaultRole",
+        "Параметр -Value содержит ПолныеПрава",
+        "Параметр -ConfigPath указывает на <project-root>/Projects/MyCfg/src/",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/configuration/scripts/edit.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/configuration/scripts/edit.ps1"
+      ],
+      "mode": "edit"
+    },
+    {
+      "id": 16,
+      "prompt": "Проверь конфигурацию после добавления нового справочника. Исходники в src/.",
+      "expected_output": "Скрипт python3 <skills-root>/configuration/scripts/validate.py на Linux или powershell.exe -NoProfile -File <skills-root>/configuration/scripts/validate.ps1 на Windows запущен, выполнены все 8 проверок, выведен итоговый отчёт с числом ошибок и предупреждений.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/configuration/scripts/validate.py на Linux или powershell.exe -NoProfile -File <skills-root>/configuration/scripts/validate.ps1 на Windows вызван с параметром -ConfigPath src/",
+        "Ответ содержит результаты проверки структуры XML (well-formedness)",
+        "Ответ содержит результат проверки InternalInfo с 7 ContainedObject",
+        "Ответ содержит итоговую строку с числом ошибок и предупреждений (=== Result: ... ===)",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/configuration/scripts/validate.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/configuration/scripts/validate.ps1"
+      ],
+      "mode": "validate"
+    },
+    {
+      "id": 17,
+      "prompt": "Проверь конфигурацию <project-root>/WS/tasks/cfsrc/acc_8.3.24, выведи максимум 10 ошибок.",
+      "expected_output": "Скрипт python3 <skills-root>/configuration/scripts/validate.py на Linux или powershell.exe -NoProfile -File <skills-root>/configuration/scripts/validate.ps1 на Windows запущен с MaxErrors 10 для указанного пути, при наличии более 10 ошибок валидация остановлена после 10-й.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/configuration/scripts/validate.py на Linux или powershell.exe -NoProfile -File <skills-root>/configuration/scripts/validate.ps1 на Windows вызван с параметром -ConfigPath <project-root>/WS/tasks/cfsrc/acc_8.3.24",
+        "Скрипт python3 <skills-root>/configuration/scripts/validate.py на Linux или powershell.exe -NoProfile -File <skills-root>/configuration/scripts/validate.ps1 на Windows вызван с параметром -MaxErrors 10",
+        "Ответ содержит итоговую строку с числом ошибок и предупреждений",
+        "Ответ содержит коды exit code: 0 при успехе, 1 при наличии ошибок",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/configuration/scripts/validate.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/configuration/scripts/validate.ps1"
+      ],
+      "mode": "validate"
+    },
+    {
+      "id": 18,
+      "prompt": "Проверь конфигурацию в test-tmp/cf и сохрани отчёт в файл report.txt.",
+      "expected_output": "Скрипт python3 <skills-root>/configuration/scripts/validate.py на Linux или powershell.exe -NoProfile -File <skills-root>/configuration/scripts/validate.ps1 на Windows запущен с параметром OutFile, результаты валидации записаны в report.txt в кодировке UTF-8 BOM.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/configuration/scripts/validate.py на Linux или powershell.exe -NoProfile -File <skills-root>/configuration/scripts/validate.ps1 на Windows вызван с параметром -ConfigPath test-tmp/cf",
+        "Скрипт python3 <skills-root>/configuration/scripts/validate.py на Linux или powershell.exe -NoProfile -File <skills-root>/configuration/scripts/validate.ps1 на Windows вызван с параметром -OutFile report.txt",
+        "Ответ содержит результаты проверок ChildObjects: валидные имена типов и отсутствие дубликатов",
+        "Ответ содержит результат проверки DefaultLanguage и наличия файлов языков",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/configuration/scripts/validate.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/configuration/scripts/validate.ps1"
+      ],
+      "mode": "validate"
+    }
+  ]
+}

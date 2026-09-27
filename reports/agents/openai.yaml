@@ -1,0 +1,6 @@
+interface:
+  display_name: "1C Reports"
+  short_description: "СКД, отчёты и запросы 1С"
+  default_prompt: "Use $reports for this 1C report, DCS, or query task."
+policy:
+  allow_implicit_invocation: true

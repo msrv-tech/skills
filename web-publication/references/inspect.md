@@ -1,0 +1,80 @@
+# inspect — Статус Apache и публикаций 1С
+
+<!-- docs-evals:python-entrypoint:start -->
+## Запуск скрипта
+
+Основной запуск на Linux выполняется Python 3 с аргументами CLI скрипта:
+
+```bash
+python3 "<skills-root>/web-publication/scripts/inspect-publication.py" -ApachePath <ApachePath>
+```
+
+Windows PowerShell остаётся отдельным вариантом запуска:
+
+```powershell
+powershell.exe -NoProfile -File "<skills-root>/web-publication/scripts/inspect-publication.ps1" -ApachePath <ApachePath>
+```
+<!-- docs-evals:python-entrypoint:end -->
+
+Показывает состояние Apache HTTP Server, список опубликованных баз и последние ошибки.
+
+## Usage
+
+```
+/web-publication:inspect
+```
+
+## Параметры подключения
+
+Прочитай `.v8-project.json` из корня проекта. Если задан `webPath` — используй как `-ApachePath`.
+По умолчанию `tools/apache24` от корня проекта.
+
+## Команда
+
+Ubuntu:
+
+```bash
+python3 <skills-root>/web-publication/scripts/inspect-publication.py
+```
+
+Показываются только публикации, которыми управляют файлы
+`/etc/apache2/conf-available/1c-skills-publication-*.conf`, состояние
+`apache2.service` и реальный результат `apache2ctl configtest`.
+
+Windows:
+
+```powershell
+powershell.exe -NoProfile -File <skills-root>/web-publication/scripts/inspect-publication.ps1 <параметры>
+```
+
+### Параметры скрипта
+
+| Параметр | Обязательный | Описание |
+|----------|:------------:|----------|
+| `-ApachePath <путь>` | нет | Корень Apache (по умолчанию `tools/apache24`) |
+
+## Формат вывода
+
+```
+=== Apache Web Server ===
+Status: Запущен (PID: 12345)
+Path:   C:\...\tools\apache24
+Port:   8081
+Module: C:/Program Files/1cv8/8.3.24.1691/bin/wsap24.dll
+
+=== Опубликованные базы ===
+  mydb   http://localhost:8081/mydb   File="C:\Bases\MyDB";
+
+=== Последние ошибки ===
+(пусто)
+```
+
+## Примеры
+
+```powershell
+# Статус по умолчанию
+powershell.exe -NoProfile -File <skills-root>/web-publication/scripts/inspect-publication.ps1
+
+# Указать путь к Apache
+powershell.exe -NoProfile -File <skills-root>/web-publication/scripts/inspect-publication.ps1 -ApachePath "C:\tools\apache24"
+```

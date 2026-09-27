@@ -8,17 +8,17 @@
 
 [https://github.com/msrv-tech/skills](https://github.com/msrv-tech/skills)
 
-Это не один большой промпт, а каталог из 82 специализированных навыков. Каждый skill лежит в отдельной папке, содержит `SKILL.md`, а для практических сценариев еще и скрипты, reference-файлы, evals и примеры. Такой формат можно использовать в Codex, Claude Code и других агентных средах, где есть локальные инструкции и инструменты.
+Это не один большой промпт, а 13 доменных наборов. Каждый skill лежит в отдельной папке: `SKILL.md` маршрутизирует задачу, `references/` содержит инструкции режимов, `scripts/` — исполняемые инструменты, а `evals/` — проверочные сценарии. Такой формат можно использовать в Codex, Claude Code и других агентных средах, где есть локальные инструкции и инструменты.
 
 ## Что Внутри
 
 Репозиторий закрывает основные рабочие сценарии 1С-разработчика:
 
-- конфигурации: `cf-init`, `cf-info`, `cf-edit`, `cf-validate`, `cf-new-project`, `cf-add-object`
-- расширения: `cfe-init`, `cfe-borrow`, `cfe-patch-method`, `cfe-diff`, `cfe-validate`
-- метаданные: `meta-compile`, `meta-edit`, `meta-info`, `meta-remove`, `meta-validate`
+- конфигурации: `configuration:create-empty`, `configuration:inspect`, `configuration:edit`, `configuration:validate`, `configuration:create-project`, `configuration:add-object`
+- расширения: `extension:create`, `extension:borrow`, `extension:patch-method`, `extension:inspect`, `extension:validate`
+- метаданные: `metadata:create`, `metadata:edit`, `metadata:inspect`, `metadata:remove`, `metadata:validate`
 - управляемые формы, макеты, роли, подсистемы, СКД и MXL
-- внешние обработки и отчеты: `epf-*`, `erf-*`
+- внешние обработки и отчеты: единый блок `external-artifacts`
 - информационные базы: создание, загрузка XML/CF, выгрузка XML/CF, обновление, запуск
 - веб-публикация через Apache и браузерные smoke-тесты через Playwright
 - отдельное расширение `codex-test-bridge`, которое дает HTTP API для тестовых баз 1С
@@ -41,7 +41,7 @@
 - различия между CF, CFE, EPF и ERF
 - ограничения веб-публикации
 
-Если все это положить в один системный промпт, он станет тяжелым и неуправляемым. Skills решают задачу иначе: агент подтягивает конкретный навык тогда, когда он нужен. Например, для создания справочника используется `meta-compile`, для проверки формы - `form-validate`, для публикации базы - `web-publish`.
+Если все это положить в один системный промпт, он станет тяжелым и неуправляемым. Skills решают задачу иначе: агент подтягивает конкретный навык тогда, когда он нужен. Например, для создания справочника используется `metadata:create`, для проверки формы - `forms:validate`, для публикации базы - `web-publication:publish`.
 
 ## Главная Фишка: Test Bridge Для 1С
 
@@ -172,7 +172,7 @@ Bridge предназначен только для локальных демо-
 
 Его нельзя подключать к боевым базам и нельзя публиковать наружу. API выполняет серверные операции в базе, включая выполнение BSL-кода и запись объектов. Это сознательно сделано для тестового контура, где агенту нужно быстро проверить результат разработки.
 
-Обычный `web-publish` в наборе skills публикует базу безопаснее, без HTTP-сервисов расширений. Для bridge HTTP-сервис включается отдельным helper-скриптом:
+Обычный `web-publication:publish` в наборе skills публикует базу безопаснее, без HTTP-сервисов расширений. Для bridge HTTP-сервис включается отдельным helper-скриптом:
 
 [enable_vrd_windows.ps1](https://github.com/msrv-tech/skills/blob/main/codex-test-bridge/scripts/enable_vrd_windows.ps1)
 

@@ -1,0 +1,242 @@
+{
+  "skill_name": "layouts",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Создай макет печатной формы для счёта на оплату. Формат A4 альбомный. Нужны области: Шапка (реквизиты организации и покупателя), Строка (номенклатура, количество, цена, сумма), Итого (итоговая сумма). Сохрани в src/DataProcessors/ПечатьСчёта/Templates/СчётНаОплату/Template.xml.",
+      "expected_output": "JSON DSL записан, скрипт python3 <skills-root>/layouts/scripts/mxl-create.py на Linux или powershell.exe -NoProfile -File <skills-root>/layouts/scripts/mxl-create.ps1 на Windows выполнен, файл Template.xml создан с тремя именованными областями и параметрами.",
+      "expectations": [
+        "JSON-определение макета записано в файл перед вызовом скрипта",
+        "Скрипт python3 <skills-root>/layouts/scripts/mxl-create.py на Linux или powershell.exe -NoProfile -File <skills-root>/layouts/scripts/mxl-create.ps1 на Windows вызван с параметрами -JsonPath и -OutputPath",
+        "Файл Template.xml создан по указанному пути",
+        "Template.xml содержит три именованные области: Шапка, Строка, Итого",
+        "В области Строка присутствуют параметры для номенклатуры, количества, цены и суммы",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/layouts/scripts/mxl-create.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/layouts/scripts/mxl-create.ps1"
+      ],
+      "mode": "mxl-create"
+    },
+    {
+      "id": 2,
+      "prompt": "Сгенерируй макет этикетки товара формата A5 книжный. Одна область Label с параметрами: Наименование, Артикул, Цена. Жирный шрифт для цены. Результат в <project-root>/Templates/Этикетка/Template.xml.",
+      "expected_output": "Template.xml создан с одной областью Label и тремя параметрами, стиль цены с жирным шрифтом.",
+      "expectations": [
+        "JSON DSL содержит определение page как \"A5-portrait\" или эквивалентное",
+        "Скрипт python3 <skills-root>/layouts/scripts/mxl-create.py на Linux или powershell.exe -NoProfile -File <skills-root>/layouts/scripts/mxl-create.ps1 на Windows выполнен без ошибок",
+        "Template.xml содержит именованную область Label",
+        "В области Label присутствуют параметры Наименование, Артикул, Цена",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/layouts/scripts/mxl-create.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/layouts/scripts/mxl-create.ps1"
+      ],
+      "mode": "mxl-create"
+    },
+    {
+      "id": 3,
+      "prompt": "Создай макет для отчёта по продажам. Области: Заголовок (название отчёта и период), ЗаголовокТаблицы (шапка колонок), Строка (контрагент, сумма продаж), Подвал (итог). Формат A4 книжный. Путь: src/Reports/ПродажиПоКонтрагентам/Templates/ОсновнойМакет/Template.xml.",
+      "expected_output": "Template.xml создан с четырьмя областями. Скрипт выполнен успешно.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/layouts/scripts/mxl-create.py на Linux или powershell.exe -NoProfile -File <skills-root>/layouts/scripts/mxl-create.ps1 на Windows вызван с корректными путями",
+        "Template.xml содержит четыре именованные области: Заголовок, ЗаголовокТаблицы, Строка, Подвал",
+        "В области Заголовок присутствуют параметры для названия и периода",
+        "В области Строка присутствуют параметры для контрагента и суммы",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/layouts/scripts/mxl-create.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/layouts/scripts/mxl-create.ps1"
+      ],
+      "mode": "mxl-create"
+    },
+    {
+      "id": 4,
+      "prompt": "Декомпилируй макет накладной ТОРГ-12 в JSON для анализа: src/Documents/РеализацияТоваровУслуг/Templates/ТОРГ12/Template.xml. Сохрани результат в ТОРГ12.json.",
+      "expected_output": "Скрипт python3 <skills-root>/layouts/scripts/mxl-decompile.py на Linux или powershell.exe -NoProfile -File <skills-root>/layouts/scripts/mxl-decompile.ps1 на Windows выполнен, создан файл ТОРГ12.json с компактным JSON DSL описанием макета.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/layouts/scripts/mxl-decompile.py на Linux или powershell.exe -NoProfile -File <skills-root>/layouts/scripts/mxl-decompile.ps1 на Windows вызван с параметром -TemplatePath, указывающим на Template.xml",
+        "Параметр -OutputPath указывает на ТОРГ12.json",
+        "Файл ТОРГ12.json создан и содержит валидный JSON",
+        "JSON содержит секцию areas с именованными областями макета",
+        "JSON содержит секции fonts и styles с описанием стилей",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/layouts/scripts/mxl-decompile.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/layouts/scripts/mxl-decompile.ps1"
+      ],
+      "mode": "mxl-decompile"
+    },
+    {
+      "id": 5,
+      "prompt": "Хочу изменить макет счёта-фактуры — сначала декомпилируй его в JSON, потом я скажу что менять. Путь к макету: src/DataProcessors/ПечатьСчётФактур/Templates/СчётФактура/Template.xml.",
+      "expected_output": "JSON DSL получен из Template.xml и выведен (или сохранён). Структура макета понятна для дальнейшего редактирования.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/layouts/scripts/mxl-decompile.py на Linux или powershell.exe -NoProfile -File <skills-root>/layouts/scripts/mxl-decompile.ps1 на Windows вызван с указанным путём к Template.xml",
+        "Вывод (stdout или файл) содержит JSON с описанием макета счёт-фактуры",
+        "JSON содержит именованные области (areas) с параметрами",
+        "Сгенерированные имена шрифтов и стилей информативны (default, bold, bordered и т.п.)",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/layouts/scripts/mxl-decompile.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/layouts/scripts/mxl-decompile.ps1"
+      ],
+      "mode": "mxl-decompile"
+    },
+    {
+      "id": 6,
+      "prompt": "Декомпилируй макет ценника в JSON без сохранения в файл — просто выведи результат на экран. Макет: src/DataProcessors/Ценники/Templates/Ценник/Template.xml.",
+      "expected_output": "JSON DSL выведен в stdout без создания файла.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/layouts/scripts/mxl-decompile.py на Linux или powershell.exe -NoProfile -File <skills-root>/layouts/scripts/mxl-decompile.ps1 на Windows вызван без параметра -OutputPath (вывод в stdout)",
+        "Вывод содержит валидный JSON с описанием макета ценника",
+        "JSON содержит секцию areas с хотя бы одной областью",
+        "Параметры rowStyle определены там, где пустые ячейки имеют единый формат",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/layouts/scripts/mxl-decompile.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/layouts/scripts/mxl-decompile.ps1"
+      ],
+      "mode": "mxl-decompile"
+    },
+    {
+      "id": 7,
+      "prompt": "Перед написанием кода заполнения покажи структуру макета накладной: какие именованные области есть и какие параметры нужно заполнять. Макет: src/Documents/РеализацияТоваровУслуг/Templates/Накладная/Template.xml.",
+      "expected_output": "Вывод содержит список именованных областей макета с типами, диапазонами строк и перечнем параметров по каждой области.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/layouts/scripts/mxl-inspect.py на Linux или powershell.exe -NoProfile -File <skills-root>/layouts/scripts/mxl-inspect.ps1 на Windows вызван с параметром -TemplatePath",
+        "Вывод содержит секцию Named areas со списком областей (имя, тип, диапазон строк)",
+        "Вывод содержит секцию Parameters by area с параметрами каждой области",
+        "Области перечислены в порядке сверху вниз (по позиции строк)",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/layouts/scripts/mxl-inspect.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/layouts/scripts/mxl-inspect.ps1"
+      ],
+      "mode": "mxl-inspect"
+    },
+    {
+      "id": 8,
+      "prompt": "Покажи структуру макета обработки ЗагрузкаДанных — нужно знать статические тексты и шаблоны строк. Обработка называется ЗагрузкаДанных, макет — ОбразецДанных. Исходники в src/.",
+      "expected_output": "Вывод содержит структуру макета с текстовым содержимым ячеек и шаблонными строками с параметрами в скобках.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/layouts/scripts/mxl-inspect.py на Linux или powershell.exe -NoProfile -File <skills-root>/layouts/scripts/mxl-inspect.ps1 на Windows вызван с параметрами -ProcessorName ЗагрузкаДанных и -TemplateName ОбразецДанных",
+        "Флаг -WithText передан для отображения текстового содержимого",
+        "Вывод содержит секцию Text content со статическими текстами",
+        "Вывод содержит шаблонные строки (Templates) с подстановками [ИмяПараметра]",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/layouts/scripts/mxl-inspect.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/layouts/scripts/mxl-inspect.ps1"
+      ],
+      "mode": "mxl-inspect"
+    },
+    {
+      "id": 9,
+      "prompt": "Макет отчёта по продажам слишком большой — вывод обрезается на 150 строках. Покажи следующие 150 строк. Путь: src/Reports/ОтчётПоПродажам/Templates/Основной/Template.xml.",
+      "expected_output": "Вывод содержит следующую страницу описания макета (строки 150-300), предыдущие 150 строк пропущены.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/layouts/scripts/mxl-inspect.py на Linux или powershell.exe -NoProfile -File <skills-root>/layouts/scripts/mxl-inspect.ps1 на Windows вызван с параметром -Offset 150",
+        "Параметр -TemplatePath указывает на Template.xml отчёта",
+        "Вывод начинается со строки, следующей после ранее показанных 150 строк",
+        "Если вывод снова обрезан — показана подсказка использовать -Offset 300",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/layouts/scripts/mxl-inspect.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/layouts/scripts/mxl-inspect.ps1"
+      ],
+      "mode": "mxl-inspect"
+    },
+    {
+      "id": 10,
+      "prompt": "После генерации макета счёта на оплату проверь его корректность. Путь: src/DataProcessors/ПечатьСчёта/Templates/СчётНаОплату/Template.xml.",
+      "expected_output": "Валидация Template.xml выполнена по 12 проверкам. Все проверки пройдены или выведены конкретные ошибки с номерами строк.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/layouts/scripts/mxl-validate.py на Linux или powershell.exe -NoProfile -File <skills-root>/layouts/scripts/mxl-validate.ps1 на Windows вызван с параметром -TemplatePath",
+        "Вывод содержит результаты проверок с пометками OK, ERROR или WARN",
+        "Вывод содержит итоговую строку с количеством ошибок и предупреждений",
+        "При ошибках: указаны конкретные строки и индексы, вышедшие за пределы",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/layouts/scripts/mxl-validate.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/layouts/scripts/mxl-validate.ps1"
+      ],
+      "mode": "mxl-validate"
+    },
+    {
+      "id": 11,
+      "prompt": "Проверь макет обработки ФормированиеДокументов, шаблон ОсновнаяФорма. Исходники в <project-root>/Projects/MyConf/src/.",
+      "expected_output": "Скрипт нашёл Template.xml по имени обработки и шаблона, выполнил все проверки.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/layouts/scripts/mxl-validate.py на Linux или powershell.exe -NoProfile -File <skills-root>/layouts/scripts/mxl-validate.ps1 на Windows вызван с параметрами -ProcessorName ФормированиеДокументов и -TemplateName ОсновнаяФорма",
+        "Параметр -SrcDir указывает на <project-root>/Projects/MyConf/src/",
+        "Вывод содержит заголовок с именем валидируемого макета",
+        "Вывод содержит итоговую строку с количеством ошибок",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/layouts/scripts/mxl-validate.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/layouts/scripts/mxl-validate.ps1"
+      ],
+      "mode": "mxl-validate"
+    },
+    {
+      "id": 12,
+      "prompt": "Макет накладной после ручного редактирования XML выдаёт много ошибок. Покажи только первые 5. Путь: src/Documents/РеализацияТоваровУслуг/Templates/Накладная/Template.xml.",
+      "expected_output": "Найдены структурные ошибки макета (несоответствие индексов форматов/шрифтов/колонок), вывод остановлен на 5-й ошибке.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/layouts/scripts/mxl-validate.py на Linux или powershell.exe -NoProfile -File <skills-root>/layouts/scripts/mxl-validate.ps1 на Windows вызван с параметром -MaxErrors 5",
+        "Вывод содержит не более 5 ошибок (ERROR)",
+        "Для каждой ошибки указан тип проверки и конкретное несоответствие (индекс, строка или область)",
+        "Код возврата скрипта равен 1 при наличии ошибок",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/layouts/scripts/mxl-validate.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/layouts/scripts/mxl-validate.ps1"
+      ],
+      "mode": "mxl-validate"
+    },
+    {
+      "id": 13,
+      "prompt": "Добавь печатную форму МакетМ11 к обработке ЗагрузкаДанных. Исходники в <project-root>/Projects/App/src/.",
+      "expected_output": "Скрипт python3 <skills-root>/layouts/scripts/attach.py на Linux или powershell.exe -NoProfile -File <skills-root>/layouts/scripts/attach.ps1 на Windows вызван, создан файл ПФ_MXL_МакетМ11.xml и папка ПФ_MXL_МакетМ11/Ext/Template.xml, в ЗагрузкаДанных.xml добавлена запись Template.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/layouts/scripts/attach.py на Linux или powershell.exe -NoProfile -File <skills-root>/layouts/scripts/attach.ps1 на Windows вызван с параметрами -ObjectName ЗагрузкаДанных и -TemplateType SpreadsheetDocument",
+        "Применён префикс ПФ_MXL_ к имени макета (ПФ_MXL_МакетМ11)",
+        "Созданы файлы Templates/ПФ_MXL_МакетМ11.xml и Templates/ПФ_MXL_МакетМ11/Ext/Template.xml",
+        "В корневом XML объекта ЗагрузкаДанных.xml добавлен элемент Template",
+        "Claude уведомляет об автоматическом добавлении префикса ПФ_MXL_",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/layouts/scripts/attach.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/layouts/scripts/attach.ps1"
+      ],
+      "mode": "attach"
+    },
+    {
+      "id": 14,
+      "prompt": "Добавь схему компоновки данных МоёСКД к отчёту АнализПродаж. Директория исходников: <project-root>/Projects/ERP/src/.",
+      "expected_output": "Скрипт python3 <skills-root>/layouts/scripts/attach.py на Linux или powershell.exe -NoProfile -File <skills-root>/layouts/scripts/attach.ps1 на Windows вызван с типом DataCompositionSchema, создан макет МоёСКД, в АнализПродаж.xml обновлено поле MainDataCompositionSchema.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/layouts/scripts/attach.py на Linux или powershell.exe -NoProfile -File <skills-root>/layouts/scripts/attach.ps1 на Windows вызван с параметром -TemplateType DataCompositionSchema",
+        "Параметр -ObjectName указывает АнализПродаж",
+        "Созданы файлы Templates/МоёСКД.xml и Templates/МоёСКД/Ext/Template.xml (DCS-схема)",
+        "Поле MainDataCompositionSchema в АнализПродаж.xml обновлено ссылкой на МоёСКД",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/layouts/scripts/attach.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/layouts/scripts/attach.ps1"
+      ],
+      "mode": "attach"
+    },
+    {
+      "id": 15,
+      "prompt": "Добавь HTML-макет с именем Инструкция к справочнику Номенклатура. Исходники в src/.",
+      "expected_output": "Скрипт python3 <skills-root>/layouts/scripts/attach.py на Linux или powershell.exe -NoProfile -File <skills-root>/layouts/scripts/attach.ps1 на Windows вызван с типом HTMLDocument, созданы файлы макета Инструкция.xml и Инструкция/Ext/Template.html, в Номенклатура.xml добавлен Template.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/layouts/scripts/attach.py на Linux или powershell.exe -NoProfile -File <skills-root>/layouts/scripts/attach.ps1 на Windows вызван с параметром -TemplateType HTMLDocument",
+        "Параметр -ObjectName указывает Номенклатура, параметр -TemplateName указывает Инструкция",
+        "Созданы файлы src/Catalogs/Номенклатура/Templates/Инструкция.xml и .../Инструкция/Ext/Template.html",
+        "В корневом XML справочника Номенклатура.xml добавлен элемент Template",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/layouts/scripts/attach.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/layouts/scripts/attach.ps1"
+      ],
+      "mode": "attach"
+    },
+    {
+      "id": 16,
+      "prompt": "Удали макет СтарыйМакет из обработки ЗагрузкаДанных. Исходники в <project-root>/Projects/App/src/.",
+      "expected_output": "Скрипт python3 <skills-root>/layouts/scripts/remove.py на Linux или powershell.exe -NoProfile -File <skills-root>/layouts/scripts/remove.ps1 на Windows вызван, папка Templates/СтарыйМакет/ и файл Templates/СтарыйМакет.xml удалены, из ЗагрузкаДанных.xml убрана запись Template.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/layouts/scripts/remove.py на Linux или powershell.exe -NoProfile -File <skills-root>/layouts/scripts/remove.ps1 на Windows вызван с параметрами -ObjectName ЗагрузкаДанных и -TemplateName СтарыйМакет",
+        "Удалён файл Templates/СтарыйМакет.xml (метаданные макета)",
+        "Удалена папка Templates/СтарыйМакет/ (содержимое макета)",
+        "Из корневого XML объекта ЗагрузкаДанных.xml убран элемент Template для СтарыйМакет",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/layouts/scripts/remove.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/layouts/scripts/remove.ps1"
+      ],
+      "mode": "remove"
+    },
+    {
+      "id": 17,
+      "prompt": "Удали схему компоновки ОсновнаяСхема из отчёта АнализПродаж. Исходники в src/.",
+      "expected_output": "Скрипт python3 <skills-root>/layouts/scripts/remove.py на Linux или powershell.exe -NoProfile -File <skills-root>/layouts/scripts/remove.ps1 на Windows вызван, макет ОсновнаяСхема удалён, поле MainDataCompositionSchema в АнализПродаж.xml очищено.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/layouts/scripts/remove.py на Linux или powershell.exe -NoProfile -File <skills-root>/layouts/scripts/remove.ps1 на Windows вызван с параметрами -ObjectName АнализПродаж и -TemplateName ОсновнаяСхема",
+        "Удалены файлы Templates/ОсновнаяСхема.xml и папка Templates/ОсновнаяСхема/",
+        "Поле MainDataCompositionSchema в АнализПродаж.xml очищено (так как удалённый макет был основной схемой)",
+        "Claude сообщает об очистке MainDataCompositionSchema",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/layouts/scripts/remove.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/layouts/scripts/remove.ps1"
+      ],
+      "mode": "remove"
+    },
+    {
+      "id": 18,
+      "prompt": "Удали макет ПФ_MXL_Счёт из справочника Договоры. Исходники в <project-root>/Config/src/.",
+      "expected_output": "Скрипт python3 <skills-root>/layouts/scripts/remove.py на Linux или powershell.exe -NoProfile -File <skills-root>/layouts/scripts/remove.ps1 на Windows вызван, файлы макета ПФ_MXL_Счёт удалены, из Договоры.xml убрана соответствующая запись Template.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/layouts/scripts/remove.py на Linux или powershell.exe -NoProfile -File <skills-root>/layouts/scripts/remove.ps1 на Windows вызван с параметрами -ObjectName Договоры и -TemplateName ПФ_MXL_Счёт",
+        "Параметр -SrcDir указывает на <project-root>/Config/src/ или эквивалентный путь",
+        "Удалён файл Templates/ПФ_MXL_Счёт.xml и папка Templates/ПФ_MXL_Счёт/",
+        "Из корневого XML справочника Договоры.xml убран элемент Template для ПФ_MXL_Счёт",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/layouts/scripts/remove.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/layouts/scripts/remove.ps1"
+      ],
+      "mode": "remove"
+    }
+  ]
+}

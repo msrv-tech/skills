@@ -12,7 +12,7 @@ from common.test_database_registry import RegistryResolutionError, resolve_regis
 
 ROOT = Path(__file__).resolve().parents[1]
 RESOLVER_SCRIPT = ROOT / "test-databases" / "scripts" / "resolve-registry.py"
-REPO_UPDATE_SCRIPT = ROOT / "repo-update" / "scripts" / "repo-update.py"
+REPO_UPDATE_SCRIPT = ROOT / "database" / "scripts" / "repository-update.py"
 
 spec = importlib.util.spec_from_file_location("repo_update", REPO_UPDATE_SCRIPT)
 assert spec is not None and spec.loader is not None

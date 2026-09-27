@@ -1,0 +1,62 @@
+# layouts:mxl-decompile — Декомпилятор макета в DSL
+
+<!-- docs-evals:python-entrypoint:start -->
+## Запуск скрипта
+
+Основной запуск на Linux выполняется Python 3 с аргументами CLI скрипта:
+
+```bash
+python3 "<skills-root>/layouts/scripts/mxl-decompile.py" -TemplatePath <project-root>/Template.xml
+```
+
+Windows PowerShell остаётся отдельным вариантом запуска:
+
+```powershell
+powershell.exe -NoProfile -File "<skills-root>/layouts/scripts/mxl-decompile.ps1" -TemplatePath <project-root>/Template.xml
+```
+<!-- docs-evals:python-entrypoint:end -->
+
+Принимает Template.xml табличного документа 1С и генерирует компактное JSON-определение (DSL). Обратная операция к `/layouts:mxl-create`.
+
+## Использование
+
+```
+/layouts:mxl-decompile <TemplatePath> [OutputPath]
+```
+
+## Параметры
+
+| Параметр     | Обязательный | Описание                                |
+|--------------|:------------:|-----------------------------------------|
+| TemplatePath | да           | Путь к Template.xml                     |
+| OutputPath   | нет          | Путь для JSON (если не указан — stdout) |
+
+## Команда
+
+```powershell
+powershell.exe -NoProfile -File <skills-root>/layouts/scripts/mxl-decompile.ps1 -TemplatePath "<путь>/Template.xml" [-OutputPath "<путь>.json"]
+```
+
+## Рабочий процесс
+
+Декомпиляция существующего макета для анализа или доработки:
+
+1. агент вызывает `/layouts:mxl-decompile` для получения JSON из Template.xml
+2. агент анализирует или модифицирует JSON (добавляет области, меняет стили)
+3. агент вызывает `/layouts:mxl-create` для генерации нового Template.xml
+4. агент вызывает `/layouts:mxl-validate` для проверки
+
+## JSON-схема DSL
+
+Полная спецификация формата: **`mxl-dsl.md`** (прочитать через Read tool).
+
+## Генерация имён
+
+Скрипт автоматически генерирует осмысленные имена:
+
+- **Шрифты**: `default`, `bold`, `header`, `small`, `italic` — или описательные имена по свойствам
+- **Стили**: `bordered`, `bordered-center`, `bold-right`, `border-top` и т.д. — по комбинации свойств
+
+## Детектирование `rowStyle`
+
+Если в строке есть пустые ячейки (без параметров/текста) и все они имеют одинаковый формат — этот формат распознаётся как `rowStyle`, а пустые ячейки исключаются из вывода.

@@ -1,0 +1,6 @@
+interface:
+  display_name: "1C UI Testing"
+  short_description: "Playwright-сессии и браузерные UI-тесты 1С"
+  default_prompt: "Use $ui-testing for this 1C web UI testing task."
+policy:
+  allow_implicit_invocation: true

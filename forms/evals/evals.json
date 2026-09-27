@@ -1,0 +1,284 @@
+{
+  "skill_name": "forms",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Добавь форму ФормаДокумента к документу src/Documents/АвансовыйОтчет.xml. Назначение Object, установить как форму по умолчанию.",
+      "expected_output": "Созданы файлы формы в Documents/АвансовыйОтчет/Forms/ФормаДокумента/, форма зарегистрирована в XML документа как DefaultObjectForm.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/forms/scripts/add.py на Linux или powershell.exe -NoProfile -File <skills-root>/forms/scripts/add.ps1 на Windows вызван с параметром -ObjectPath src/Documents/АвансовыйОтчет.xml",
+        "Скрипт вызван с параметром -FormName ФормаДокумента",
+        "Скрипт вызван с параметром -Purpose Object",
+        "Скрипт вызван с флагом -SetDefault",
+        "Создан файл src/Documents/АвансовыйОтчет/Forms/ФормаДокумента/Ext/Form.xml",
+        "В АвансовыйОтчет.xml обновлён тег DefaultObjectForm или DefaultForm",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/forms/scripts/add.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/forms/scripts/add.ps1"
+      ],
+      "mode": "add"
+    },
+    {
+      "id": 2,
+      "prompt": "Добавь форму списка ФормаСписка к справочнику src/Catalogs/Контрагенты.xml. Синоним: Список контрагентов.",
+      "expected_output": "Форма списка создана и зарегистрирована как DefaultListForm в XML справочника.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/forms/scripts/add.py на Linux или powershell.exe -NoProfile -File <skills-root>/forms/scripts/add.ps1 на Windows вызван с параметром -ObjectPath src/Catalogs/Контрагенты.xml",
+        "Скрипт вызван с параметром -FormName ФормаСписка",
+        "Скрипт вызван с параметром -Purpose List",
+        "Скрипт вызван с параметром -Synonym \"Список контрагентов\"",
+        "Создан файл src/Catalogs/Контрагенты/Forms/ФормаСписка/Ext/Form/Module.bsl с пятью регионами",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/forms/scripts/add.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/forms/scripts/add.ps1"
+      ],
+      "mode": "add"
+    },
+    {
+      "id": 3,
+      "prompt": "Добавь форму записи ФормаЗаписи к регистру сведений src/InformationRegisters/КурсыВалют.xml.",
+      "expected_output": "Форма записи создана и зарегистрирована как DefaultRecordForm в XML регистра.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/forms/scripts/add.py на Linux или powershell.exe -NoProfile -File <skills-root>/forms/scripts/add.ps1 на Windows вызван с параметром -ObjectPath src/InformationRegisters/КурсыВалют.xml",
+        "Скрипт вызван с параметром -FormName ФормаЗаписи",
+        "Скрипт вызван с параметром -Purpose Record",
+        "Создан файл src/InformationRegisters/КурсыВалют/Forms/ФормаЗаписи.xml (метаданные формы с UUID)",
+        "В КурсыВалют.xml добавлена запись <Form> в ChildObjects и обновлён DefaultRecordForm",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/forms/scripts/add.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/forms/scripts/add.ps1"
+      ],
+      "mode": "add"
+    },
+    {
+      "id": 4,
+      "prompt": "Скомпилируй управляемую форму из файла form.json и сохрани результат в src/DataProcessors/МояОбработка/Forms/Форма/Form.xml.",
+      "expected_output": "Form.xml сгенерирован в указанном месте. XML содержит корневой элемент Form с пространствами имён, все элементы имеют уникальные числовые ID.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/forms/scripts/create.py на Linux или powershell.exe -NoProfile -File <skills-root>/forms/scripts/create.ps1 на Windows вызван с параметрами -JsonPath и -OutputPath",
+        "Файл Form.xml создан по указанному пути",
+        "Form.xml содержит объявление пространства имён xmlns:v8 или аналогичное",
+        "Каждый элемент формы имеет атрибут id с числовым значением",
+        "ID элементов уникальны и последовательны",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/forms/scripts/create.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/forms/scripts/create.ps1"
+      ],
+      "mode": "create"
+    },
+    {
+      "id": 5,
+      "prompt": "Сгенерируй Form.xml из JSON-определения. DSL-файл: form-def.json. Выходной файл: output/Form.xml. Форма должна содержать группу с полями НачДата и КонДата и кнопку Сформировать.",
+      "expected_output": "Form.xml сгенерирован с элементами Group, содержащей два поля дат, и кнопкой команды.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/forms/scripts/create.py на Linux или powershell.exe -NoProfile -File <skills-root>/forms/scripts/create.ps1 на Windows вызван с правильными путями",
+        "Файл Form.xml создан в output/Form.xml",
+        "XML содержит элемент типа Group (или UsualGroup)",
+        "Присутствуют элементы для полей НачДата и КонДата",
+        "Присутствует элемент кнопки (Button или CommandBarButton)",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/forms/scripts/create.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/forms/scripts/create.ps1"
+      ],
+      "mode": "create"
+    },
+    {
+      "id": 6,
+      "prompt": "Создай управляемую форму списка справочника Контрагенты. DSL в файле catalog-list.json, результат нужен в Forms/ФормаСписка/Form.xml.",
+      "expected_output": "Form.xml для формы списка: содержит элемент таблицы (Table) с привязкой к основному реквизиту Список, правильную структуру XML.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/forms/scripts/create.py на Linux или powershell.exe -NoProfile -File <skills-root>/forms/scripts/create.ps1 на Windows вызван корректно",
+        "Файл Form.xml создан в Forms/ФормаСписка/Form.xml",
+        "XML содержит элемент Table (или DynamicList) для списка",
+        "XML корректно сформирован — открывающие теги закрыты, нет незакрытых элементов",
+        "Файл начинается с XML-декларации или корневого элемента Form",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/forms/scripts/create.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/forms/scripts/create.ps1"
+      ],
+      "mode": "create"
+    },
+    {
+      "id": 7,
+      "prompt": "Покажи структуру формы документа РеализацияТоваровУслуг. Файл формы: src/Documents/РеализацияТоваровУслуг/Forms/ФормаДокумента/Ext/Form.xml",
+      "expected_output": "Компактная сводка формы: дерево элементов с типами и привязками, список атрибутов с типами, команды и обработчики событий формы.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/forms/scripts/inspect-form.py на Linux или powershell.exe -NoProfile -File <skills-root>/forms/scripts/inspect-form.ps1 на Windows вызван с параметром -FormPath",
+        "Вывод содержит заголовок '=== Form: ФормаДокумента' с именем объекта",
+        "Вывод содержит секцию 'Elements:' с деревом UI-элементов (символы ├─, └─)",
+        "Вывод содержит секцию 'Attributes:' со списком реквизитов и их типами",
+        "Вывод содержит секцию 'Commands:' или 'Events:'",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/forms/scripts/inspect-form.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/forms/scripts/inspect-form.ps1"
+      ],
+      "mode": "inspect"
+    },
+    {
+      "id": 8,
+      "prompt": "Мне нужно понять, какие группы есть на форме обработки ПодборТоваров и куда лучше вставить новое поле. Посмотри форму: <project-root>/1C/Config/src/DataProcessors/ПодборТоваров/Forms/Форма/Ext/Form.xml",
+      "expected_output": "Вывод содержит дерево групп формы с типами ориентации, помогающий определить место для вставки нового поля.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/forms/scripts/inspect-form.py на Linux или powershell.exe -NoProfile -File <skills-root>/forms/scripts/inspect-form.ps1 на Windows вызван с параметром -FormPath",
+        "Вывод содержит элементы типа [Group:H], [Group:V] или [Group:AH] с именами групп",
+        "Вывод содержит привязки элементов через '->'",
+        "Количество строк вывода не превышает лимит 150 (или выводится сообщение о пагинации)",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/forms/scripts/inspect-form.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/forms/scripts/inspect-form.ps1"
+      ],
+      "mode": "inspect"
+    },
+    {
+      "id": 9,
+      "prompt": "Покажи атрибуты и параметры формы списка справочника Номенклатура. Интересуют DynamicList и фильтры. Форма: src/Catalogs/Номенклатура/Forms/ФормаСписка/Ext/Form.xml",
+      "expected_output": "Вывод содержит секции Attributes и Parameters с типами, в том числе DynamicList с MainTable.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/forms/scripts/inspect-form.py на Linux или powershell.exe -NoProfile -File <skills-root>/forms/scripts/inspect-form.ps1 на Windows вызван с параметром -FormPath",
+        "Вывод содержит секцию 'Attributes:' с атрибутом типа DynamicList",
+        "Атрибут DynamicList показывает MainTable через '->'",
+        "Вывод содержит секцию 'Parameters:' если форма имеет параметры",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/forms/scripts/inspect-form.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/forms/scripts/inspect-form.ps1"
+      ],
+      "mode": "inspect"
+    },
+    {
+      "id": 10,
+      "prompt": "В форму документа ПоступлениеТоваров добавь поле ввода Склад (привязка Object.Склад) в группу HeaderGroup после поля Контрагент. Форма лежит в src/Documents/ПоступлениеТоваров/Forms/ФормаДокумента/Ext/Form.xml",
+      "expected_output": "Скрипт python3 <skills-root>/forms/scripts/edit.py на Linux или powershell.exe -NoProfile -File <skills-root>/forms/scripts/edit.ps1 на Windows вызван, элемент InputField Склад добавлен в HeaderGroup после Контрагент, сформированы companion-элементы ContextMenu и ExtendedTooltip.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/forms/scripts/edit.py на Linux или powershell.exe -NoProfile -File <skills-root>/forms/scripts/edit.ps1 на Windows вызван с параметрами -FormPath и -JsonPath",
+        "В выводе присутствует строка '+ [Input] Склад -> Object.Склад'",
+        "Позиция вставки: into HeaderGroup, after Контрагент",
+        "Сгенерированы companion-элементы ContextMenu и ExtendedTooltip для Склад",
+        "Вывод содержит 'Run forms:validate to verify'",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/forms/scripts/edit.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/forms/scripts/edit.ps1"
+      ],
+      "mode": "edit"
+    },
+    {
+      "id": 11,
+      "prompt": "Добавь в форму обработки ЗакрытиеМесяца атрибут ИтоговаяСумма типа decimal(15,2) и команду ПересчитатьИтоги с обработчиком ПересчитатьИтогиВыполнить. Форма: <project-root>/Config/src/DataProcessors/ЗакрытиеМесяца/Forms/Форма/Ext/Form.xml",
+      "expected_output": "Атрибут ИтоговаяСумма типа decimal(15,2) и команда ПересчитатьИтоги добавлены в форму обработки.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/forms/scripts/edit.py на Linux или powershell.exe -NoProfile -File <skills-root>/forms/scripts/edit.ps1 на Windows вызван с параметром -FormPath",
+        "В выводе присутствует строка '+ ИтоговаяСумма: decimal(15,2)'",
+        "В выводе присутствует строка с командой ПересчитатьИтоги -> ПересчитатьИтогиВыполнить",
+        "Вывод содержит счётчик '1 attribute(s)' и '1 command'",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/forms/scripts/edit.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/forms/scripts/edit.ps1"
+      ],
+      "mode": "edit"
+    },
+    {
+      "id": 12,
+      "prompt": "В таблицу Товары формы заказа клиента добавь колонку-чекбокс Выбран (check, привязка Object.Товары.Выбран) с событием OnChange. Форма: <project-root>/Projects/Sales/src/Documents/ЗаказКлиента/Forms/ФормаДокумента/Ext/Form.xml",
+      "expected_output": "Элемент CheckBoxField Выбран добавлен как колонка таблицы Товары с обработчиком события OnChange.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/forms/scripts/edit.py на Linux или powershell.exe -NoProfile -File <skills-root>/forms/scripts/edit.ps1 на Windows вызван с корректными параметрами -FormPath и -JsonPath",
+        "В выводе присутствует строка '+ [Check] Выбран -> Object.Товары.Выбран {OnChange}'",
+        "Указана позиция вставки into Товары",
+        "Сгенерированы companion-элементы ContextMenu и ExtendedTooltip для Выбран",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/forms/scripts/edit.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/forms/scripts/edit.ps1"
+      ],
+      "mode": "edit"
+    },
+    {
+      "id": 13,
+      "prompt": "Удали форму ФормаПодбора из справочника Номенклатура. Исходники в папке src/.",
+      "expected_output": "Форма ФормаПодбора удалена: удалён файл-метаданные Forms/ФормаПодбора.xml и каталог Forms/ФормаПодбора/, из XML объекта убрана регистрация формы.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/forms/scripts/remove.py на Linux или powershell.exe -NoProfile -File <skills-root>/forms/scripts/remove.ps1 на Windows вызван с параметрами -ObjectName 'Номенклатура' и -FormName 'ФормаПодбора'",
+        "Удалён файл src/Номенклатура/Forms/ФормаПодбора.xml",
+        "Удалён каталог src/Номенклатура/Forms/ФормаПодбора/ рекурсивно",
+        "Элемент <Form> с именем ФормаПодбора убран из ChildObjects в Номенклатура.xml",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/forms/scripts/remove.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/forms/scripts/remove.ps1"
+      ],
+      "mode": "remove"
+    },
+    {
+      "id": 14,
+      "prompt": "Нужно удалить устаревшую форму ФормаСпискаУстаревшая из документа ЗаказПокупателя. Исходники лежат в <project-root>/Projects/Config/src/",
+      "expected_output": "Форма ФормаСпискаУстаревшая удалена из объекта ЗаказПокупателя, файлы формы удалены, XML объекта обновлён.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/forms/scripts/remove.py на Linux или powershell.exe -NoProfile -File <skills-root>/forms/scripts/remove.ps1 на Windows вызван с параметром -SrcDir '<project-root>/Projects/Config/src'",
+        "Удалён файл <project-root>/Projects/Config/src/ЗаказПокупателя/Forms/ФормаСпискаУстаревшая.xml",
+        "Удалён каталог <project-root>/Projects/Config/src/ЗаказПокупателя/Forms/ФормаСпискаУстаревшая/",
+        "Регистрация формы удалена из ЗаказПокупателя.xml",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/forms/scripts/remove.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/forms/scripts/remove.ps1"
+      ],
+      "mode": "remove"
+    },
+    {
+      "id": 15,
+      "prompt": "Удали форму ФормаЭлемента из обработки ЗагрузкаДанных. Это была DefaultForm объекта. Исходники в src/.",
+      "expected_output": "Форма удалена, а значение DefaultForm в XML объекта очищено, поскольку удалённая форма являлась формой по умолчанию.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/forms/scripts/remove.py на Linux или powershell.exe -NoProfile -File <skills-root>/forms/scripts/remove.ps1 на Windows вызван с параметрами -ObjectName 'ЗагрузкаДанных' и -FormName 'ФормаЭлемента'",
+        "Файлы формы ФормаЭлемента удалены (xml и директория)",
+        "Значение DefaultForm очищено в XML объекта ЗагрузкаДанных.xml",
+        "Регистрация формы убрана из ChildObjects",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/forms/scripts/remove.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/forms/scripts/remove.ps1"
+      ],
+      "mode": "remove"
+    },
+    {
+      "id": 16,
+      "prompt": "Проверь корректность формы документа ПоступлениеТоваров после того, как я добавил туда несколько полей вручную. Форма: src/Documents/ПоступлениеТоваров/Forms/ФормаДокумента/Ext/Form.xml",
+      "expected_output": "Все 11 проверок пройдены: уникальность ID элементов, атрибутов и команд, наличие companion-элементов, корректность DataPath и ссылок на команды, один MainAttribute.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/forms/scripts/validate.py на Linux или powershell.exe -NoProfile -File <skills-root>/forms/scripts/validate.ps1 на Windows вызван с параметром -FormPath",
+        "Вывод содержит строки '[OK]' для каждой из проверок",
+        "Вывод содержит итоговую строку 'All checks passed'",
+        "Вывод содержит статистику: количество элементов, атрибутов, команд",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/forms/scripts/validate.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/forms/scripts/validate.ps1"
+      ],
+      "mode": "validate"
+    },
+    {
+      "id": 17,
+      "prompt": "После ручного редактирования Form.xml формы обработки я случайно продублировал ID элементов. Запусти валидацию и найди ошибки. Форма: <project-root>/Config/src/DataProcessors/МояОбработка/Forms/Форма/Ext/Form.xml",
+      "expected_output": "Валидация обнаружила ошибку дублирования ID элементов, вывод содержит [ERROR] с указанием конкретных дублированных значений.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/forms/scripts/validate.py на Linux или powershell.exe -NoProfile -File <skills-root>/forms/scripts/validate.ps1 на Windows вызван с параметром -FormPath",
+        "Вывод содержит строку '[ERROR]' для проверки уникальности ID элементов",
+        "Код возврата скрипта равен 1 (ошибки найдены)",
+        "Вывод указывает на конкретную проверку: 'Unique element IDs'",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/forms/scripts/validate.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/forms/scripts/validate.ps1"
+      ],
+      "mode": "validate"
+    },
+    {
+      "id": 18,
+      "prompt": "Сгенерировал форму справочника Контрагенты через forms:create. Теперь нужно убедиться, что все DataPath ссылаются на существующие атрибуты, и нет ошибок в ссылках на команды. Форма: src/Catalogs/Контрагенты/Forms/ФормаЭлемента/Ext/Form.xml",
+      "expected_output": "Валидация проверила DataPath-ссылки и CommandName-ссылки, все проверки пройдены без ошибок.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/forms/scripts/validate.py на Linux или powershell.exe -NoProfile -File <skills-root>/forms/scripts/validate.ps1 на Windows вызван с параметром -FormPath",
+        "Вывод содержит строку '[OK]    DataPath references:' с количеством проверенных путей",
+        "Вывод содержит строку '[OK]    Command references:'",
+        "Вывод содержит '[OK]    MainAttribute: 1 main attribute'",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/forms/scripts/validate.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/forms/scripts/validate.ps1"
+      ],
+      "mode": "validate"
+    },
+    {
+      "id": 19,
+      "prompt": "Мне нужно создать форму документа ПоступлениеТоваров, но я не знаю как правильно расположить поля шапки, табличную часть и итоги. Покажи стандартный паттерн.",
+      "expected_output": "Показан паттерн Document Form с описанием структуры: двухколоночная шапка, Pages с таблицей товаров, футер с итогами, рекомендуемые события и соглашения об именовании.",
+      "expectations": [
+        "Показан архетип 'Document Form' с текстовой схемой структуры (Header, Pages, Footer)",
+        "Упомянуты события OnCreateAtServer, OnReadAtServer, BeforeWriteAtServer",
+        "Показаны соглашения об именовании групп: HeaderGroup, HeaderLeftGroup, FooterGroup, TotalsGroup",
+        "Показаны примеры именования элементов для таблицы: [Table][Field]"
+      ],
+      "mode": "patterns"
+    },
+    {
+      "id": 20,
+      "prompt": "Создаю форму обработки для массовой замены цен. Покажи паттерн формы обработки: какие группы, кнопки, события стандартные для такого типа форм.",
+      "expected_output": "Показан паттерн Data Processor Form с зонами параметров, рабочей областью и кнопками действий, включая defaultButton и кнопку Close.",
+      "expectations": [
+        "Показан архетип 'Data Processor Form' со структурой Parameters / Working area / Action buttons",
+        "Упомянуто свойство windowOpeningMode=LockOwnerWindow для диалогов",
+        "Показана кнопка закрытия через stdCommand: Close",
+        "Упомянуто событие OnCreateAtServer"
+      ],
+      "mode": "patterns"
+    },
+    {
+      "id": 21,
+      "prompt": "Как правильно сделать форму-мастер (визард) в 1С? Нужно провести пользователя через 3 шага: ввод параметров, предпросмотр, результат.",
+      "expected_output": "Показан паттерн Wizard с Pages по шагам, кнопками Back/Next/Execute, рекомендациями по windowOpeningMode и отсутствию стандартной командной панели.",
+      "expectations": [
+        "Показан архетип 'Wizard' со структурой Pages (Step1, Step2, Step3)",
+        "Показаны кнопки Back, Next (defaultButton), Execute, Close",
+        "Упомянуты свойства windowOpeningMode=LockOwnerWindow и commandBarLocation=None",
+        "Показан JSON DSL-пример или текстовая схема мастера"
+      ],
+      "mode": "patterns"
+    }
+  ]
+}

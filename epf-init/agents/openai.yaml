@@ -1,6 +1,0 @@
-interface:
-  display_name: "EPF Init"
-  short_description: "Создать пустую внешнюю обработку 1С (scaffold XML-исходников)"
-  default_prompt: "Use $epf-init for this task."
-policy:
-  allow_implicit_invocation: true

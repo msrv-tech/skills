@@ -6,7 +6,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-VALIDATOR = ROOT / "interface-validate" / "scripts" / "interface-validate.py"
+VALIDATOR = ROOT / "access-and-navigation" / "scripts" / "interface-validate.py"
 
 
 class InterfaceValidatorTests(unittest.TestCase):

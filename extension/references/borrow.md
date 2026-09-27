@@ -1,0 +1,111 @@
+# borrow — Заимствование объектов из конфигурации
+
+<!-- docs-evals:python-entrypoint:start -->
+## Запуск скрипта
+
+Основной запуск на Linux выполняется Python 3 с аргументами CLI скрипта:
+
+```bash
+python3 "<skills-root>/extension/scripts/borrow.py" -ConfigPath <project-root>/src -ExtensionPath <project-root>/extension
+```
+
+Windows PowerShell остаётся отдельным вариантом запуска:
+
+```powershell
+powershell.exe -NoProfile -File "<skills-root>/extension/scripts/borrow.ps1" -ConfigPath <project-root>/src -ExtensionPath <project-root>/extension
+```
+<!-- docs-evals:python-entrypoint:end -->
+
+Заимствует объекты из основной конфигурации в расширение. Создаёт XML-файлы с `ObjectBelonging=Adopted` и `ExtendedConfigurationObject`, добавляет запись в ChildObjects расширения.
+
+## Предусловие
+
+Расширение должно быть создано (`/extension:create`) и содержать валидный `Configuration.xml`.
+
+### Авто-определение ConfigPath
+
+Если пользователь не указал `-ConfigPath` — попробуй определить автоматически:
+1. Прочитай `.v8-project.json` из корня проекта
+2. Разреши целевую базу (по имени, ветке или `default` — алгоритм из `/database:project-settings`)
+3. Если у базы есть поле `configSrc` — используй как `-ConfigPath`
+4. Если `configSrc` нет — спроси у пользователя
+
+## Параметры
+
+| Параметр | Описание |
+|----------|----------|
+| `ExtensionPath` | Путь к каталогу расширения (обязат.) |
+| `ConfigPath` | Путь к конфигурации-источнику (обязат.) |
+| `Object` | Что заимствовать (обязат.), batch через `;;` |
+| `BorrowMainAttribute` | Заимствовать основной реквизит формы. Без параметра — не заимствует. `Form` — реквизиты, используемые на форме. `All` — все реквизиты объекта. Требует форму в -Object |
+
+## Формат -Object
+
+- `Catalog.Контрагенты` — справочник
+- `CommonModule.РаботаСФайлами` — общий модуль
+- `Document.РеализацияТоваров` — документ
+- `Enum.ВидыОплат` — перечисление
+- `Catalog.Контрагенты.Form.ФормаЭлемента` — форма объекта (заимствование формы)
+- `Catalog.X ;; CommonModule.Y ;; Enum.Z` — несколько объектов
+Поддерживаются все 44 типа объектов конфигурации.
+
+### Заимствование форм
+
+Формат `Тип.Имя.Form.ИмяФормы` заимствует форму конкретного объекта. Если родительский объект ещё не заимствован — он будет заимствован автоматически.
+
+Создаётся:
+1. **Метаданные формы** — `Forms/ИмяФормы.xml` с `ObjectBelonging=Adopted`, `FormType=Managed`
+2. **Form.xml** — `Forms/ИмяФормы/Ext/Form.xml` с копией исходной формы + `<BaseForm>` (начальное состояние)
+3. **Module.bsl** — пустой файл `Forms/ИмяФормы/Ext/Form/Module.bsl`
+4. **Регистрация** — `<Form>` в ChildObjects родительского объекта
+
+### Заимствование основного реквизита формы (-BorrowMainAttribute)
+
+**Когда нужно**: пользователь хочет добавить новый реквизит в существующий объект конфигурации и вывести его на заимствованную форму. Без `-BorrowMainAttribute` форма заимствуется "пустой" — только визуальные элементы, без привязки к данным объекта. С `-BorrowMainAttribute` форма сохраняет привязки к реквизитам объекта (DataPath), что позволяет затем добавить на неё новые элементы через `/forms:edit`.
+
+**Два режима**:
+- `Form` (по умолчанию) — заимствует только те реквизиты объекта, которые уже выведены на форму. Оптимальный выбор для большинства случаев
+- `All` — заимствует все реквизиты и табличные части объекта. Используй если планируешь выводить на форму реквизиты, которых на ней ещё нет
+
+**Типовой сценарий** (добавление реквизита + вывод на форму):
+1. `/extension:borrow` с `-BorrowMainAttribute` — заимствовать форму с реквизитами
+2. `/metadata:edit` — добавить новый реквизит в объект расширения
+3. `/forms:edit` — вывести реквизит на заимствованную форму
+
+**Защита существующих данных**: если зависимый объект уже заимствован с содержимым (реквизитами, формами) — скрипт не перезаписывает его, а добавляет только недостающее.
+
+## Команда
+
+```powershell
+powershell.exe -NoProfile -File <skills-root>/extension/scripts/borrow.ps1 -ExtensionPath src -ConfigPath C:\cfsrc\erp -Object "Catalog.Контрагенты"
+```
+
+## Примеры
+
+```powershell
+# Заимствовать один объект
+... -ExtensionPath src -ConfigPath C:\cfsrc\erp -Object "Catalog.Контрагенты"
+
+# Заимствовать форму (автоматически заимствует родительский объект)
+... -ExtensionPath src -ConfigPath C:\cfsrc\erp -Object "Catalog.Контрагенты.Form.ФормаЭлемента"
+
+# Несколько объектов за раз
+... -ExtensionPath src -ConfigPath C:\cfsrc\erp -Object "Catalog.Контрагенты ;; CommonModule.ОбщийМодуль ;; Enum.ВидыОплат"
+
+# Заимствовать форму с основным реквизитом (реквизиты по DataPath формы)
+... -ExtensionPath src -ConfigPath C:\cfsrc\erp -Object "Catalog.Номенклатура.Form.ФормаЭлемента" -BorrowMainAttribute
+
+# Заимствовать форму с ВСЕМИ реквизитами объекта
+... -ExtensionPath src -ConfigPath C:\cfsrc\erp -Object "Catalog.Номенклатура.Form.ФормаЭлемента" -BorrowMainAttribute All
+```
+
+## Верификация
+
+```
+/extension:validate <ExtensionPath>
+```
+
+
+## Реестр тестовых баз
+
+Перед любой операцией с ИБ используй скил `test-databases`: на Linux запусти `python3 <skills-root>/test-databases/scripts/resolve-registry.py`, а на Windows — `resolve-registry.ps1` через PowerShell; затем выбери запись по правилам этого скила. Не определяй путь к реестру самостоятельно, не дублируй его структуру и не подключайся к базе вне реестра. `.v8-project.json` используй только для вспомогательных полей, которых нет в выбранной записи.

@@ -1,0 +1,355 @@
+{
+  "skill_name": "database",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Создай новую файловую информационную базу по пути <project-root>/Bases/TestDB.",
+      "expected_output": "Скрипт python3 <skills-root>/database/scripts/create.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/create.ps1 на Windows запущен с параметром -InfoBasePath <project-root>/Bases/TestDB. База создана, лог показан пользователю. Предложено зарегистрировать базу в .v8-project.json.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/database/scripts/create.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/create.ps1 на Windows вызван с параметром -InfoBasePath <project-root>/Bases/TestDB",
+        "Лог-файл прочитан и содержимое показано пользователю",
+        "Предложена регистрация базы через /database:project-settings add",
+        "Путь к платформе 1cv8/1cv8.exe разрешён из явного параметра, переменной окружения или стандартного каталога текущей ОС",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/database/scripts/create.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/database/scripts/create.ps1"
+      ],
+      "mode": "create"
+    },
+    {
+      "id": 2,
+      "prompt": "Создай серверную базу MyApp_Test на сервере srv01. Добавь её в список баз с именем «Тестовая MyApp».",
+      "expected_output": "Скрипт python3 <skills-root>/database/scripts/create.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/create.ps1 на Windows запущен с параметрами -InfoBaseServer srv01, -InfoBaseRef MyApp_Test, -AddToList, -ListName \"Тестовая MyApp\".",
+      "expectations": [
+        "Скрипт python3 <skills-root>/database/scripts/create.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/create.ps1 на Windows вызван с параметром -InfoBaseServer srv01",
+        "Скрипт python3 <skills-root>/database/scripts/create.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/create.ps1 на Windows вызван с параметром -InfoBaseRef MyApp_Test",
+        "Скрипт python3 <skills-root>/database/scripts/create.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/create.ps1 на Windows вызван с параметром -AddToList",
+        "Скрипт python3 <skills-root>/database/scripts/create.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/create.ps1 на Windows вызван с параметром -ListName \"Тестовая MyApp\"",
+        "Лог-файл прочитан и результат показан пользователю",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/database/scripts/create.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/database/scripts/create.ps1"
+      ],
+      "mode": "create"
+    },
+    {
+      "id": 3,
+      "prompt": "Создай базу <project-root>/Bases/DevDB из шаблона CF-файла <project-root>/Templates/erp.cf.",
+      "expected_output": "Скрипт python3 <skills-root>/database/scripts/create.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/create.ps1 на Windows запущен с параметрами -InfoBasePath <project-root>/Bases/DevDB и -UseTemplate <project-root>/Templates/erp.cf. Пользователь предупреждён что конфигурация будет загружена из шаблона.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/database/scripts/create.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/create.ps1 на Windows вызван с параметром -InfoBasePath <project-root>/Bases/DevDB",
+        "Скрипт python3 <skills-root>/database/scripts/create.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/create.ps1 на Windows вызван с параметром -UseTemplate <project-root>/Templates/erp.cf",
+        "Пользователь предупреждён что конфигурация из шаблона CF будет загружена в новую базу",
+        "Лог-файл прочитан и результат показан пользователю",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/database/scripts/create.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/database/scripts/create.ps1"
+      ],
+      "mode": "create"
+    },
+    {
+      "id": 4,
+      "prompt": "Покажи список баз данных проекта",
+      "expected_output": "Таблица с базами данных из .v8-project.json: ID, имя, тип, путь/сервер, признак базы по умолчанию",
+      "expectations": [
+        "Прочитан файл .v8-project.json из корня проекта",
+        "Ответ содержит таблицу или список с колонками ID, Имя, Тип, Путь/Сервер",
+        "Отмечена база по умолчанию (поле default из конфига)",
+        "Для файловых баз показан путь, для серверных — адрес сервера и имя базы"
+      ],
+      "mode": "project-settings"
+    },
+    {
+      "id": 5,
+      "prompt": "Добавь базу данных: имя — Тестовая, тип — файловая, путь <project-root>/Bases/MyApp_Test, пользователь Admin",
+      "expected_output": "В файл .v8-project.json добавлена новая запись базы данных с указанными параметрами",
+      "expectations": [
+        "Задан вопрос пользователю (AskUserQuestion) для уточнения недостающих параметров (id, aliases, branches) если они не указаны",
+        "В .v8-project.json добавлен новый объект в массив databases",
+        "Поля id, name, type, path, user заполнены корректно",
+        "Если это первая база — установлена как default"
+      ],
+      "mode": "project-settings"
+    },
+    {
+      "id": 6,
+      "prompt": "Удали базу test из реестра проекта",
+      "expected_output": "Запись с id=\"test\" удалена из массива databases в .v8-project.json",
+      "expectations": [
+        "Прочитан файл .v8-project.json",
+        "Из массива databases удалён элемент с id=\"test\"",
+        "Если удаляемая база была default — задан вопрос о новой базе по умолчанию",
+        "Обновлённый .v8-project.json сохранён"
+      ],
+      "mode": "project-settings"
+    },
+    {
+      "id": 7,
+      "prompt": "Запусти базу dev в режиме 1С:Предприятие",
+      "expected_output": "Скрипт python3 <skills-root>/database/scripts/run.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/run.ps1 на Windows вызван с параметрами подключения к базе dev. 1С запущена в фоне.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/database/scripts/run.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/run.ps1 на Windows вызван с параметрами подключения к базе dev из .v8-project.json",
+        "Параметр -InfoBasePath или -InfoBaseServer/-InfoBaseRef передан корректно",
+        "1С запущена без ожидания (Start-Process без -Wait) — управление возвращено сразу",
+        "Если user задан в .v8-project.json — передан параметр -UserName",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/database/scripts/run.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/database/scripts/run.ps1"
+      ],
+      "mode": "run"
+    },
+    {
+      "id": 8,
+      "prompt": "Открой базу разработки и запусти обработку <project-root>/epf/НастройкаПрав.epf",
+      "expected_output": "Скрипт python3 <skills-root>/database/scripts/run.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/run.ps1 на Windows вызван с параметром -Execute и путём к EPF-файлу",
+      "expectations": [
+        "Скрипт python3 <skills-root>/database/scripts/run.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/run.ps1 на Windows вызван с параметром -Execute \"<project-root>/epf/НастройкаПрав.epf\"",
+        "База определена автоматически из текущей Git-ветки или поля default в .v8-project.json",
+        "Параметры подключения к базе переданы корректно",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/database/scripts/run.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/database/scripts/run.ps1"
+      ],
+      "mode": "run"
+    },
+    {
+      "id": 9,
+      "prompt": "Открой серверную базу srv01/MyApp_Prod с навигационной ссылкой e1cib/data/Справочник.Номенклатура, пользователь Admin",
+      "expected_output": "Скрипт python3 <skills-root>/database/scripts/run.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/run.ps1 на Windows вызван с параметрами -InfoBaseServer, -InfoBaseRef, -UserName и -URL",
+      "expectations": [
+        "Скрипт python3 <skills-root>/database/scripts/run.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/run.ps1 на Windows вызван с параметрами -InfoBaseServer \"srv01\" и -InfoBaseRef \"MyApp_Prod\"",
+        "Передан параметр -UserName \"Admin\"",
+        "Передан параметр -URL \"e1cib/data/Справочник.Номенклатура\"",
+        "1С запущена в фоне без ожидания",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/database/scripts/run.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/database/scripts/run.ps1"
+      ],
+      "mode": "run"
+    },
+    {
+      "id": 10,
+      "prompt": "Примени конфигурацию к базе данных dev",
+      "expected_output": "Скрипт python3 <skills-root>/database/scripts/update.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/update.ps1 на Windows вызван с параметрами подключения к базе dev. База обновлена.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/database/scripts/update.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/update.ps1 на Windows вызван с параметрами подключения к базе dev из .v8-project.json",
+        "Параметр -InfoBasePath или -InfoBaseServer/-InfoBaseRef передан корректно",
+        "После выполнения прочитан лог и показан результат",
+        "Если user задан в .v8-project.json — передан параметр -UserName",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/database/scripts/update.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/database/scripts/update.ps1"
+      ],
+      "mode": "update"
+    },
+    {
+      "id": 11,
+      "prompt": "Обнови конфигурацию на серверной базе srv01/MyApp динамически, пользователь Admin пароль secret",
+      "expected_output": "Скрипт python3 <skills-root>/database/scripts/update.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/update.ps1 на Windows вызван с параметрами серверного подключения и флагом -Dynamic \"+\"",
+      "expectations": [
+        "Скрипт python3 <skills-root>/database/scripts/update.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/update.ps1 на Windows вызван с параметрами -InfoBaseServer \"srv01\" и -InfoBaseRef \"MyApp\"",
+        "Передан параметр -Dynamic \"+\" для динамического обновления",
+        "Переданы параметры -UserName \"Admin\" и -Password \"secret\"",
+        "После выполнения прочитан лог и показан результат",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/database/scripts/update.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/database/scripts/update.ps1"
+      ],
+      "mode": "update"
+    },
+    {
+      "id": 12,
+      "prompt": "Обнови расширение МоёРасширение в базе dev",
+      "expected_output": "Скрипт python3 <skills-root>/database/scripts/update.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/update.ps1 на Windows вызван с параметром -Extension \"МоёРасширение\" и подключением к базе dev",
+      "expectations": [
+        "Скрипт python3 <skills-root>/database/scripts/update.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/update.ps1 на Windows вызван с параметром -Extension \"МоёРасширение\"",
+        "Параметры подключения к базе dev взяты из .v8-project.json",
+        "После выполнения прочитан лог и показан результат",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/database/scripts/update.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/database/scripts/update.ps1"
+      ],
+      "mode": "update"
+    },
+    {
+      "id": 13,
+      "prompt": "Загрузи конфигурацию из XML-исходников в папке <project-root>/WS/MyApp/cfsrc в базу dev",
+      "expected_output": "Скрипт python3 <skills-root>/database/scripts/load-xml.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/load-xml.ps1 на Windows вызван с параметрами -ConfigDir и подключением к базе dev в режиме Full",
+      "expectations": [
+        "Запрошено подтверждение у пользователя (полная загрузка заменяет всю конфигурацию)",
+        "Скрипт python3 <skills-root>/database/scripts/load-xml.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/load-xml.ps1 на Windows вызван с параметром -ConfigDir \"<project-root>/WS/MyApp/cfsrc\"",
+        "Параметр -Mode Full применён (явно или по умолчанию)",
+        "Параметры подключения к базе dev взяты из .v8-project.json",
+        "После выполнения предложено выполнить /database:update",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/database/scripts/load-xml.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/database/scripts/load-xml.ps1"
+      ],
+      "mode": "load-xml"
+    },
+    {
+      "id": 14,
+      "prompt": "Загрузи частично только справочник Номенклатура и его модуль объекта из исходников cfsrc",
+      "expected_output": "Скрипт python3 <skills-root>/database/scripts/load-xml.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/load-xml.ps1 на Windows вызван с параметром -Mode Partial и списком файлов справочника Номенклатура",
+      "expectations": [
+        "Скрипт python3 <skills-root>/database/scripts/load-xml.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/load-xml.ps1 на Windows вызван с параметром -Mode Partial",
+        "Передан параметр -Files содержащий \"Catalogs/Номенклатура.xml\"",
+        "Параметр -Files содержит путь к модулю объекта справочника",
+        "После выполнения предложено выполнить /database:update",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/database/scripts/load-xml.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/database/scripts/load-xml.ps1"
+      ],
+      "mode": "load-xml"
+    },
+    {
+      "id": 15,
+      "prompt": "Загрузи расширение МоёРасширение из XML-исходников в папке ext_src в файловую базу <project-root>/Bases/MyApp",
+      "expected_output": "Скрипт python3 <skills-root>/database/scripts/load-xml.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/load-xml.ps1 на Windows вызван с параметрами -ConfigDir, -InfoBasePath и -Extension",
+      "expectations": [
+        "Скрипт python3 <skills-root>/database/scripts/load-xml.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/load-xml.ps1 на Windows вызван с параметром -Extension \"МоёРасширение\"",
+        "Передан параметр -InfoBasePath \"<project-root>/Bases/MyApp\"",
+        "Передан параметр -ConfigDir указывающий на ext_src",
+        "После выполнения прочитан лог и показан результат",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/database/scripts/load-xml.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/database/scripts/load-xml.ps1"
+      ],
+      "mode": "load-xml"
+    },
+    {
+      "id": 16,
+      "prompt": "Выгрузи конфигурацию базы <project-root>/Bases/MyDB полностью в XML в папку <project-root>/WS/cfsrc. Платформа 8.3.25.1257, пользователь Admin.",
+      "expected_output": "Скрипт python3 <skills-root>/database/scripts/dump-xml.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/dump-xml.ps1 на Windows запущен с параметрами -InfoBasePath <project-root>/Bases/MyDB, -UserName Admin, -ConfigDir <project-root>/WS/cfsrc, -Mode Full. XML-файлы всех объектов выгружены в указанный каталог.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/database/scripts/dump-xml.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/dump-xml.ps1 на Windows вызван с параметром -InfoBasePath <project-root>/Bases/MyDB",
+        "Скрипт python3 <skills-root>/database/scripts/dump-xml.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/dump-xml.ps1 на Windows вызван с параметром -ConfigDir <project-root>/WS/cfsrc",
+        "Скрипт python3 <skills-root>/database/scripts/dump-xml.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/dump-xml.ps1 на Windows вызван с параметром -Mode Full",
+        "Скрипт python3 <skills-root>/database/scripts/dump-xml.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/dump-xml.ps1 на Windows вызван с параметром -UserName Admin",
+        "Лог-файл прочитан и результат показан пользователю",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/database/scripts/dump-xml.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/database/scripts/dump-xml.ps1"
+      ],
+      "mode": "dump-xml"
+    },
+    {
+      "id": 17,
+      "prompt": "Выгрузи только изменённые объекты из базы dev (из .v8-project.json) в папку src/config.",
+      "expected_output": "База dev разрешена через .v8-project.json. Скрипт python3 <skills-root>/database/scripts/dump-xml.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/dump-xml.ps1 на Windows запущен с параметром -Mode Changes, выгружены только объекты изменённые с последней выгрузки (по ConfigDumpInfo.xml).",
+      "expectations": [
+        "Прочитан файл .v8-project.json для разрешения базы по имени dev",
+        "Скрипт python3 <skills-root>/database/scripts/dump-xml.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/dump-xml.ps1 на Windows вызван с параметром -Mode Changes",
+        "Скрипт python3 <skills-root>/database/scripts/dump-xml.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/dump-xml.ps1 на Windows вызван с параметром -ConfigDir src/config",
+        "Лог-файл прочитан и результат инкрементальной выгрузки показан пользователю",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/database/scripts/dump-xml.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/database/scripts/dump-xml.ps1"
+      ],
+      "mode": "dump-xml"
+    },
+    {
+      "id": 18,
+      "prompt": "Выгрузи только справочник Номенклатура и документ РеализацияТоваровУслуг из базы <project-root>/Bases/DevDB в папку src/. Пользователь Admin.",
+      "expected_output": "Скрипт python3 <skills-root>/database/scripts/dump-xml.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/dump-xml.ps1 на Windows запущен с параметрами -Mode Partial, -Objects \"Справочник.Номенклатура,Документ.РеализацияТоваровУслуг\". Выгружены только указанные объекты.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/database/scripts/dump-xml.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/dump-xml.ps1 на Windows вызван с параметром -Mode Partial",
+        "Скрипт python3 <skills-root>/database/scripts/dump-xml.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/dump-xml.ps1 на Windows вызван с параметром -Objects содержащим Справочник.Номенклатура и Документ.РеализацияТоваровУслуг",
+        "Скрипт python3 <skills-root>/database/scripts/dump-xml.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/dump-xml.ps1 на Windows вызван с параметром -InfoBasePath <project-root>/Bases/DevDB",
+        "Лог-файл прочитан и результат частичной выгрузки показан пользователю",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/database/scripts/dump-xml.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/database/scripts/dump-xml.ps1"
+      ],
+      "mode": "dump-xml"
+    },
+    {
+      "id": 19,
+      "prompt": "Загрузи конфигурацию из файла <project-root>/backup/УТ_2025.cf в базу dev",
+      "expected_output": "Скрипт python3 <skills-root>/database/scripts/load-cf.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/load-cf.ps1 на Windows вызван с параметрами подключения к базе dev и путём к CF-файлу. После выполнения показан результат из лога.",
+      "expectations": [
+        "Запрошено подтверждение у пользователя перед загрузкой (так как операция полностью заменяет конфигурацию)",
+        "Скрипт python3 <skills-root>/database/scripts/load-cf.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/load-cf.ps1 на Windows вызван с параметром -InputFile \"<project-root>/backup/УТ_2025.cf\"",
+        "Параметры подключения к базе dev взяты из .v8-project.json (InfoBasePath или InfoBaseServer+InfoBaseRef)",
+        "После выполнения показан результат из лога и предложено выполнить /database:update",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/database/scripts/load-cf.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/database/scripts/load-cf.ps1"
+      ],
+      "mode": "load-cf"
+    },
+    {
+      "id": 20,
+      "prompt": "Загрузи расширение ext.cfe как МоёРасширение в файловую базу <project-root>/Bases/MyApp",
+      "expected_output": "Скрипт python3 <skills-root>/database/scripts/load-cf.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/load-cf.ps1 на Windows вызван с параметрами -InputFile, -InfoBasePath и -Extension",
+      "expectations": [
+        "Скрипт python3 <skills-root>/database/scripts/load-cf.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/load-cf.ps1 на Windows вызван с параметром -InputFile \"ext.cfe\"",
+        "Передан параметр -InfoBasePath \"<project-root>/Bases/MyApp\"",
+        "Передан параметр -Extension \"МоёРасширение\"",
+        "После выполнения прочитан лог и показан результат",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/database/scripts/load-cf.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/database/scripts/load-cf.ps1"
+      ],
+      "mode": "load-cf"
+    },
+    {
+      "id": 21,
+      "prompt": "Восстанови конфигурацию из бэкапа config.cf на серверную базу: сервер srv01, база MyApp_Prod, пользователь Admin, пароль secret",
+      "expected_output": "Скрипт python3 <skills-root>/database/scripts/load-cf.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/load-cf.ps1 на Windows вызван с параметрами серверного подключения и путём к CF-файлу",
+      "expectations": [
+        "Запрошено подтверждение у пользователя перед выполнением",
+        "Скрипт python3 <skills-root>/database/scripts/load-cf.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/load-cf.ps1 на Windows вызван с параметрами -InfoBaseServer \"srv01\" и -InfoBaseRef \"MyApp_Prod\"",
+        "Переданы параметры -UserName \"Admin\" и -Password \"secret\"",
+        "Передан параметр -InputFile \"config.cf\"",
+        "После выполнения предложено выполнить /database:update",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/database/scripts/load-cf.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/database/scripts/load-cf.ps1"
+      ],
+      "mode": "load-cf"
+    },
+    {
+      "id": 22,
+      "prompt": "Выгрузи конфигурацию базы <project-root>/Bases/MyDB в CF-файл <project-root>/backup/config.cf. Пользователь Admin, пароль не нужен.",
+      "expected_output": "Скрипт python3 <skills-root>/database/scripts/dump-cf.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/dump-cf.ps1 на Windows запущен с параметрами -InfoBasePath <project-root>/Bases/MyDB, -UserName Admin, -OutputFile <project-root>/backup/config.cf. Лог показан пользователю.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/database/scripts/dump-cf.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/dump-cf.ps1 на Windows вызван с параметром -InfoBasePath <project-root>/Bases/MyDB",
+        "Скрипт python3 <skills-root>/database/scripts/dump-cf.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/dump-cf.ps1 на Windows вызван с параметром -UserName Admin",
+        "Скрипт python3 <skills-root>/database/scripts/dump-cf.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/dump-cf.ps1 на Windows вызван с параметром -OutputFile <project-root>/backup/config.cf",
+        "Лог-файл прочитан и результат показан пользователю после выполнения",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/database/scripts/dump-cf.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/database/scripts/dump-cf.ps1"
+      ],
+      "mode": "dump-cf"
+    },
+    {
+      "id": 23,
+      "prompt": "Сделай бэкап конфигурации серверной базы MyApp_Dev на сервере srv01. Логин Admin, пароль secret. Сохранить в config.cf.",
+      "expected_output": "Скрипт python3 <skills-root>/database/scripts/dump-cf.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/dump-cf.ps1 на Windows запущен с параметрами -InfoBaseServer srv01, -InfoBaseRef MyApp_Dev, -UserName Admin, -Password secret, -OutputFile config.cf.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/database/scripts/dump-cf.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/dump-cf.ps1 на Windows вызван с параметром -InfoBaseServer srv01",
+        "Скрипт python3 <skills-root>/database/scripts/dump-cf.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/dump-cf.ps1 на Windows вызван с параметром -InfoBaseRef MyApp_Dev",
+        "Скрипт python3 <skills-root>/database/scripts/dump-cf.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/dump-cf.ps1 на Windows вызван с параметром -OutputFile config.cf",
+        "Лог-файл прочитан, при наличии ошибок — содержимое лога показано пользователю",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/database/scripts/dump-cf.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/database/scripts/dump-cf.ps1"
+      ],
+      "mode": "dump-cf"
+    },
+    {
+      "id": 24,
+      "prompt": "Выгрузи расширение МоёРасширение из базы <project-root>/Bases/DevDB в файл ext.cfe. Пользователь Admin.",
+      "expected_output": "Скрипт python3 <skills-root>/database/scripts/dump-cf.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/dump-cf.ps1 на Windows запущен с параметрами -InfoBasePath <project-root>/Bases/DevDB, -UserName Admin, -OutputFile ext.cfe, -Extension МоёРасширение.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/database/scripts/dump-cf.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/dump-cf.ps1 на Windows вызван с параметром -Extension МоёРасширение",
+        "Скрипт python3 <skills-root>/database/scripts/dump-cf.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/dump-cf.ps1 на Windows вызван с параметром -InfoBasePath <project-root>/Bases/DevDB",
+        "Скрипт python3 <skills-root>/database/scripts/dump-cf.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/dump-cf.ps1 на Windows вызван с параметром -OutputFile ext.cfe",
+        "Лог-файл прочитан и результат выгрузки расширения показан пользователю",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/database/scripts/dump-cf.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/database/scripts/dump-cf.ps1"
+      ],
+      "mode": "dump-cf"
+    },
+    {
+      "id": 25,
+      "prompt": "Загрузи все незафиксированные изменения из гита в базу dev",
+      "expected_output": "Скрипт python3 <skills-root>/database/scripts/load-git.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/load-git.ps1 на Windows вызван с параметром -Source All и подключением к базе dev. Показан список загруженных файлов.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/database/scripts/load-git.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/load-git.ps1 на Windows вызван с параметром -Source All",
+        "Параметр -ConfigDir указывает на каталог XML-выгрузки (из поля configSrc базы или из аргумента)",
+        "Параметры подключения к базе dev взяты из .v8-project.json",
+        "После выполнения предложено выполнить /database:update",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/database/scripts/load-git.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/database/scripts/load-git.ps1"
+      ],
+      "mode": "load-git"
+    },
+    {
+      "id": 26,
+      "prompt": "Загрузи только staged изменения в базу разработки",
+      "expected_output": "Скрипт python3 <skills-root>/database/scripts/load-git.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/load-git.ps1 на Windows вызван с параметром -Source Staged",
+      "expectations": [
+        "Скрипт python3 <skills-root>/database/scripts/load-git.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/load-git.ps1 на Windows вызван с параметром -Source Staged",
+        "База определена автоматически из текущей Git-ветки или из поля default в .v8-project.json",
+        "Параметр -ConfigDir передан корректно",
+        "После выполнения показан список загруженных файлов и предложено /database:update",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/database/scripts/load-git.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/database/scripts/load-git.ps1"
+      ],
+      "mode": "load-git"
+    },
+    {
+      "id": 27,
+      "prompt": "Покажи что будет загружено из коммитов HEAD~3..HEAD, без реальной загрузки",
+      "expected_output": "Скрипт python3 <skills-root>/database/scripts/load-git.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/load-git.ps1 на Windows вызван с параметрами -Source Commit -CommitRange \"HEAD~3..HEAD\" -DryRun. Показан список файлов без загрузки.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/database/scripts/load-git.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/load-git.ps1 на Windows вызван с параметром -DryRun",
+        "Передан параметр -Source Commit",
+        "Передан параметр -CommitRange \"HEAD~3..HEAD\"",
+        "Реальная загрузка в базу не выполнена — только показан список файлов",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/database/scripts/load-git.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/database/scripts/load-git.ps1"
+      ],
+      "mode": "load-git"
+    }
+  ]
+}

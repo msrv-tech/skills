@@ -1,0 +1,70 @@
+# mxl-create — Компилятор макета из DSL
+
+<!-- docs-evals:python-entrypoint:start -->
+## Запуск скрипта
+
+Основной запуск на Linux выполняется Python 3 с аргументами CLI скрипта:
+
+```bash
+python3 "<skills-root>/layouts/scripts/mxl-create.py" -JsonPath <project-root>/definition.json
+```
+
+Windows PowerShell остаётся отдельным вариантом запуска:
+
+```powershell
+powershell.exe -NoProfile -File "<skills-root>/layouts/scripts/mxl-create.ps1" -JsonPath <project-root>/definition.json
+```
+<!-- docs-evals:python-entrypoint:end -->
+
+Принимает компактное JSON-определение макета и генерирует корректный Template.xml для табличного документа 1С. агент описывает *что* нужно (области, параметры, стили), скрипт обеспечивает *корректность* XML (палитры, индексы, объединения, namespace).
+
+## Использование
+
+```
+/layouts:mxl-create <JsonPath> <OutputPath>
+```
+
+## Параметры
+
+| Параметр   | Обязательный | Описание                           |
+|------------|:------------:|------------------------------------|
+| JsonPath   | да           | Путь к JSON-определению макета     |
+| OutputPath | да           | Путь для генерации Template.xml    |
+
+## Команда
+
+```powershell
+powershell.exe -NoProfile -File <skills-root>/layouts/scripts/mxl-create.ps1 -JsonPath "<путь>.json" -OutputPath "<путь>/Template.xml"
+```
+
+## Рабочий процесс
+
+1. агент пишет JSON-определение (Write tool) → файл `.json`
+2. агент вызывает `/layouts:mxl-create` для генерации Template.xml
+3. агент вызывает `/layouts:mxl-validate` для проверки корректности
+4. агент вызывает `/layouts:mxl-inspect` для верификации структуры
+
+**Если макет создаётся по изображению** (скриншот, скан печатной формы) — вручную определить границы колонок и пропорции, затем использовать `"Nx"` ширины + `"page"` для автоматического расчёта размеров.
+
+## JSON-схема DSL
+
+Полная спецификация формата: **`mxl-dsl.md`** (прочитать через Read tool перед написанием JSON).
+
+Краткая структура:
+
+```
+{ columns, page, defaultWidth, columnWidths,
+  fonts: { name: { face, size, bold, italic, underline, strikeout } },
+  styles: { name: { font, align, valign, border, borderWidth, wrap, format } },
+  areas: [{ name, rows: [{ height, rowStyle, cells: [
+    { col, span, rowspan, style, param, detail, text, template }
+  ]}]}]
+}
+```
+
+Ключевые правила:
+- `page` — формат страницы (`"A4-landscape"`, `"A4-portrait"` или число). Автоматически вычисляет `defaultWidth` из суммы пропорций `"Nx"`
+- `col` — 1-based позиция колонки
+- `rowStyle` — автозаполнение пустот стилем (рамки по всей ширине)
+- Тип заполнения определяется автоматически: `param` → Parameter, `text` → Text, `template` → Template
+- `rowspan` — объединение строк вниз (rowStyle учитывает занятые ячейки)

@@ -1,0 +1,81 @@
+# create — Создание расширения конфигурации 1С
+
+<!-- docs-evals:python-entrypoint:start -->
+## Запуск скрипта
+
+Основной запуск на Linux выполняется Python 3 с аргументами CLI скрипта:
+
+```bash
+python3 "<skills-root>/extension/scripts/create.py" -ConfigPath <project-root>/src
+```
+
+Windows PowerShell остаётся отдельным вариантом запуска:
+
+```powershell
+powershell.exe -NoProfile -File "<skills-root>/extension/scripts/create.ps1" -ConfigPath <project-root>/src
+```
+<!-- docs-evals:python-entrypoint:end -->
+
+Создаёт scaffold расширения: `Configuration.xml`, `Languages/Русский.xml`, опционально `Roles/`.
+
+## Подготовка
+
+Если есть выгрузка базовой конфигурации, передай `-ConfigPath` — скрипт автоматически определит `CompatibilityMode` и UUID языка из базовой конфигурации.
+
+### Авто-определение ConfigPath
+
+Если пользователь не указал `-ConfigPath` — попробуй определить автоматически:
+1. Прочитай `.v8-project.json` из корня проекта
+2. Разреши целевую базу (по имени, ветке или `default` — алгоритм из `/database:project-settings`)
+3. Если у базы есть поле `configSrc` — используй как `-ConfigPath`
+4. Если `configSrc` нет — спроси у пользователя
+
+Если `.v8-project.json` не найден и `-ConfigPath` не задан — расширение создастся с предупреждением (UUID языка = нули, CompatibilityMode по умолчанию).
+
+## Параметры
+
+| Параметр | Описание | По умолчанию |
+|----------|----------|--------------|
+| `Name` | Имя расширения (обязат.) | — |
+| `Synonym` | Синоним | = Name |
+| `NamePrefix` | Префикс собственных объектов | = Name + "_" |
+| `OutputDir` | Каталог для создания | `src` |
+| `Purpose` | `Patch` (исправление) / `Customization` (доработка) / `AddOn` (дополнение) | `Customization` |
+| `Version` | Версия расширения | — |
+| `Vendor` | Поставщик | — |
+| `CompatibilityMode` | Режим совместимости | `Version8_3_24` |
+| `ConfigPath` | Путь к выгрузке базовой конфигурации (авто-определяет CompatibilityMode и Language UUID) | — |
+| `NoRole` | Без основной роли | false |
+
+## Команда
+
+```powershell
+powershell.exe -NoProfile -File <skills-root>/extension/scripts/create.ps1 -Name "МоёРасширение"
+```
+
+## Примеры
+
+```powershell
+# Расширение для ERP с авто-определением совместимости из базовой конфигурации
+... -Name Расш1 -ConfigPath C:\WS\tasks\cfsrc\erp_8.3.24 -OutputDir src
+
+# Расширение-исправление с явным режимом совместимости
+... -Name Расш1 -Purpose Patch -CompatibilityMode Version8_3_17 -OutputDir src
+
+# Расширение-доработка с версией
+... -Name МоёРасширение -Version "1.0.0.1" -Vendor "Компания" -OutputDir src
+
+# Без роли, с явным префиксом
+... -Name ИсправлениеБага -NamePrefix "ИБ_" -Purpose Patch -NoRole -OutputDir src
+```
+
+## Верификация
+
+```
+/extension:validate <OutputDir>
+```
+
+
+## Реестр тестовых баз
+
+Перед любой операцией с ИБ используй скил `test-databases`: на Linux запусти `python3 <skills-root>/test-databases/scripts/resolve-registry.py`, а на Windows — `resolve-registry.ps1` через PowerShell; затем выбери запись по правилам этого скила. Не определяй путь к реестру самостоятельно, не дублируй его структуру и не подключайся к базе вне реестра. `.v8-project.json` используй только для вспомогательных полей, которых нет в выбранной записи.

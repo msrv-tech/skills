@@ -46,9 +46,9 @@ jobs:
       - name: Smoke test XML validators
         shell: bash
         run: |
-          python cfe-validate/scripts/cfe-validate.py \
+          python extension/scripts/validate.py \
             -ExtensionPath codex-test-bridge/src -Detailed
-          python meta-validate/scripts/meta-validate.py \
+          python metadata/scripts/validate.py \
             -ObjectPath 'codex-test-bridge/src/CommonModules/CodexUIJobsServer.xml|codex-test-bridge/src/HTTPServices/CodexTestBridge.xml|codex-test-bridge/src/InformationRegisters/CodexUIJobs.xml' \
             -Detailed
 
@@ -57,10 +57,10 @@ jobs:
         with:
           node-version: "22"
           cache: npm
-          cache-dependency-path: web-test/scripts/package-lock.json
+          cache-dependency-path: ui-testing/scripts/package-lock.json
 
       - name: Install Node dependencies
-        working-directory: web-test/scripts
+        working-directory: ui-testing/scripts
         run: npm ci
 
       - name: Check JavaScript syntax

@@ -1,0 +1,47 @@
+# add-help — Добавление справки
+
+<!-- docs-evals:python-entrypoint:start -->
+## Запуск скрипта
+
+Основной запуск на Linux выполняется Python 3 с аргументами CLI скрипта:
+
+```bash
+python3 "<skills-root>/metadata/scripts/add-help.py" -ObjectName <ObjectName> -Lang <Lang>
+```
+
+Windows PowerShell остаётся отдельным вариантом запуска:
+
+```powershell
+powershell.exe -NoProfile -File "<skills-root>/metadata/scripts/add-help.ps1" -ObjectName <ObjectName> -Lang <Lang>
+```
+<!-- docs-evals:python-entrypoint:end -->
+
+Добавляет встроенную справку к объекту: файл метаданных `Help.xml`, HTML-страницу и при необходимости обновляет метаданные форм.
+
+## Usage
+
+```
+/metadata:add-help <ObjectName> [Lang] [SrcDir]
+```
+
+| Параметр   | Обязательный | По умолчанию | Описание                            |
+|------------|:------------:|--------------|-------------------------------------|
+| ObjectName | да           | —            | Путь объекта относительно SrcDir (например `Catalogs/МойСправочник`, `DataProcessors/МояОбработка`) |
+| Lang       | нет          | `ru`         | Код языка справки                   |
+| SrcDir     | нет          | `src`        | Каталог исходников                  |
+
+## Команда
+
+```powershell
+powershell.exe -NoProfile -File <skills-root>/metadata/scripts/add-help.ps1 -ObjectName "<ObjectName>" [-Lang "<Lang>"] [-SrcDir "<SrcDir>"]
+```
+
+## Что делает скрипт
+
+- Создаёт `Ext/Help.xml` и `Ext/Help/ru.html` — шаблон справки
+- Если у объекта есть формы — добавляет `<IncludeHelpInContents>` в метаданные форм (если отсутствует)
+- Справка **не регистрируется** в `ChildObjects` — достаточно наличия файлов
+
+## После запуска
+
+Отредактируй `Ext/Help/ru.html` — наполни содержимым справки (стандартный HTML: `<h1>`..`<h4>`, `<p>`, `<ul>`, `<table>` и т.д.). Кнопка справки появится автоматически через `Autofill` в AutoCommandBar формы.

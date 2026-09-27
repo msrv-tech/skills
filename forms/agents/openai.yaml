@@ -1,0 +1,6 @@
+interface:
+  display_name: "1C Forms"
+  short_description: "Создание, изменение и проверка управляемых форм 1С"
+  default_prompt: "Use $forms for this 1C managed form task."
+policy:
+  allow_implicit_invocation: true

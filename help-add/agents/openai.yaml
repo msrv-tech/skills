@@ -1,6 +1,0 @@
-interface:
-  display_name: "Help ADD"
-  short_description: "Добавить встроенную справку к объекту 1С (обработка, отчёт, справочник, документ и др.)...."
-  default_prompt: "Use $help-add for this task."
-policy:
-  allow_implicit_invocation: true

@@ -7,7 +7,7 @@ from xml.etree import ElementTree
 
 
 ROOT = Path(__file__).resolve().parents[1]
-REMOVE_FORM = ROOT / "form-remove" / "scripts" / "remove-form.py"
+REMOVE_FORM = ROOT / "forms" / "scripts" / "remove.py"
 MD_NS = "http://v8.1c.ru/8.3/MDClasses"
 
 

@@ -1,0 +1,6 @@
+interface:
+  display_name: "1C Layouts"
+  short_description: "Макеты объектов и табличные документы MXL"
+  default_prompt: "Use $layouts for this 1C layout or MXL task."
+policy:
+  allow_implicit_invocation: true

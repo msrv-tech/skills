@@ -1,6 +1,0 @@
-interface:
-  display_name: "Meta Validate"
-  short_description: "Валидация объекта метаданных 1С. Используй после создания или модификации объекта конфигу..."
-  default_prompt: "Use $meta-validate for this task."
-policy:
-  allow_implicit_invocation: true

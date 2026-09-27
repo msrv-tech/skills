@@ -1,0 +1,251 @@
+{
+  "skill_name": "extension",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Создай расширение-исправление Расш1 для ERP с совместимостью Version8_3_17. Выходная папка src/.",
+      "expected_output": "В папке src/ созданы файлы: Configuration.xml (Purpose=Patch, CompatibilityMode=Version8_3_17), Languages/Русский.xml, Roles/Расш1_ОсновнаяРоль.xml.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/extension/scripts/create.py на Linux или powershell.exe -NoProfile -File <skills-root>/extension/scripts/create.ps1 на Windows вызван с параметром -Name Расш1",
+        "Скрипт python3 <skills-root>/extension/scripts/create.py на Linux или powershell.exe -NoProfile -File <skills-root>/extension/scripts/create.ps1 на Windows вызван с параметром -Purpose Patch",
+        "Скрипт python3 <skills-root>/extension/scripts/create.py на Linux или powershell.exe -NoProfile -File <skills-root>/extension/scripts/create.ps1 на Windows вызван с параметром -CompatibilityMode Version8_3_17",
+        "Создан файл src/Configuration.xml с корректным Purpose=Patch",
+        "Создан файл src/Languages/Русский.xml",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/extension/scripts/create.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/extension/scripts/create.ps1"
+      ],
+      "mode": "create"
+    },
+    {
+      "id": 2,
+      "prompt": "Создай расширение МоёРасширение версии 1.0.0.1, поставщик ООО Рога. Без основной роли. OutputDir = <project-root>/ext/output.",
+      "expected_output": "Создан scaffold расширения в <project-root>/ext/output: Configuration.xml (Version=1.0.0.1, Vendor=ООО Рога), Languages/Русский.xml. Папка Roles/ не создана.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/extension/scripts/create.py на Linux или powershell.exe -NoProfile -File <skills-root>/extension/scripts/create.ps1 на Windows вызван с параметром -Name МоёРасширение",
+        "Скрипт python3 <skills-root>/extension/scripts/create.py на Linux или powershell.exe -NoProfile -File <skills-root>/extension/scripts/create.ps1 на Windows вызван с параметром -Version \"1.0.0.1\"",
+        "Скрипт python3 <skills-root>/extension/scripts/create.py на Linux или powershell.exe -NoProfile -File <skills-root>/extension/scripts/create.ps1 на Windows вызван с параметром -NoRole",
+        "Скрипт python3 <skills-root>/extension/scripts/create.py на Linux или powershell.exe -NoProfile -File <skills-root>/extension/scripts/create.ps1 на Windows вызван с параметром -OutputDir <project-root>/ext/output",
+        "Папка Roles/ не создана (параметр -NoRole)",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/extension/scripts/create.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/extension/scripts/create.ps1"
+      ],
+      "mode": "create"
+    },
+    {
+      "id": 3,
+      "prompt": "Нужно расширение-доработка с явным префиксом объектов ДРП_. Имя расширения ДоработкаРП, совместимость Version8_3_24.",
+      "expected_output": "Создан scaffold расширения: Configuration.xml с NamePrefix=ДРП_, Purpose=Customization, CompatibilityMode=Version8_3_24.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/extension/scripts/create.py на Linux или powershell.exe -NoProfile -File <skills-root>/extension/scripts/create.ps1 на Windows вызван с параметром -Name ДоработкаРП",
+        "Скрипт python3 <skills-root>/extension/scripts/create.py на Linux или powershell.exe -NoProfile -File <skills-root>/extension/scripts/create.ps1 на Windows вызван с параметром -NamePrefix ДРП_",
+        "Скрипт python3 <skills-root>/extension/scripts/create.py на Linux или powershell.exe -NoProfile -File <skills-root>/extension/scripts/create.ps1 на Windows вызван с параметром -Purpose Customization",
+        "Configuration.xml содержит значение NamePrefix равное ДРП_",
+        "Configuration.xml содержит Purpose=Customization",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/extension/scripts/create.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/extension/scripts/create.ps1"
+      ],
+      "mode": "create"
+    },
+    {
+      "id": 4,
+      "prompt": "Создай расширение-исправление для справочника Контрагенты в ERP: нужно добавить проверку ИНН при записи. Конфигурация в <project-root>/cfsrc/erp.",
+      "expected_output": "Последовательно выполнены: configuration:inspect (получена совместимость), extension:create (scaffold расширения Patch), extension:borrow (заимствован Catalog.Контрагенты), extension:patch-method (создан перехватчик &Перед ПриЗаписи), extension:validate (0 ошибок).",
+      "expectations": [
+        "Рекомендован или вызван скил configuration:inspect для получения CompatibilityMode конфигурации <project-root>/cfsrc/erp",
+        "Рекомендован или вызван скил extension:create с параметром -Purpose Patch",
+        "Рекомендован или вызван скил extension:borrow с параметром -Object \"Catalog.Контрагенты\"",
+        "Рекомендован или вызван скил extension:patch-method для метода ПриЗаписи с InterceptorType Before",
+        "Рекомендован или вызван скил extension:validate для финальной проверки расширения"
+      ],
+      "mode": "full-cycle"
+    },
+    {
+      "id": 5,
+      "prompt": "Нужно расширение-доработка для УТ: добавить новый реквизит Артикул в справочник Номенклатура и вывести его на форму элемента. Конфигурация в <project-root>/ut/cfsrc.",
+      "expected_output": "Создано расширение типа Customization: scaffold, заимствован Catalog.Номенклатура, добавлен собственный реквизит через metadata:create, форма доработана через forms:add/forms:create, валидация пройдена.",
+      "expectations": [
+        "Рекомендован или вызван скил extension:create с параметром -Purpose Customization",
+        "Рекомендован или вызван скил extension:borrow с параметром -Object \"Catalog.Номенклатура\"",
+        "Рекомендован или вызван скил metadata:create для добавления собственного реквизита с префиксом расширения",
+        "Рекомендован или вызван скил forms:add или forms:create для доработки формы",
+        "Рекомендован или вызван скил extension:validate в конце цепочки"
+      ],
+      "mode": "full-cycle"
+    },
+    {
+      "id": 6,
+      "prompt": "Создай расширение AddOn для БП 3.0 — новый справочник Проекты с реквизитами Куратор и Бюджет. Конфигурация в <project-root>/bp/cfsrc.",
+      "expected_output": "Создано расширение типа AddOn: scaffold, собственный справочник Расш1_Проекты создан через metadata:create, валидация пройдена.",
+      "expectations": [
+        "Рекомендован или вызван скил configuration:inspect для получения версии конфигурации из <project-root>/bp/cfsrc",
+        "Рекомендован или вызван скил extension:create с параметром -Purpose AddOn",
+        "Рекомендован или вызван скил metadata:create для создания справочника с префиксом расширения",
+        "Имя создаваемого объекта содержит префикс расширения (NamePrefix)",
+        "Рекомендован или вызван скил extension:validate по завершении"
+      ],
+      "mode": "full-cycle"
+    },
+    {
+      "id": 7,
+      "prompt": "Заимствуй справочник Контрагенты из конфигурации ERP в расширение. Расширение в папке src/, конфигурация в <project-root>/cfsrc/erp.",
+      "expected_output": "В папке src/Catalogs/Контрагенты/ созданы XML-файлы с ObjectBelonging=Adopted. Запись добавлена в ChildObjects Configuration.xml расширения.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/extension/scripts/borrow.py на Linux или powershell.exe -NoProfile -File <skills-root>/extension/scripts/borrow.ps1 на Windows вызван с параметром -ExtensionPath src",
+        "Скрипт python3 <skills-root>/extension/scripts/borrow.py на Linux или powershell.exe -NoProfile -File <skills-root>/extension/scripts/borrow.ps1 на Windows вызван с параметром -ConfigPath <project-root>/cfsrc/erp",
+        "Скрипт python3 <skills-root>/extension/scripts/borrow.py на Linux или powershell.exe -NoProfile -File <skills-root>/extension/scripts/borrow.ps1 на Windows вызван с параметром -Object \"Catalog.Контрагенты\"",
+        "В созданном XML-файле присутствует атрибут ObjectBelonging=Adopted",
+        "В Configuration.xml расширения добавлена запись Catalog.Контрагенты в ChildObjects",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/extension/scripts/borrow.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/extension/scripts/borrow.ps1"
+      ],
+      "mode": "borrow"
+    },
+    {
+      "id": 8,
+      "prompt": "Нужно заимствовать сразу несколько объектов в расширение: справочник Номенклатура, общий модуль РаботаСФайлами и перечисление ВидыОплат. Расширение в ext/src/, конфигурация в <project-root>/config/ut.",
+      "expected_output": "Заимствованы три объекта: в ChildObjects расширения добавлены записи для Catalog.Номенклатура, CommonModule.РаботаСФайлами и Enum.ВидыОплат.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/extension/scripts/borrow.py на Linux или powershell.exe -NoProfile -File <skills-root>/extension/scripts/borrow.ps1 на Windows вызван с параметром -ExtensionPath ext/src",
+        "Скрипт python3 <skills-root>/extension/scripts/borrow.py на Linux или powershell.exe -NoProfile -File <skills-root>/extension/scripts/borrow.ps1 на Windows вызван с параметром -ConfigPath <project-root>/config/ut",
+        "Параметр -Object содержит все три объекта через разделитель ;;",
+        "Созданы каталоги для Catalogs/Номенклатура, CommonModules/РаботаСФайлами и Enums/ВидыОплат",
+        "Все три объекта добавлены в ChildObjects файла Configuration.xml расширения",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/extension/scripts/borrow.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/extension/scripts/borrow.ps1"
+      ],
+      "mode": "borrow"
+    },
+    {
+      "id": 9,
+      "prompt": "Хочу добавить перехватчик в документ РеализацияТоваровУслуг. Сначала нужно заимствовать его из конфигурации УТ. Расширение в <project-root>/ext/МоёРасширение, конфигурация в <project-root>/cfsrc/ut.",
+      "expected_output": "Документ РеализацияТоваровУслуг заимствован в расширение с атрибутом ExtendedConfigurationObject, указывающим UUID оригинального объекта.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/extension/scripts/borrow.py на Linux или powershell.exe -NoProfile -File <skills-root>/extension/scripts/borrow.ps1 на Windows вызван с параметром -Object \"Document.РеализацияТоваровУслуг\"",
+        "Скрипт python3 <skills-root>/extension/scripts/borrow.py на Linux или powershell.exe -NoProfile -File <skills-root>/extension/scripts/borrow.ps1 на Windows вызван с параметром -ExtensionPath <project-root>/ext/МоёРасширение",
+        "Созданная XML-структура содержит атрибут ExtendedConfigurationObject с UUID документа из конфигурации-источника",
+        "Запись Document.РеализацияТоваровУслуг добавлена в ChildObjects Configuration.xml расширения",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/extension/scripts/borrow.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/extension/scripts/borrow.ps1"
+      ],
+      "mode": "borrow"
+    },
+    {
+      "id": 10,
+      "prompt": "Создай перехватчик &Перед для метода ПриЗаписи модуля объекта справочника Контрагенты. Расширение в папке src/.",
+      "expected_output": "В файле src/Catalogs/Контрагенты/Ext/ObjectModule.bsl создана процедура с декоратором &Перед(\"ПриЗаписи\") и директивой &НаСервере.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/extension/scripts/patch-method.py на Linux или powershell.exe -NoProfile -File <skills-root>/extension/scripts/patch-method.ps1 на Windows вызван с параметром -ExtensionPath src",
+        "Скрипт python3 <skills-root>/extension/scripts/patch-method.py на Linux или powershell.exe -NoProfile -File <skills-root>/extension/scripts/patch-method.ps1 на Windows вызван с параметром -ModulePath \"Catalog.Контрагенты.ObjectModule\"",
+        "Скрипт python3 <skills-root>/extension/scripts/patch-method.py на Linux или powershell.exe -NoProfile -File <skills-root>/extension/scripts/patch-method.ps1 на Windows вызван с параметром -MethodName ПриЗаписи",
+        "Скрипт python3 <skills-root>/extension/scripts/patch-method.py на Linux или powershell.exe -NoProfile -File <skills-root>/extension/scripts/patch-method.ps1 на Windows вызван с параметром -InterceptorType Before",
+        "Созданный BSL-код содержит декоратор &Перед(\"ПриЗаписи\") и имя процедуры с префиксом расширения",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/extension/scripts/patch-method.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/extension/scripts/patch-method.ps1"
+      ],
+      "mode": "patch-method"
+    },
+    {
+      "id": 11,
+      "prompt": "Добавь перехватчик &После на клиенте для метода ПослеЗаписиНаСервере формы ФормаДокумента документа Заказ. Расширение в ext/src/.",
+      "expected_output": "В файл ext/src/Documents/Заказ/Forms/ФормаДокумента/Ext/Form/Module.bsl добавлена процедура с &После(\"ПослеЗаписиНаСервере\") и директивой &НаКлиенте.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/extension/scripts/patch-method.py на Linux или powershell.exe -NoProfile -File <skills-root>/extension/scripts/patch-method.ps1 на Windows вызван с параметром -ModulePath \"Document.Заказ.Form.ФормаДокумента\"",
+        "Скрипт python3 <skills-root>/extension/scripts/patch-method.py на Linux или powershell.exe -NoProfile -File <skills-root>/extension/scripts/patch-method.ps1 на Windows вызван с параметром -MethodName ПослеЗаписиНаСервере",
+        "Скрипт python3 <skills-root>/extension/scripts/patch-method.py на Linux или powershell.exe -NoProfile -File <skills-root>/extension/scripts/patch-method.ps1 на Windows вызван с параметром -InterceptorType After",
+        "Скрипт python3 <skills-root>/extension/scripts/patch-method.py на Linux или powershell.exe -NoProfile -File <skills-root>/extension/scripts/patch-method.ps1 на Windows вызван с параметром -Context НаКлиенте",
+        "Созданный BSL-код содержит декоратор &После(\"ПослеЗаписиНаСервере\") и директиву &НаКлиенте",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/extension/scripts/patch-method.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/extension/scripts/patch-method.ps1"
+      ],
+      "mode": "patch-method"
+    },
+    {
+      "id": 12,
+      "prompt": "Создай перехватчик &ИзменениеИКонтроль для функции ПолучитьДанные общего модуля ОбщийМодуль. Это функция, а не процедура. Расширение в <project-root>/ext/Расш1.",
+      "expected_output": "В файл <project-root>/ext/Расш1/CommonModules/ОбщийМодуль/Ext/Module.bsl добавлена функция с &ИзменениеИКонтроль(\"ПолучитьДанные\"), маркерами #Вставка/#Удаление и ПродолжитьВызов().",
+      "expectations": [
+        "Скрипт python3 <skills-root>/extension/scripts/patch-method.py на Linux или powershell.exe -NoProfile -File <skills-root>/extension/scripts/patch-method.ps1 на Windows вызван с параметром -InterceptorType ModificationAndControl",
+        "Скрипт python3 <skills-root>/extension/scripts/patch-method.py на Linux или powershell.exe -NoProfile -File <skills-root>/extension/scripts/patch-method.ps1 на Windows вызван с параметром -ModulePath \"CommonModule.ОбщийМодуль\"",
+        "Скрипт python3 <skills-root>/extension/scripts/patch-method.py на Linux или powershell.exe -NoProfile -File <skills-root>/extension/scripts/patch-method.ps1 на Windows вызван с параметром -MethodName ПолучитьДанные",
+        "Скрипт python3 <skills-root>/extension/scripts/patch-method.py на Linux или powershell.exe -NoProfile -File <skills-root>/extension/scripts/patch-method.ps1 на Windows вызван с параметром -IsFunction",
+        "Созданный BSL-код содержит декоратор &ИзменениеИКонтроль(\"ПолучитьДанные\"), маркеры #Вставка/#КонецВставки и вызов ПродолжитьВызов()",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/extension/scripts/patch-method.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/extension/scripts/patch-method.ps1"
+      ],
+      "mode": "patch-method"
+    },
+    {
+      "id": 13,
+      "prompt": "Покажи что изменено в расширении МоёРасширение. Расширение в папке src/, конфигурация в <project-root>/cfsrc/erp.",
+      "expected_output": "Выведен отчёт в режиме Mode A: для каждого объекта показаны статусы [BORROWED] или [OWN], перечислены перехватчики (&Перед, &После, &ИзменениеИКонтроль) и количество собственных реквизитов/форм.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/extension/scripts/inspect-extension.py на Linux или powershell.exe -NoProfile -File <skills-root>/extension/scripts/inspect-extension.ps1 на Windows вызван с параметром -ExtensionPath src",
+        "Скрипт python3 <skills-root>/extension/scripts/inspect-extension.py на Linux или powershell.exe -NoProfile -File <skills-root>/extension/scripts/inspect-extension.ps1 на Windows вызван с параметром -ConfigPath <project-root>/cfsrc/erp",
+        "Скрипт python3 <skills-root>/extension/scripts/inspect-extension.py на Linux или powershell.exe -NoProfile -File <skills-root>/extension/scripts/inspect-extension.ps1 на Windows вызван с параметром -Mode A",
+        "Вывод содержит метки [BORROWED] или [OWN] для объектов расширения",
+        "Для заимствованных объектов показаны найденные декораторы перехватчиков",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/extension/scripts/inspect-extension.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/extension/scripts/inspect-extension.ps1"
+      ],
+      "mode": "inspect"
+    },
+    {
+      "id": 14,
+      "prompt": "Проверь, все ли вставки из расширения перенесены в основную конфигурацию. Расширение в ext/src/, конфигурация в <project-root>/projects/erp/cfsrc.",
+      "expected_output": "Выведен отчёт в режиме Mode B: для каждого &ИзменениеИКонтроль показан статус — [TRANSFERRED], [NOT_TRANSFERRED] или [NEEDS_REVIEW].",
+      "expectations": [
+        "Скрипт python3 <skills-root>/extension/scripts/inspect-extension.py на Linux или powershell.exe -NoProfile -File <skills-root>/extension/scripts/inspect-extension.ps1 на Windows вызван с параметром -Mode B",
+        "Скрипт python3 <skills-root>/extension/scripts/inspect-extension.py на Linux или powershell.exe -NoProfile -File <skills-root>/extension/scripts/inspect-extension.ps1 на Windows вызван с параметром -ExtensionPath ext/src",
+        "Скрипт python3 <skills-root>/extension/scripts/inspect-extension.py на Linux или powershell.exe -NoProfile -File <skills-root>/extension/scripts/inspect-extension.ps1 на Windows вызван с параметром -ConfigPath <project-root>/projects/erp/cfsrc",
+        "Вывод содержит статусы [TRANSFERRED], [NOT_TRANSFERRED] или [NEEDS_REVIEW] для каждого перехватчика &ИзменениеИКонтроль",
+        "Для каждого блока #Вставка указано, найден ли он в соответствующем модуле конфигурации",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/extension/scripts/inspect-extension.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/extension/scripts/inspect-extension.ps1"
+      ],
+      "mode": "inspect"
+    },
+    {
+      "id": 15,
+      "prompt": "Посмотри на расширение ИсправлениеБагов в папке <project-root>/ext/fix — сколько там заимствованных объектов и какие у них перехватчики? Конфигурация в <project-root>/cfsrc/bp.",
+      "expected_output": "Отчёт Mode A по расширению: перечислены все заимствованные объекты с указанием типа декораторов и количества собственных дополнений.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/extension/scripts/inspect-extension.py на Linux или powershell.exe -NoProfile -File <skills-root>/extension/scripts/inspect-extension.ps1 на Windows вызван с параметром -ExtensionPath <project-root>/ext/fix",
+        "Скрипт python3 <skills-root>/extension/scripts/inspect-extension.py на Linux или powershell.exe -NoProfile -File <skills-root>/extension/scripts/inspect-extension.ps1 на Windows вызван с параметром -ConfigPath <project-root>/cfsrc/bp",
+        "Используется режим Mode A (по умолчанию или явно)",
+        "Вывод содержит строки с метками [BORROWED] для каждого заимствованного объекта",
+        "Для объектов с перехватчиками указаны конкретные строки с декораторами и имена методов",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/extension/scripts/inspect-extension.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/extension/scripts/inspect-extension.ps1"
+      ],
+      "mode": "inspect"
+    },
+    {
+      "id": 16,
+      "prompt": "Проверь расширение в папке src/ на корректность структуры.",
+      "expected_output": "Выведен отчёт валидации: 9 шагов проверки (XML well-formedness, InternalInfo, свойства расширения, enum-значения, ChildObjects, DefaultLanguage, файлы языков, каталоги объектов, заимствованные объекты). Итог: N ошибок, N предупреждений.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/extension/scripts/validate.py на Linux или powershell.exe -NoProfile -File <skills-root>/extension/scripts/validate.ps1 на Windows вызван с параметром -ExtensionPath src",
+        "Вывод содержит результаты всех 9 шагов проверки с метками [OK], [ERROR] или [WARN]",
+        "Вывод содержит итоговую строку с количеством ошибок и предупреждений",
+        "Проверена корректность XML-структуры и наличие MetaDataObject/Configuration",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/extension/scripts/validate.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/extension/scripts/validate.ps1"
+      ],
+      "mode": "validate"
+    },
+    {
+      "id": 17,
+      "prompt": "Проверь расширение <project-root>/ext/МоёРасширение. Если есть ошибки — покажи их все, ограничение 50 ошибок.",
+      "expected_output": "Запущена валидация с лимитом MaxErrors=50. Вывод содержит все найденные ошибки ERROR и предупреждения WARN по каждому из 9 шагов.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/extension/scripts/validate.py на Linux или powershell.exe -NoProfile -File <skills-root>/extension/scripts/validate.ps1 на Windows вызван с параметром -ExtensionPath <project-root>/ext/МоёРасширение",
+        "Скрипт python3 <skills-root>/extension/scripts/validate.py на Linux или powershell.exe -NoProfile -File <skills-root>/extension/scripts/validate.ps1 на Windows вызван с параметром -MaxErrors 50",
+        "Вывод содержит проверку ObjectBelonging=Adopted для заимствованных объектов",
+        "Вывод содержит проверку NamePrefix и Purpose в свойствах расширения",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/extension/scripts/validate.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/extension/scripts/validate.ps1"
+      ],
+      "mode": "validate"
+    },
+    {
+      "id": 18,
+      "prompt": "После создания расширения Расш1 в ext/src/ нужно убедиться что всё правильно. Сохрани результат валидации в файл validation-report.txt.",
+      "expected_output": "Валидация выполнена, результат сохранён в файл validation-report.txt. В выводе показаны статусы всех 9 проверок.",
+      "expectations": [
+        "Скрипт python3 <skills-root>/extension/scripts/validate.py на Linux или powershell.exe -NoProfile -File <skills-root>/extension/scripts/validate.ps1 на Windows вызван с параметром -ExtensionPath ext/src",
+        "Скрипт python3 <skills-root>/extension/scripts/validate.py на Linux или powershell.exe -NoProfile -File <skills-root>/extension/scripts/validate.ps1 на Windows вызван с параметром -OutFile validation-report.txt",
+        "Файл validation-report.txt создан с результатами валидации",
+        "Проверены enum-значения CompatibilityMode и Purpose расширения",
+        "Проверено что DefaultLanguage ссылается на язык в ChildObjects",
+        "На Linux разрешён Python entrypoint: python3 <skills-root>/extension/scripts/validate.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/extension/scripts/validate.ps1"
+      ],
+      "mode": "validate"
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+# inspect — Структура конфигурации 1С
+
+<!-- docs-evals:python-entrypoint:start -->
+## Запуск скрипта
+
+Основной запуск на Linux выполняется Python 3 с аргументами CLI скрипта:
+
+```bash
+python3 "<skills-root>/configuration/scripts/inspect-configuration.py" -ConfigPath <project-root>/src
+```
+
+Windows PowerShell остаётся отдельным вариантом запуска:
+
+```powershell
+powershell.exe -NoProfile -File "<skills-root>/configuration/scripts/inspect-configuration.ps1" -ConfigPath <project-root>/src
+```
+<!-- docs-evals:python-entrypoint:end -->
+
+Читает Configuration.xml из выгрузки конфигурации и выводит компактное описание структуры.
+
+## Параметры и команда
+
+| Параметр | Описание |
+|----------|----------|
+| `ConfigPath` | Путь к Configuration.xml или каталогу выгрузки |
+| `Mode` | Режим: `overview` (default), `brief`, `full` |
+| `Limit` / `Offset` | Пагинация (по умолчанию 150 строк) |
+| `OutFile` | Записать результат в файл (UTF-8 BOM) |
+
+```powershell
+powershell.exe -NoProfile -File <skills-root>/configuration/scripts/inspect-configuration.ps1 -ConfigPath "<путь>"
+```
+
+## Три режима
+
+| Режим | Что показывает |
+|---|---|
+| `overview` *(default)* | Заголовок + ключевые свойства + таблица счётчиков объектов по типам |
+| `brief` | Одна строка: Имя — "Синоним" vВерсия \| N объектов \| совместимость |
+| `full` | Все свойства по категориям + полный список ChildObjects + DefaultRoles + мобильные функциональности |
+
+## Примеры
+
+```powershell
+# Обзор пустой конфигурации
+... -ConfigPath upload/cfempty
+
+# Краткая сводка реальной конфигурации
+... -ConfigPath upload/acc_8.3.24 -Mode brief
+
+# Полная информация
+... -ConfigPath upload/acc_8.3.24 -Mode full
+
+# С пагинацией
+... -ConfigPath upload/acc_8.3.24 -Mode full -Limit 50 -Offset 100
+```

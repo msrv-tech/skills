@@ -1,6 +1,0 @@
-interface:
-  display_name: "Form Validate"
-  short_description: "Валидация управляемой формы 1С. Используй после создания или модификации формы для провер..."
-  default_prompt: "Use $form-validate for this task."
-policy:
-  allow_implicit_invocation: true
