@@ -62,6 +62,13 @@
     {"action": "assertElement", "form": "documentObject", "elementType": "field", "element": {"objectName": "DocumentNumber"}, "exists": true},
     {"action": "closeForm", "form": "documentObject"},
     {
+      "action": "openTaskExecutionForm",
+      "metadataName": "CodexUIFixtureTask",
+      "uuid": "11111111-2222-4333-8444-555555555555",
+      "targetForm": {"title": "Codex UI fixture task execution", "saveAs": "taskSetup", "timeout": 30}
+    },
+    {"action": "closeForm", "form": "taskSetup"},
+    {
       "action": "openForm",
       "metadataKind": "task",
       "metadataName": "CodexUIFixtureTask",

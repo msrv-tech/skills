@@ -1,7 +1,7 @@
 {
   "$schema": "../../ui-scenario.schema.json",
   "name": "UI conformance: special document fields and edit cancellation",
-  "conformanceCases": ["field.cancel-editing", "field.text-document", "field.formatted-document", "field.spreadsheet-document"],
+  "conformanceCases": ["field.cancel-editing", "field.text-document", "field.text-document-programmatic", "field.formatted-document", "field.spreadsheet-document"],
   "steps": [
     {
       "action": "openForm",
@@ -13,8 +13,11 @@
     {"action": "cancelFieldEditing", "form": "fixture", "field": {"objectName": "TextValue"}},
     {"action": "assertField", "form": "fixture", "field": {"objectName": "TextValue"}, "expected": "initial"},
     {"action": "assertElement", "form": "fixture", "elementType": "field", "element": {"objectName": "TextDocumentValue"}, "exists": true, "visible": true},
+    {"action": "assertField", "form": "fixture", "field": {"objectName": "TextDocumentValue"}, "expected": "fixture text document"},
     {"action": "inputText", "form": "fixture", "elementType": "field", "field": {"objectName": "TextDocumentValue"}, "value": "changed text document"},
     {"action": "assertField", "form": "fixture", "field": {"objectName": "TextDocumentValue"}, "contains": "changed text document"},
+    {"action": "invokeFormCommand", "form": "fixture", "command": "Reset", "button": {"objectName": "Reset"}},
+    {"action": "assertField", "form": "fixture", "field": {"objectName": "TextDocumentValue"}, "expected": "fixture text document"},
     {"action": "assertElement", "form": "fixture", "elementType": "field", "element": {"objectName": "FormattedDocumentValue"}, "exists": true, "visible": true},
     {"action": "inputHtml", "form": "fixture", "field": {"objectName": "FormattedDocumentValue"}, "value": "<p><b>Codex formatted fixture</b></p>"},
     {"action": "assertHtml", "form": "fixture", "field": {"objectName": "FormattedDocumentValue"}, "contains": "Codex formatted fixture"},

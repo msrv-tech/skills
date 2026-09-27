@@ -17,6 +17,7 @@ class UiConformanceTests(unittest.TestCase):
         scenarios = load_conformance_scenarios([ROOT / "examples" / "ui-conformance"])
         sources = validate_conformance_coverage(scenarios)
         self.assertIn("field.text", sources)
+        self.assertIn("field.text-document-programmatic", sources)
         self.assertIn("button.form-command", sources)
         self.assertIn("table.edit-cell", sources)
         self.assertIn("reference.characteristic", sources)
@@ -27,6 +28,49 @@ class UiConformanceTests(unittest.TestCase):
         self.assertEqual(report["summary"]["fixtureActions"], 49)
         self.assertEqual(report["summary"]["failed"], 0)
         self.assertGreater(report["summary"]["variants"], 0)
+
+    def test_text_document_fixture_checks_programmatic_reassignment(self):
+        scenarios = load_conformance_scenarios([ROOT / "examples" / "ui-conformance"])
+        scenario = next(
+            item for item in scenarios
+            if "field.text-document-programmatic" in item["cases"]
+        )
+        steps = scenario["data"]["steps"]
+        reset_index = next(
+            index for index, step in enumerate(steps)
+            if step.get("action") == "invokeFormCommand" and step.get("command") == "Reset"
+        )
+        self.assertEqual(
+            steps[reset_index + 1],
+            {
+                "action": "assertField",
+                "form": "fixture",
+                "field": {"objectName": "TextDocumentValue"},
+                "expected": "fixture text document",
+            },
+        )
+        self.assertTrue(any(
+            step.get("action") == "inputText"
+            and step.get("field", {}).get("objectName") == "TextDocumentValue"
+            and step.get("value") == "changed text document"
+            for step in steps[:reset_index]
+        ))
+
+    def test_generic_task_form_fixture_is_created_before_open(self):
+        scenarios = load_conformance_scenarios([ROOT / "examples" / "ui-conformance"])
+        scenario = next(item for item in scenarios if "form.lifecycle" in item["cases"])
+        steps = scenario["data"]["steps"]
+        task_open_index = next(
+            index for index, step in enumerate(steps)
+            if step.get("action") == "openForm" and step.get("metadataKind") == "task"
+        )
+        task_uuid = steps[task_open_index]["uuid"]
+        self.assertTrue(any(
+            step.get("action") == "openTaskExecutionForm"
+            and step.get("metadataName") == "CodexUIFixtureTask"
+            and step.get("uuid") == task_uuid
+            for step in steps[:task_open_index]
+        ))
 
     def test_missing_fixture_case_is_rejected(self):
         scenarios = load_conformance_scenarios([ROOT / "examples" / "ui-conformance"])
