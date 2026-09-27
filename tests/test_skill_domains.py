@@ -23,7 +23,8 @@ EXPECTED_SKILLS = {
     "ui-testing",
     "web-publication",
 }
-INFRASTRUCTURE_DIRS = {".git", ".github", "common", "docs", "temp", "tests"}
+REQUIRED_INFRASTRUCTURE_DIRS = {".git", ".github", "common", "docs", "tests"}
+OPTIONAL_INFRASTRUCTURE_DIRS = {"temp"}
 
 
 class SkillDomainTests(unittest.TestCase):
@@ -77,7 +78,9 @@ class SkillDomainTests(unittest.TestCase):
         self.assertEqual([], list(ROOT.glob("*/OPERATION.md")))
         self.assertFalse((ROOT / "scripts" / "sync-skill-domains.py").exists())
         top_level_dirs = {path.name for path in ROOT.iterdir() if path.is_dir()}
-        self.assertEqual(EXPECTED_SKILLS | INFRASTRUCTURE_DIRS, top_level_dirs)
+        required = EXPECTED_SKILLS | REQUIRED_INFRASTRUCTURE_DIRS
+        self.assertTrue(required <= top_level_dirs)
+        self.assertTrue(top_level_dirs <= required | OPTIONAL_INFRASTRUCTURE_DIRS)
         for skill_name in self.skills:
             text = (ROOT / skill_name / "SKILL.md").read_text(encoding="utf-8")
             self.assertNotIn("OPERATION.md", text)
