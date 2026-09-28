@@ -415,7 +415,7 @@ Cleanup включен по умолчанию. Его можно отключи
 
 Для сценариев, которые действительно должны проверить управляемую форму,
 используй `run-ui`. Worker запускает штатные `/TestClient` и `/TestManager` на
-невидимом Windows desktop или в Xvfb и не требует web-клиента:
+worker-owned Windows session desktop или в Xvfb и не требует web-клиента:
 
 Win32 desktop и явные UIA-сценарии доступны только на Windows. Linux backend
 использует Xvfb и штатную объектную модель TestClient/TestManager. Для декорации

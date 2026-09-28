@@ -9,6 +9,7 @@ ENTRYPOINT = ROOT / "codex-test-bridge" / "scripts" / "linux_flow.sh"
 
 
 class IntegrationEntrypointTests(unittest.TestCase):
+    @unittest.skipIf(os.name == "nt", "Linux integration entrypoint")
     def test_doctor_fails_when_real_integration_environment_is_absent(self):
         environment = {
             "PATH": os.environ.get("PATH", ""),

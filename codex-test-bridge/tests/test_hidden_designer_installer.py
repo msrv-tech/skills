@@ -6,7 +6,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 from install_cfe_designer_hidden import (
-    is_authentication_title, is_batch_designer_title, x11_keysym_name, xvfb_display_candidates,
+    is_authentication_title, is_batch_designer_title, prepare_windows_raw_command,
+    x11_keysym_name, xvfb_display_candidates,
 )
 
 
@@ -38,6 +39,24 @@ class HiddenDesignerInstallerTests(unittest.TestCase):
         self.assertTrue(is_batch_designer_title("Конфигуратор - Бухгалтерия предприятия"))
         self.assertTrue(is_batch_designer_title("Загрузка конфигурационной информации..."))
         self.assertFalse(is_batch_designer_title("Доступ к информационной базе"))
+
+    def test_windows_raw_command_preserves_empty_password_and_quotes_paths(self):
+        command = [
+            r"C:\Program Files\1cv8\bin\1cv8.exe",
+            "DESIGNER",
+            r"/Sserver\database",
+            "/NTest User",
+            '/P""',
+            "/LoadCfg",
+            r"C:\Temp Space\codex-test-bridge.cfe",
+        ]
+
+        prepared = prepare_windows_raw_command(command)
+
+        self.assertEqual(prepared[0], command[0])
+        self.assertEqual(prepared[4], '/P""')
+        self.assertEqual(prepared[3], '"/NTest User"')
+        self.assertEqual(prepared[6], '"C:\\Temp Space\\codex-test-bridge.cfe"')
 
 
 if __name__ == "__main__":

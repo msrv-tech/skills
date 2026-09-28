@@ -13,6 +13,11 @@ from common.test_database_registry import RegistryResolutionError, resolve_regis
 
 
 def main(argv: list[str] | None = None) -> int:
+    if os.name == "nt":
+        # Redirected Windows consoles otherwise use the active OEM/ANSI code
+        # page. Registry paths are UTF-8 data and may contain Cyrillic names.
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
     parser = argparse.ArgumentParser(
         description="Resolve the 1C test database registry",
         allow_abbrev=False,

@@ -3,17 +3,20 @@ import os
 import socket
 import sys
 import tempfile
+import time
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from ui_worker import (
-    UiWorkerError, expand, navigation_ref_from_uuid, prepare_native_ui_scenario, redact_command,
+    ProcessBackend, UiWorkerError, WindowsDesktopBackend, expand, navigation_ref_from_uuid,
+    prepare_native_ui_scenario, redact_command,
     isolate_test_client_startup_parameter, manager_failure_error, failed_ui_steps, normalize_1c_auth_arguments,
     choose_free_xvfb_display,
     resolve_native_ui_references, run_ui_worker,
-    suppress_1c_startup_ui, validate_worker_config, xvfb_process_environment,
+    should_recover_stalled_windows_step, suppress_1c_startup_ui, validate_worker_config,
+    windows_command_line, xvfb_process_environment,
 )
 from agent_ui import diagnose_ui_failure, normalize_ui_tree
 from uia_runner import _locate_inner_button_by_pixels
@@ -526,6 +529,28 @@ class UiWorkerTests(unittest.TestCase):
         self.assertIn('Окно.ПолучитьКомандныйИнтерфейс()', module)
         self.assertIn('"ТестируемаяКнопкаКомандногоИнтерфейса"', module)
 
+    def test_close_form_prefers_form_and_never_closes_main_window(self):
+        module = (
+            Path(__file__).resolve().parents[1]
+            / "src" / "Ext" / "ManagedApplicationModule.bsl"
+        ).read_text(encoding="utf-8-sig")
+        start = module.index("Функция CTB_ЗапроситьЗакрытиеФормы")
+        end = module.index("Функция CTB_ОткрытьФормуВыполненияЗадачи", start)
+        close_form = module[start:end]
+
+        self.assertLess(close_form.index("Форма.Закрыть()"), close_form.index("КнопкаЗакрыть.Нажать()"))
+        self.assertLess(close_form.index("КнопкаЗакрыть.Нажать()"), close_form.index("Окно.Закрыть()"))
+        self.assertIn("Если Окно.Основное Тогда", close_form)
+        self.assertIn("Form cannot be closed without closing the main client window", close_form)
+
+    def test_open_form_recovery_reuses_already_opened_target(self):
+        module = (
+            Path(__file__).resolve().parents[1]
+            / "src" / "Ext" / "ManagedApplicationModule.bsl"
+        ).read_text(encoding="utf-8-sig")
+        self.assertIn("CTB_НайтиУжеОткрытуюЦелевуюФорму", module)
+        self.assertIn("Повторный менеджер должен подхватить фактически открытую форму", module)
+
     def test_warm_suite_restores_test_client_after_server_hook(self):
         module = (
             Path(__file__).resolve().parents[1]
@@ -605,6 +630,60 @@ class UiWorkerTests(unittest.TestCase):
             validate_worker_config({"backend": "screen", "clientCommand": ["a"], "managerCommand": ["b"]})
         with self.assertRaisesRegex(UiWorkerError, "bridgeBaseUrl"):
             validate_worker_config({"resultTransport": "bridgeJob", "clientCommand": ["a"], "managerCommand": ["b"]})
+        with self.assertRaisesRegex(UiWorkerError, "windowsRawCommandLine"):
+            validate_worker_config({"clientCommand": ["a"], "managerCommand": ["b"], "windowsRawCommandLine": "yes"})
+
+    def test_windows_raw_command_line_preserves_empty_password_token(self):
+        command = [r"C:\Program Files\1cv8\bin\1cv8.exe", "ENTERPRISE", '/P""', "/TestClient"]
+
+        quoted = windows_command_line(command)
+        raw = windows_command_line(command, raw_arguments=True)
+
+        self.assertIn('/P\\"\\"', quoted)
+        self.assertEqual(
+            raw,
+            '"C:\\Program Files\\1cv8\\bin\\1cv8.exe" ENTERPRISE /P"" /TestClient',
+        )
+
+    def test_windows_process_backend_uses_raw_command_line(self):
+        command = [r"C:\Program Files\1cv8\bin\1cv8.exe", "ENTERPRISE", '/P""', "/TestClient"]
+        process = Mock(pid=123)
+        with patch("ui_worker.os.name", "nt"), patch("ui_worker.subprocess.Popen", return_value=process) as popen:
+            ProcessBackend({}, None).start(command, raw_command_line=True)
+
+        rendered = popen.call_args.args[0]
+        self.assertIsInstance(rendered, str)
+        self.assertIn('/P""', rendered)
+        self.assertNotIn('/P\\"\\"', rendered)
+
+    def test_windows_step_recovery_is_bounded_and_respects_declared_timeout(self):
+        backend = object.__new__(WindowsDesktopBackend)
+        partial = {"status": "running", "step": {"action": "openForm"}}
+        self.assertFalse(should_recover_stalled_windows_step(backend, partial, 29, 0, {}))
+        self.assertTrue(should_recover_stalled_windows_step(backend, partial, 30, 0, {}))
+        self.assertFalse(should_recover_stalled_windows_step(backend, partial, 30, 1, {}))
+        compact_partial = {"status": "running", "currentStep": 1, "step": {"status": "running"}}
+        scenario = {"steps": [{"action": "openForm", "targetForm": {"timeout": 30}}]}
+        self.assertFalse(should_recover_stalled_windows_step(
+            backend, compact_partial, 39, 0, {}, scenario,
+        ))
+        self.assertTrue(should_recover_stalled_windows_step(
+            backend, compact_partial, 40, 0, {}, scenario,
+        ))
+        compact_partial["step"]["status"] = "passed"
+        self.assertTrue(should_recover_stalled_windows_step(
+            backend, compact_partial, 40, 0, {}, scenario,
+        ))
+        compact_partial["step"]["action"] = "platform-specific-action"
+        self.assertTrue(should_recover_stalled_windows_step(
+            backend, compact_partial, 40, 0, {}, scenario,
+        ))
+        self.assertFalse(should_recover_stalled_windows_step(
+            backend, {"status": "running", "step": {"action": "closeForm", "status": "failed"}}, 30, 0, {},
+        ))
+        self.assertFalse(should_recover_stalled_windows_step(
+            backend, {"status": "passed", "step": {"action": "closeForm"}}, 30, 0, {},
+        ))
 
     def test_password_is_redacted_from_report_command(self):
         command = ["1cv8c.exe", "/N", "Tester", "/P", "secret", "/TestClient"]
@@ -780,6 +859,63 @@ class UiWorkerTests(unittest.TestCase):
             self.assertTrue(Path(report["artifacts"]["progress"]).is_file())
             self.assertTrue(Path(report["artifacts"]["summary"]).is_file())
 
+    def test_bridge_failed_step_stops_worker_before_timeout(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            scenario = root / "ui.json"
+            scenario.write_text(
+                '{"name":"expected failure","steps":[{"action":"assertConnected"}]}',
+                encoding="utf-8",
+            )
+            port = free_port()
+            config = {
+                "backend": "process",
+                "bridgeBaseUrl": "http://bridge.invalid/hs/codex-test",
+                "resultTransport": "bridgeJob",
+                "testPort": port,
+                "probeTestPort": True,
+                "startupTimeoutSeconds": 5,
+                "timeoutSeconds": 30,
+                "progressPollSeconds": 0.1,
+                "clientCommand": [sys.executable, "-c", CLIENT_CODE, "{testPort}"],
+                "managerCommand": [sys.executable, "-c", "import time; time.sleep(60)", "{jobId}"],
+            }
+            failed_step = {
+                "status": "failed",
+                "name": "Expected failure",
+                "action": "assertConnected",
+                "error": "bridge failure sentinel",
+            }
+
+            def fake_bridge(_config, payload):
+                if payload["command"] == "uiJobGet":
+                    partial = {
+                        "ok": True,
+                        "status": "running",
+                        "stage": "failed",
+                        "name": "expected failure",
+                        "currentStep": 1,
+                        "totalSteps": 1,
+                        "step": failed_step,
+                        "steps": [failed_step],
+                    }
+                    return {"status": "running", "result": json.dumps(partial)}
+                return {"ok": True}
+
+            started = time.monotonic()
+            with patch("ui_worker.bridge_command", side_effect=fake_bridge):
+                report = run_ui_worker(config, scenario, root / "artifacts")
+            elapsed = time.monotonic() - started
+
+            self.assertFalse(report["ok"])
+            self.assertLess(elapsed, 5)
+            self.assertEqual(report["error"]["type"], "ScenarioFailure")
+            self.assertIn("bridge failure sentinel", report["error"]["message"])
+            self.assertTrue(any(
+                event.get("stage") == "failed" and "stopping TestManager" in event.get("message", "")
+                for event in report["progress"]
+            ))
+
     def test_inline_log_transport_embeds_scenario_and_reads_marker(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
@@ -816,8 +952,8 @@ class UiWorkerTests(unittest.TestCase):
             with self.assertRaisesRegex(UiWorkerError, "does not exist"):
                 run_ui_worker(config, Path(temp_dir) / "missing.feature", Path(temp_dir) / "artifacts")
 
-    @unittest.skipUnless(os.name == "nt", "Windows hidden desktop test")
-    def test_windows_hidden_desktop_backend(self):
+    @unittest.skipUnless(os.name == "nt", "Windows session desktop test")
+    def test_windows_session_desktop_backend(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
             scenario = root / "ui.feature"
@@ -836,11 +972,21 @@ class UiWorkerTests(unittest.TestCase):
             self.assertTrue(report["ok"], report)
             self.assertEqual(report["backend"], "windowsDesktop")
 
-    def test_windows_backend_owns_launcher_process_tree(self):
+    def test_windows_desktop_uses_stable_session_desktop_not_created_desktop(self):
         worker = (Path(__file__).resolve().parents[1] / "ui_worker.py").read_text(encoding="utf-8")
-        self.assertIn("JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE", worker)
-        self.assertIn("CreateJobObjectW", worker)
-        self.assertIn("AssignProcessToJobObject", worker)
+        backend = worker[worker.index("class WindowsDesktopBackend"):worker.index("def xvfb_process_environment")]
+        self.assertIn("class WindowsDesktopBackend(ProcessBackend)", backend)
+        self.assertIn('self.desktop_name = "Default"', backend)
+        self.assertIn("OpenDesktopW", backend)
+        self.assertNotIn("self.user32.CreateDesktopW", backend)
+        self.assertNotIn("self.kernel32.CreateProcessW", backend)
+        self.assertNotIn("startup.lpDesktop", backend)
+
+    def test_windows_backend_avoids_job_object_launch_path(self):
+        worker = (Path(__file__).resolve().parents[1] / "ui_worker.py").read_text(encoding="utf-8")
+        backend = worker[worker.index("class WindowsDesktopBackend"):worker.index("def xvfb_process_environment")]
+        self.assertNotIn("CreateJobObjectW", backend)
+        self.assertNotIn("AssignProcessToJobObject", backend)
 
 
 if __name__ == "__main__":

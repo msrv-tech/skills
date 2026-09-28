@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Install a CFE with batch Designer on an isolated desktop."""
+"""Install a CFE with batch Designer through the configured worker backend."""
 
 from __future__ import annotations
 
 import argparse
 import ctypes
 import os
+import subprocess
 import sys
 import time
 import uuid
@@ -48,6 +49,19 @@ def xvfb_display_candidates(
         display for display in range(90, 200)
         if not (socket_directory / f"X{display}").exists()
         and not (temporary_directory / f".X{display}-lock").exists()
+    ]
+
+
+def prepare_windows_raw_command(command: list[str]) -> list[str]:
+    """Quote normal argv fragments but preserve 1C's literal /P"" token."""
+    if not command:
+        raise ValueError("Process command must not be empty")
+    return [
+        command[0],
+        *[
+            argument if argument == '/P""' else subprocess.list2cmdline([argument])
+            for argument in command[1:]
+        ],
     ]
 
 
@@ -334,7 +348,7 @@ def main() -> int:
     # open an interactive authentication form. The compact 1C syntax works on
     # both platforms and keeps batch Designer genuinely non-interactive.
     target = [f"/S{args.server}\\{args.database}"] if args.server else [f"/F{Path(args.database_path).resolve()}"]
-    password_argument = '/P""' if os.name != "nt" and password == "" else f"/P{password}"
+    password_argument = '/P""' if password == "" else f"/P{password}"
     authentication = [f"/N{args.user}", password_argument] if args.user else []
     command = [
         str(executable), "DESIGNER", *target, *authentication,
@@ -346,7 +360,13 @@ def main() -> int:
     backend, display_number = create_installer_backend()
     process = None
     try:
-        process = backend.start(command)
+        if os.name == "nt":
+            process = backend.start(
+                prepare_windows_raw_command(command),
+                raw_command_line=True,
+            )
+        else:
+            process = backend.start(command)
         if os.name != "nt":
             submit_linux_authentication(int(display_number), args.user, password or "", process)
         exit_code = wait_for_process(process, args.timeout)

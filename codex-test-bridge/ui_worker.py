@@ -130,7 +130,7 @@ def run_accessibility_bridge_request(
     timeout_seconds = float(
         config.get("accessibilityBridgeTimeoutSeconds", config.get("uiaBridgeTimeoutSeconds", 45))
     )
-    if isinstance(backend, WindowsHiddenDesktopBackend):
+    if isinstance(backend, WindowsDesktopBackend):
         return run_uia_bridge_request_isolated(
             backend.desktop_name, client.pid, request, timeout_seconds,
         )
@@ -431,6 +431,8 @@ def validate_worker_config(config: Any) -> None:
         raise UiWorkerError("probeTestPort must be boolean")
     if not isinstance(config.get("suppressStartupUi", True), bool):
         raise UiWorkerError("suppressStartupUi must be boolean")
+    if not isinstance(config.get("windowsRawCommandLine", False), bool):
+        raise UiWorkerError("windowsRawCommandLine must be boolean")
     environment = config.get("environment", {})
     if not isinstance(environment, dict) or any(not isinstance(key, str) or not isinstance(value, str) for key, value in environment.items()):
         raise UiWorkerError("environment must be an object with string values")
@@ -522,6 +524,38 @@ def normalize_1c_auth_arguments(command: list[str]) -> list[str]:
         result.append(command[index])
         index += 1
     return result
+
+
+def windows_command_line(command: list[str], *, raw_arguments: bool = False) -> str:
+    """Render a command line for ``CreateProcessW``.
+
+    Normal mode follows Python's Windows argv quoting. Raw-argument mode
+    quotes only argv[0] and joins every remaining item verbatim. It is needed
+    for 1C's compact empty-password token ``/P\"\"``: ``list2cmdline`` escapes
+    its quotes to ``/P\\\"\\\"``, which the platform does not recognize.
+    """
+    if not command:
+        raise UiWorkerError("Process command must not be empty")
+    if not raw_arguments:
+        return subprocess.list2cmdline(command)
+    executable = subprocess.list2cmdline(command[:1])
+    return " ".join([executable, *command[1:]])
+
+
+def bridge_reported_failed_step(value: Any) -> bool:
+    """Return true once bridge progress contains a failed native UI step."""
+    if not isinstance(value, dict):
+        return False
+    if value.get("status") == "failed" or value.get("ok") is False:
+        return is_scenario_result(value)
+    step = value.get("step")
+    return (
+        value.get("status") == "running"
+        and isinstance(step, dict)
+        and step.get("status") == "failed"
+    )
+
+
 class RunningProcess:
     pid: int
 
@@ -560,11 +594,16 @@ class ProcessBackend:
         self.environment = environment
         self.working_directory = working_directory
 
-    def start(self, command: list[str]) -> RunningProcess:
+    def start(
+        self, command: list[str], *, raw_command_line: bool = False, role: str = "client",
+    ) -> RunningProcess:
         env = os.environ.copy()
         env.update(self.environment)
+        process_command: list[str] | str = command
+        if os.name == "nt" and raw_command_line:
+            process_command = windows_command_line(command, raw_arguments=True)
         process = subprocess.Popen(
-            command,
+            process_command,
             cwd=self.working_directory or None,
             env=env,
             stdin=subprocess.DEVNULL,
@@ -632,71 +671,36 @@ class WindowsProcessHandle(RunningProcess):
             self.process_handle = 0
 
 
-class WindowsHiddenDesktopBackend:
+class WindowsDesktopBackend(ProcessBackend):
+    """Run 1C on the inherited interactive Windows session desktop.
+
+    1C 8.5 can display a window with an explicit STARTUPINFO.lpDesktop and still
+    block the synchronous TestClient call which opened it. The same process is
+    stable when it inherits the orchestrator's WinSta0\\Default desktop. Keep
+    the public backend name for the worker contract and use the proven Python
+    subprocess launcher instead of assigning a Win32 desktop explicitly.
+    """
     name = "windowsDesktop"
-    GENERIC_ALL = 0x10000000
-    CREATE_UNICODE_ENVIRONMENT = 0x00000400
-    # 1cv8 can replace the launcher process while processing startup options.
-    # Owning the whole tree avoids leaking a full client when that happens.
-    JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE = 0x00002000
-    JOB_OBJECT_EXTENDED_LIMIT_INFORMATION = 9
+    DESKTOP_READOBJECTS = 0x0001
+    DESKTOP_ENUMERATE = 0x0040
 
-    class JOBOBJECT_BASIC_LIMIT_INFORMATION(ctypes.Structure):
-        _fields_ = [
-            ("PerProcessUserTimeLimit", ctypes.c_int64), ("PerJobUserTimeLimit", ctypes.c_int64),
-            ("LimitFlags", wintypes.DWORD), ("MinimumWorkingSetSize", ctypes.c_size_t),
-            ("MaximumWorkingSetSize", ctypes.c_size_t), ("ActiveProcessLimit", wintypes.DWORD),
-            ("Affinity", ctypes.c_size_t), ("PriorityClass", wintypes.DWORD), ("SchedulingClass", wintypes.DWORD),
-        ]
-
-    class JOBOBJECT_IO_COUNTERS(ctypes.Structure):
-        _fields_ = [(name, ctypes.c_uint64) for name in (
-            "ReadOperationCount", "WriteOperationCount", "OtherOperationCount",
-            "ReadTransferCount", "WriteTransferCount", "OtherTransferCount",
-        )]
-
-    class JOBOBJECT_EXTENDED_LIMIT_INFORMATION(ctypes.Structure):
-        _fields_ = [
-            # The native basic struct is 64 bytes on supported Windows ABIs;
-            # LimitFlags is the DWORD at offset 16.
-            ("BasicLimitInformation", ctypes.c_byte * 64),
-            ("IoInfo", ctypes.c_byte * 48),
-            ("ProcessMemoryLimit", ctypes.c_size_t), ("JobMemoryLimit", ctypes.c_size_t),
-            ("PeakProcessMemoryUsed", ctypes.c_size_t), ("PeakJobMemoryUsed", ctypes.c_size_t),
-        ]
-
-    class STARTUPINFO(ctypes.Structure):
-        _fields_ = [
-            ("cb", wintypes.DWORD), ("lpReserved", wintypes.LPWSTR),
-            ("lpDesktop", wintypes.LPWSTR), ("lpTitle", wintypes.LPWSTR),
-            ("dwX", wintypes.DWORD), ("dwY", wintypes.DWORD),
-            ("dwXSize", wintypes.DWORD), ("dwYSize", wintypes.DWORD),
-            ("dwXCountChars", wintypes.DWORD), ("dwYCountChars", wintypes.DWORD),
-            ("dwFillAttribute", wintypes.DWORD), ("dwFlags", wintypes.DWORD),
-            ("wShowWindow", wintypes.WORD), ("cbReserved2", wintypes.WORD),
-            ("lpReserved2", ctypes.POINTER(ctypes.c_ubyte)),
-            ("hStdInput", wintypes.HANDLE), ("hStdOutput", wintypes.HANDLE),
-            ("hStdError", wintypes.HANDLE),
-        ]
-
-    class PROCESS_INFORMATION(ctypes.Structure):
-        _fields_ = [
-            ("hProcess", wintypes.HANDLE), ("hThread", wintypes.HANDLE),
-            ("dwProcessId", wintypes.DWORD), ("dwThreadId", wintypes.DWORD),
-        ]
-
-    def __init__(self, environment: dict[str, str], working_directory: str | None, desktop_name: str):
+    def __init__(self, environment: dict[str, str], working_directory: str | None):
         if os.name != "nt":
             raise UiWorkerError("windowsDesktop backend is available only on Windows")
-        self.environment = environment
-        self.working_directory = working_directory
-        self.desktop_name = desktop_name
+        super().__init__(environment, working_directory)
+        self.desktop_name = "Default"
+        self.desktop = None
+        self.user32 = None
+        self.kernel32 = None
+
+    def _open_native_desktop(self) -> None:
+        if self.desktop:
+            return
         self.user32 = ctypes.WinDLL("user32", use_last_error=True)
         self.kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
-        self.user32.CreateDesktopW.restype = wintypes.HANDLE
-        self.user32.CreateDesktopW.argtypes = [
-            wintypes.LPCWSTR, wintypes.LPCWSTR, ctypes.c_void_p,
-            wintypes.DWORD, wintypes.DWORD, ctypes.c_void_p,
+        self.user32.OpenDesktopW.restype = wintypes.HANDLE
+        self.user32.OpenDesktopW.argtypes = [
+            wintypes.LPCWSTR, wintypes.DWORD, wintypes.BOOL, wintypes.DWORD,
         ]
         self.user32.CloseDesktop.restype = wintypes.BOOL
         self.user32.CloseDesktop.argtypes = [wintypes.HANDLE]
@@ -706,12 +710,6 @@ class WindowsHiddenDesktopBackend:
         self.user32.GetWindowThreadProcessId.argtypes = [wintypes.HWND, ctypes.POINTER(wintypes.DWORD)]
         self.user32.PostMessageW.restype = wintypes.BOOL
         self.user32.PostMessageW.argtypes = [wintypes.HWND, wintypes.UINT, wintypes.WPARAM, wintypes.LPARAM]
-        self.kernel32.CreateProcessW.restype = wintypes.BOOL
-        self.kernel32.CreateProcessW.argtypes = [
-            wintypes.LPCWSTR, wintypes.LPWSTR, ctypes.c_void_p, ctypes.c_void_p,
-            wintypes.BOOL, wintypes.DWORD, ctypes.c_void_p, wintypes.LPCWSTR,
-            ctypes.POINTER(self.STARTUPINFO), ctypes.POINTER(self.PROCESS_INFORMATION),
-        ]
         self.kernel32.GetExitCodeProcess.restype = wintypes.BOOL
         self.kernel32.GetExitCodeProcess.argtypes = [wintypes.HANDLE, ctypes.POINTER(wintypes.DWORD)]
         self.kernel32.TerminateProcess.restype = wintypes.BOOL
@@ -722,68 +720,26 @@ class WindowsHiddenDesktopBackend:
         self.kernel32.CloseHandle.argtypes = [wintypes.HANDLE]
         self.kernel32.OpenProcess.restype = wintypes.HANDLE
         self.kernel32.OpenProcess.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
-        self.kernel32.CreateJobObjectW.restype = wintypes.HANDLE
-        self.kernel32.CreateJobObjectW.argtypes = [ctypes.c_void_p, wintypes.LPCWSTR]
-        self.kernel32.SetInformationJobObject.restype = wintypes.BOOL
-        self.kernel32.SetInformationJobObject.argtypes = [wintypes.HANDLE, ctypes.c_int, ctypes.c_void_p, wintypes.DWORD]
-        self.kernel32.AssignProcessToJobObject.restype = wintypes.BOOL
-        self.kernel32.AssignProcessToJobObject.argtypes = [wintypes.HANDLE, wintypes.HANDLE]
-        self.job = self.kernel32.CreateJobObjectW(None, None)
-        if not self.job:
-            raise ctypes.WinError(ctypes.get_last_error())
-        job_limits = self.JOBOBJECT_EXTENDED_LIMIT_INFORMATION()
-        wintypes.DWORD.from_buffer(job_limits.BasicLimitInformation, 16).value = self.JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
-        if not self.kernel32.SetInformationJobObject(self.job, self.JOB_OBJECT_EXTENDED_LIMIT_INFORMATION, ctypes.byref(job_limits), ctypes.sizeof(job_limits)):
-            self.kernel32.CloseHandle(self.job)
-            self.job = None
-            raise ctypes.WinError(ctypes.get_last_error())
-        self.desktop = self.user32.CreateDesktopW(desktop_name, None, None, 0, self.GENERIC_ALL, None)
+        self.desktop = self.user32.OpenDesktopW(
+            self.desktop_name,
+            0,
+            False,
+            self.DESKTOP_READOBJECTS | self.DESKTOP_ENUMERATE,
+        )
         if not self.desktop:
             raise ctypes.WinError(ctypes.get_last_error())
 
-    def start(self, command: list[str]) -> RunningProcess:
-        startup = self.STARTUPINFO()
-        startup.cb = ctypes.sizeof(startup)
-        startup.lpDesktop = f"WinSta0\\{self.desktop_name}"
-        process_info = self.PROCESS_INFORMATION()
-        command_line = ctypes.create_unicode_buffer(subprocess.list2cmdline(command))
-        environment = os.environ.copy()
-        environment.update(self.environment)
-        environment_block = "\0".join(f"{key}={value}" for key, value in sorted(environment.items(), key=lambda item: item[0].upper())) + "\0\0"
-        environment_buffer = ctypes.create_unicode_buffer(environment_block)
-        success = self.kernel32.CreateProcessW(
-            None, command_line, None, None, False, self.CREATE_UNICODE_ENVIRONMENT,
-            environment_buffer, self.working_directory or None,
-            ctypes.byref(startup), ctypes.byref(process_info),
-        )
-        if not success:
-            raise ctypes.WinError(ctypes.get_last_error())
-        if not self.kernel32.AssignProcessToJobObject(self.job, process_info.hProcess):
-            self.kernel32.TerminateProcess(process_info.hProcess, 1)
-            self.kernel32.CloseHandle(process_info.hThread)
-            self.kernel32.CloseHandle(process_info.hProcess)
-            raise ctypes.WinError(ctypes.get_last_error())
-        return WindowsProcessHandle(
-            self.kernel32,
-            self.user32,
-            self.desktop,
-            process_info.hProcess,
-            process_info.hThread,
-            process_info.dwProcessId,
-        )
-
     def adopt(self, pid: int) -> RunningProcess:
+        self._open_native_desktop()
         access = 0x00100000 | 0x00001000 | 0x0001  # SYNCHRONIZE | QUERY_LIMITED_INFORMATION | TERMINATE
+        assert self.kernel32 is not None and self.user32 is not None and self.desktop is not None
         process_handle = self.kernel32.OpenProcess(access, False, pid)
         if not process_handle:
             raise ctypes.WinError(ctypes.get_last_error())
         return WindowsProcessHandle(self.kernel32, self.user32, self.desktop, process_handle, 0, pid)
 
     def close(self) -> None:
-        if self.job:
-            self.kernel32.CloseHandle(self.job)
-            self.job = None
-        if self.desktop:
+        if self.desktop and self.user32 is not None:
             self.user32.CloseDesktop(self.desktop)
             self.desktop = None
 
@@ -930,7 +886,7 @@ def listener_pid_windows(port: int) -> int | None:
 
 
 def wait_for_restarted_test_client(
-    backend: ProcessBackend | WindowsHiddenDesktopBackend | XvfbBackend,
+    backend: ProcessBackend | WindowsDesktopBackend | XvfbBackend,
     host: str,
     port: int,
     timeout: float,
@@ -939,7 +895,7 @@ def wait_for_restarted_test_client(
     while time.monotonic() < deadline:
         try:
             with socket.create_connection((host, port), timeout=0.25):
-                if isinstance(backend, WindowsHiddenDesktopBackend):
+                if isinstance(backend, WindowsDesktopBackend):
                     pid = listener_pid_windows(port)
                     if pid is not None:
                         return backend.adopt(pid)
@@ -1065,14 +1021,54 @@ def manager_failure_error(
     return {"type": "ManagerFailure", "message": message}
 
 
-def create_backend(config: dict[str, Any], run_id: str) -> ProcessBackend | WindowsHiddenDesktopBackend | XvfbBackend:
+def should_recover_stalled_windows_step(
+    backend: Any,
+    partial_result: Any,
+    step_elapsed_seconds: float,
+    recovery_count: int,
+    config: dict[str, Any],
+    scenario_data: dict[str, Any] | None = None,
+) -> bool:
+    """Return whether a bounded Windows TestClient RPC recovery is due."""
+    if not isinstance(backend, WindowsDesktopBackend) or not isinstance(partial_result, dict):
+        return False
+    if partial_result.get("status") != "running":
+        return False
+    step = partial_result.get("step") or {}
+    declared_step: dict[str, Any] = {}
+    if isinstance(scenario_data, dict):
+        steps = scenario_data.get("steps")
+        try:
+            step_index = int(partial_result.get("currentStep", 0)) - 1
+        except (TypeError, ValueError):
+            step_index = -1
+        if isinstance(steps, list) and 0 <= step_index < len(steps):
+            candidate = steps[step_index]
+            if isinstance(candidate, dict):
+                declared_step = candidate
+    action = str(declared_step.get("action") or step.get("action") or "")
+    if not action or step.get("status") == "failed":
+        return False
+    limit = int(config.get("windowsStepRecoveryAttempts", 1))
+    threshold = float(config.get("windowsStepRecoverySeconds", 30))
+    declared_timeout = declared_step.get("timeout")
+    if declared_timeout is None and isinstance(declared_step.get("targetForm"), dict):
+        declared_timeout = declared_step["targetForm"].get("timeout")
+    try:
+        threshold = max(threshold, float(declared_timeout) + 10)
+    except (TypeError, ValueError):
+        pass
+    return recovery_count < limit and step_elapsed_seconds >= threshold
+
+
+def create_backend(config: dict[str, Any], run_id: str) -> ProcessBackend | WindowsDesktopBackend | XvfbBackend:
     backend = config.get("backend", "auto")
     if backend == "auto":
         backend = "windowsDesktop" if os.name == "nt" else "xvfb"
     environment = config.get("environment", {})
     working_directory = config.get("workingDirectory")
     if backend == "windowsDesktop":
-        return WindowsHiddenDesktopBackend(environment, working_directory, f"Codex1C-{run_id}")
+        return WindowsDesktopBackend(environment, working_directory)
     if backend == "xvfb":
         configured_display = config.get("display", "auto")
         display = choose_free_xvfb_display() if configured_display in (None, "", "auto") else int(configured_display)
@@ -1089,8 +1085,8 @@ def run_warm_ui_segments(
     This is deliberately different from ``uiSuiteJobCreate``: a TestManager is
     short-lived for every segment, so server work can run in the Python
     orchestrator between segments without keeping a manager session blocked in
-    a synchronous CFE hook.  The expensive TestClient and its hidden desktop
-    live for the complete sequence.
+    a synchronous CFE hook. The expensive TestClient and its worker-owned
+    desktop session live for the complete sequence.
     """
     validate_worker_config(config)
     if not segments:
@@ -1159,7 +1155,11 @@ def run_warm_ui_segments(
         # when TestManager invokes them through the platform RPC channel.
         bridge_command(runtime, {"command": "uiJobCreate", "jobId": suite_id, "scenario": json.dumps(first_scenario, ensure_ascii=True, separators=(",", ":"))})
         progress("startup", f"Starting warm TestClient on isolated {backend.name} backend")
-        client = backend.start(client_command)
+        client = backend.start(
+            client_command,
+            raw_command_line=bool(runtime.get("windowsRawCommandLine", False)),
+            role="client",
+        )
         if runtime.get("probeTestPort", False):
             wait_for_port(str(runtime.get("testHost", "127.0.0.1")), test_port, float(runtime.get("startupTimeoutSeconds", 60)), client)
         else:
@@ -1200,7 +1200,11 @@ def run_warm_ui_segments(
                 variables = dict(common_variables, runId=job_id, jobId=job_id, scenario=str(artifacts / f"segment-{index}.ui.json"), clientLog=str(artifacts / f"client-{suite_id}.log"), managerLog=str(artifacts / f"manager-{job_id}.log"), scenarioBase64="")
                 manager_command = normalize_1c_auth_arguments(expand(runtime["managerCommand"], variables))
                 if runtime.get("suppressStartupUi", True): manager_command = suppress_1c_startup_ui(manager_command)
-                manager = backend.start(manager_command)
+                manager = backend.start(
+                    manager_command,
+                    raw_command_line=bool(runtime.get("windowsRawCommandLine", False)),
+                    role="manager",
+                )
                 deadline, next_poll, next_heartbeat = time.monotonic() + float(runtime.get("timeoutSeconds", 900)), 0.0, time.monotonic() + float(runtime.get("heartbeatIntervalSeconds", 10))
                 while time.monotonic() < deadline:
                     manager_exit = manager.poll()
@@ -1232,27 +1236,42 @@ def run_warm_ui_segments(
                             if isinstance(partial, dict) and partial.get("status") == "running":
                                 step = partial.get("step") or {}
                                 progress("running", f"{name}: step {partial.get('currentStep', 0)}/{partial.get('totalSteps', 0)}: {step.get('name') or step.get('action') or partial.get('stage')}", scenarioName=name, scenarioId=item_id, currentStep=partial.get("currentStep"), totalSteps=partial.get("totalSteps"), step=step)
+                            if bridge_reported_failed_step(partial):
+                                manager_result = partial
+                                progress(
+                                    "failed",
+                                    f"{name}: bridge reported a failed UI step; stopping TestManager",
+                                    scenarioName=name,
+                                    scenarioId=item_id,
+                                )
+                                manager.terminate()
+                                manager_exit = manager.poll()
+                                break
                         except Exception:
                             pass
                     if now >= next_heartbeat:
                         progress("waiting", f"{name}: waiting for TestManager", scenarioName=name, scenarioId=item_id)
                         next_heartbeat = now + float(runtime.get("heartbeatIntervalSeconds", 10))
                     time.sleep(0.25)
-                if manager_exit is None:
+                if manager_exit is None and manager_result is None:
                     raise UiWorkerError(f"{name}: TestManager timed out after {float(runtime.get('timeoutSeconds', 900)):g} seconds")
-                result_deadline = time.monotonic() + float(runtime.get("resultWaitAfterExitSeconds", 30))
-                while time.monotonic() < result_deadline:
-                    text = bridge_command(runtime, {"command": "uiJobGet", "jobId": job_id}).get("result", "")
-                    candidate = json.loads(text) if text else None
-                    if is_scenario_result(candidate):
-                        manager_result = candidate
-                        break
-                    time.sleep(float(runtime.get("progressPollSeconds", 1)))
+                if manager_result is None:
+                    result_deadline = time.monotonic() + float(runtime.get("resultWaitAfterExitSeconds", 30))
+                    while time.monotonic() < result_deadline:
+                        text = bridge_command(runtime, {"command": "uiJobGet", "jobId": job_id}).get("result", "")
+                        candidate = json.loads(text) if text else None
+                        if is_scenario_result(candidate):
+                            manager_result = candidate
+                            break
+                        time.sleep(float(runtime.get("progressPollSeconds", 1)))
                 ok = manager_exit == 0 and isinstance(manager_result, dict) and bool(manager_result.get("ok", True))
                 result = dict(manager_result or {})
                 result.update({"scenarioId": item_id, "name": name, "ok": ok, "status": "passed" if ok else "failed"})
                 if not ok and "error" not in result:
-                    result["error"] = f"TestManager exit code {manager_exit}; result={bool(manager_result)}"
+                    if isinstance(manager_result, dict) and failed_ui_steps(manager_result):
+                        result["error"] = manager_failure_error(manager_result, manager_exit)["message"]
+                    else:
+                        result["error"] = f"TestManager exit code {manager_exit}; result={bool(manager_result)}"
                 results.append(result)
                 if after_segment:
                     phase_result = after_segment(item, index, result)
@@ -1420,7 +1439,11 @@ def run_ui_worker(config: dict[str, Any], scenario_path: str | Path, artifact_di
                 })
         backend = create_backend(runtime_config, run_id)
         progress("startup", f"Starting TestClient on isolated {backend.name} backend")
-        client = backend.start(client_command)
+        client = backend.start(
+            client_command,
+            raw_command_line=bool(runtime_config.get("windowsRawCommandLine", False)),
+            role="client",
+        )
         client_processes.append(client)
         if config.get("probeTestPort", False):
             wait_for_port(
@@ -1435,7 +1458,7 @@ def run_ui_worker(config: dict[str, Any], scenario_path: str | Path, artifact_di
         if (
             isinstance(scenario_data, dict)
             and scenario_data.get("uiaBeforeSteps")
-            and isinstance(backend, WindowsHiddenDesktopBackend)
+            and isinstance(backend, WindowsDesktopBackend)
             and client is not None
         ):
             progress("uia", "Running pre-native UI Automation steps")
@@ -1443,7 +1466,11 @@ def run_ui_worker(config: dict[str, Any], scenario_path: str | Path, artifact_di
             if any(step.get("status") != "passed" for step in uia_before_results):
                 raise UiWorkerError("A pre-native UI Automation step failed")
         progress("startup", "Starting TestManager")
-        manager = backend.start(manager_command)
+        manager = backend.start(
+            manager_command,
+            raw_command_line=bool(runtime_config.get("windowsRawCommandLine", False)),
+            role="manager",
+        )
         progress("running", "TestManager started", managerPid=manager.pid)
         manager_deadline = time.monotonic() + float(config.get("timeoutSeconds", 900))
         heartbeat_interval = float(config.get("heartbeatIntervalSeconds", 10))
@@ -1453,6 +1480,9 @@ def run_ui_worker(config: dict[str, Any], scenario_path: str | Path, artifact_di
         last_partial_result: dict[str, Any] | None = None
         handled_uia_requests: set[str] = set()
         captured_failed_scenarios: set[str] = set()
+        bridge_failed_result = False
+        windows_step_recovery_counts: dict[int, int] = {}
+        last_bridge_poll_error: tuple[str, str] | None = None
         current_step_started = time.monotonic()
         while time.monotonic() < manager_deadline:
             exit_code = manager.poll()
@@ -1464,6 +1494,7 @@ def run_ui_worker(config: dict[str, Any], scenario_path: str | Path, artifact_di
                 next_job_poll = now + float(config.get("progressPollSeconds", 1))
                 try:
                     progress_job = bridge_command(runtime_config, {"command": "uiJobGet", "jobId": run_id})
+                    last_bridge_poll_error = None
                     progress_text = progress_job.get("result", "")
                     if progress_text:
                         partial = json.loads(progress_text)
@@ -1510,7 +1541,11 @@ def run_ui_worker(config: dict[str, Any], scenario_path: str | Path, artifact_di
                                     client_processes.append(client)
                                     progress("restart", "Adopted platform-restarted TestClient", clientPid=client.pid)
                                 else:
-                                    client = backend.start(client_command)
+                                    client = backend.start(
+                                        client_command,
+                                        raw_command_line=bool(runtime_config.get("windowsRawCommandLine", False)),
+                                        role="client",
+                                    )
                                     client_processes.append(client)
                                     progress("restart", "Platform restart was not detected; started fallback TestClient", clientPid=client.pid)
                                 bridge_command(runtime_config, {
@@ -1547,7 +1582,7 @@ def run_ui_worker(config: dict[str, Any], scenario_path: str | Path, artifact_di
                             current = partial.get("step") or {}
                             if (
                                 current.get("status") == "failed"
-                                and isinstance(backend, WindowsHiddenDesktopBackend)
+                                and isinstance(backend, WindowsDesktopBackend)
                                 and client is not None
                             ):
                                 scenario_name = str(partial.get("name", "scenario"))
@@ -1574,11 +1609,32 @@ def run_ui_worker(config: dict[str, Any], scenario_path: str | Path, artifact_di
                                     totalSteps=partial.get("totalSteps"),
                                     step=current,
                                 )
+                            if bridge_reported_failed_step(partial):
+                                manager_result = partial
+                                bridge_failed_result = True
+                                progress(
+                                    "failed",
+                                    "Bridge reported a failed UI step; stopping TestManager",
+                                    scenarioName=partial.get("name"),
+                                    currentStep=partial.get("currentStep"),
+                                    totalSteps=partial.get("totalSteps"),
+                                    step=current,
+                                )
+                                manager.terminate()
+                                manager_exit_code = manager.poll()
+                                break
+                        elif bridge_reported_failed_step(partial):
+                            manager_result = partial
+                            bridge_failed_result = True
+                            progress("failed", "Bridge reported a failed UI result; stopping TestManager")
+                            manager.terminate()
+                            manager_exit_code = manager.poll()
+                            break
                         elif (
                             is_scenario_result(partial)
                             and config.get("captureOnFinish", False)
                             and screenshot_file is None
-                            and isinstance(backend, WindowsHiddenDesktopBackend)
+                            and isinstance(backend, WindowsDesktopBackend)
                             and client is not None
                         ):
                             try:
@@ -1587,8 +1643,58 @@ def run_ui_worker(config: dict[str, Any], scenario_path: str | Path, artifact_di
                                 )
                             except Exception as exc:
                                 screenshot_error = {"type": type(exc).__name__, "message": str(exc)}
-                except Exception:
-                    pass
+                except Exception as exc:
+                    poll_error = (type(exc).__name__, str(exc))
+                    if poll_error != last_bridge_poll_error:
+                        last_bridge_poll_error = poll_error
+                        progress(
+                            "warning",
+                            f"Bridge progress poll failed: {poll_error[0]}: {poll_error[1]}",
+                            error={"type": poll_error[0], "message": poll_error[1]},
+                        )
+            if last_partial_result is not None and isinstance(backend, WindowsDesktopBackend):
+                try:
+                    recovery_step_number = int(last_partial_result.get("currentStep", 0))
+                except (TypeError, ValueError):
+                    recovery_step_number = 0
+                recovery_count = windows_step_recovery_counts.get(recovery_step_number, 0)
+                if should_recover_stalled_windows_step(
+                    backend,
+                    last_partial_result,
+                    now - current_step_started,
+                    recovery_count,
+                    runtime_config,
+                    scenario_data,
+                ):
+                    recovery_count += 1
+                    windows_step_recovery_counts[recovery_step_number] = recovery_count
+                    current = last_partial_result.get("step") or {}
+                    progress(
+                        "restart",
+                        "Windows TestClient RPC stalled; restarting TestManager",
+                        recoveryAttempt=recovery_count,
+                        currentStep=last_partial_result.get("currentStep"),
+                        step=current,
+                    )
+                    manager.terminate()
+                    manager.close()
+                    time.sleep(1)
+                    manager = backend.start(
+                        manager_command,
+                        raw_command_line=bool(runtime_config.get("windowsRawCommandLine", False)),
+                        role="manager",
+                    )
+                    progress(
+                        "restart",
+                        "TestManager restarted after a stalled Windows UI step",
+                        recoveryAttempt=recovery_count,
+                        managerPid=manager.pid,
+                    )
+                    current_step_started = time.monotonic()
+                    last_progress_signature = None
+                    next_job_poll = time.monotonic() + float(config.get("progressPollSeconds", 1))
+                    next_heartbeat = time.monotonic() + heartbeat_interval
+                    continue
             if now >= next_heartbeat:
                 elapsed = round((utc_now() - started).total_seconds())
                 if last_partial_result:
@@ -1605,8 +1711,11 @@ def run_ui_worker(config: dict[str, Any], scenario_path: str | Path, artifact_di
             time.sleep(0.25)
         else:
             raise UiWorkerError(f"Test manager timed out after {float(config.get('timeoutSeconds', 900)):g} seconds")
-        progress("running", f"TestManager finished with exit code {manager_exit_code}")
-        if transport == "bridgeJob":
+        if bridge_failed_result:
+            progress("failed", f"TestManager stopped after bridge failure with exit code {manager_exit_code}")
+        else:
+            progress("running", f"TestManager finished with exit code {manager_exit_code}")
+        if transport == "bridgeJob" and manager_result is None:
             result_deadline = time.monotonic() + float(config.get("resultWaitAfterExitSeconds", 30))
             while time.monotonic() < result_deadline:
                 job = bridge_command(runtime_config, {"command": "uiJobGet", "jobId": run_id})
@@ -1634,7 +1743,7 @@ def run_ui_worker(config: dict[str, Any], scenario_path: str | Path, artifact_di
         elif result_file is not None and result_file.exists():
             with result_file.open("r", encoding="utf-8-sig") as source:
                 manager_result = json.load(source)
-        manager_ok = manager_exit_code == 0 and isinstance(manager_result, dict)
+        manager_ok = not bridge_failed_result and manager_exit_code == 0 and isinstance(manager_result, dict)
         if isinstance(manager_result, dict):
             manager_ok = manager_ok and manager_result.get("ok", True)
         status = "passed" if manager_ok else "failed"
@@ -1651,10 +1760,10 @@ def run_ui_worker(config: dict[str, Any], scenario_path: str | Path, artifact_di
                 error = manager_failure_error(manager_result, manager_exit_code)
 
         post_manager_delay = float(config.get("postManagerDelaySeconds", 0))
-        if post_manager_delay > 0 and client is not None:
+        if status == "passed" and post_manager_delay > 0 and client is not None:
             wait_for_startup(client, post_manager_delay)
 
-        if isinstance(scenario_data, dict) and scenario_data.get("uiaSteps") and isinstance(backend, WindowsHiddenDesktopBackend) and client is not None:
+        if status == "passed" and isinstance(scenario_data, dict) and scenario_data.get("uiaSteps") and isinstance(backend, WindowsDesktopBackend) and client is not None:
             uia_results = run_uia_steps(backend.desktop_name, client.pid, scenario_data["uiaSteps"])
             if any(step.get("status") != "passed" for step in uia_results):
                 status = "failed"
@@ -1663,7 +1772,7 @@ def run_ui_worker(config: dict[str, Any], scenario_path: str | Path, artifact_di
         if (
             config.get("captureOnFinish", False)
             and screenshot_file is None
-            and isinstance(backend, WindowsHiddenDesktopBackend)
+            and isinstance(backend, WindowsDesktopBackend)
             and client is not None
         ):
             try:

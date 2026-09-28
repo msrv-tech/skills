@@ -1,5 +1,6 @@
 {
   "backend": "windowsDesktop",
+  "windowsRawCommandLine": true,
   "testHost": "127.0.0.1",
   "testPort": "auto",
   "probeTestPort": false,

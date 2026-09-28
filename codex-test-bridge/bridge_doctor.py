@@ -9,11 +9,10 @@ import os
 import shutil
 import socket
 import subprocess
-import uuid
 from pathlib import Path
 from typing import Any, Callable
 
-from ui_worker import WindowsHiddenDesktopBackend, expand, load_worker_config
+from ui_worker import WindowsDesktopBackend, expand, load_worker_config
 
 
 def _check(name: str, ok: bool, **details: Any) -> dict[str, Any]:
@@ -77,11 +76,12 @@ def run_doctor(
                     checks.append(_check("test-port", False, port=int(port), error=str(exc)))
             backend = config.get("backend", "auto")
             if os.name == "nt" and backend in {"auto", "windowsDesktop"}:
-                desktop = WindowsHiddenDesktopBackend({}, None, "CodexDoctor-" + uuid.uuid4().hex)
+                desktop = WindowsDesktopBackend({}, None)
+                desktop._open_native_desktop()
                 desktop.close()
-                checks.append(_check("hidden-desktop", True, backend="windowsDesktop"))
+                checks.append(_check("session-desktop", True, backend="windowsDesktop"))
             elif backend == "xvfb" or (backend == "auto" and os.name != "nt"):
-                checks.append(_check("hidden-desktop", shutil.which("Xvfb") is not None, backend="xvfb"))
+                checks.append(_check("session-desktop", shutil.which("Xvfb") is not None, backend="xvfb"))
         except Exception as exc:
             checks.append(_check("worker-config", False, error=f"{type(exc).__name__}: {exc}"))
 

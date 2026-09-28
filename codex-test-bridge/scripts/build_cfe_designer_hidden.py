@@ -14,7 +14,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from ui_worker import WindowsHiddenDesktopBackend, wait_for_process  # noqa: E402
+from ui_worker import WindowsDesktopBackend, wait_for_process  # noqa: E402
 
 
 def read_log(path: Path) -> str:
@@ -29,7 +29,7 @@ def read_log(path: Path) -> str:
     return data.decode("utf-8", errors="replace").strip()
 
 
-def run_designer(backend: WindowsHiddenDesktopBackend, command: list[str], log: Path, timeout: float) -> None:
+def run_designer(backend: WindowsDesktopBackend, command: list[str], log: Path, timeout: float) -> None:
     if log.exists():
         log.unlink()
     process = backend.start(command + ["/Out", str(log)])
@@ -73,8 +73,7 @@ def main() -> int:
     staged_cfe = run_dir / "codex-test-bridge.cfe"
     common = [str(executable), "DESIGNER", "/F", str(ib_dir), "/DisableStartupDialogs", "/DisableStartupMessages"]
 
-    desktop_name = f"CodexCfeBuild-{uuid.uuid4().hex}"
-    backend = WindowsHiddenDesktopBackend({}, str(ROOT), desktop_name)
+    backend = WindowsDesktopBackend({}, str(ROOT))
     try:
         run_designer(
             backend,
