@@ -27,7 +27,7 @@ class PrepareLegacySourceTests(unittest.TestCase):
         self.assertNotIn("UISuiteJobCreate", module)
         self.assertIn('"worker", Ложь', module)
         self.assertIn('"variant", "legacy"', module)
-        self.assertIn('"bridgeVersion", "0.7.0"', module)
+        self.assertIn('"bridgeVersion", "0.7.1"', module)
         properties = configuration.find(f"{{{MD_NAMESPACE}}}Properties")
         children = configuration.find(f"{{{MD_NAMESPACE}}}ChildObjects")
         self.assertEqual(

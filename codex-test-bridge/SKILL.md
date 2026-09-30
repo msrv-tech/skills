@@ -226,6 +226,20 @@ apache2ctl configtest
 systemctl reload apache2
 ```
 
+После установки full-CFE проверь, что модуль управляемого приложения
+компилируется и веб-клиент открывается без error modal. Одинаковый
+Playwright-smoke для Linux и Windows читает только зарегистрированную демобазу:
+
+```bash
+registry="$(python3 "$CODEX_HOME/skills/test-databases/scripts/resolve-registry.py")"
+python3 ./scripts/run_web_client_compile_smoke.py \
+  --registry "$registry" --database <Ref-or-Bridge.AppName> \
+  --browser /path/to/chromium
+```
+
+Логин и пароль передаются Node-процессу только через environment и не
+попадают в argv или отчёт smoke.
+
 Linux helper атомарно изменяет только указанный VRD и сохраняет остальные
 HTTP-сервисы. Сам helper и полный flow не вызывают `sudo`: пользователь,
 запускающий их, уже должен иметь права на VRD и reload Apache. Ошибка прав
