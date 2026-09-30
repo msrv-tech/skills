@@ -350,6 +350,20 @@
         "На Linux разрешён Python entrypoint: python3 <skills-root>/database/scripts/load-git.py; на Windows разрешён PowerShell entrypoint: powershell.exe -NoProfile -File <skills-root>/database/scripts/load-git.ps1"
       ],
       "mode": "load-git"
+    },
+    {
+      "id": 28,
+      "prompt": "Собери минимальный patch.cf поверх production.cf. Свежая production XML-выгрузка лежит в baseline-cfsrc, рабочие исходники — в cfsrc, разрешены только файлы из changed-files.txt.",
+      "expected_output": "Запущен build-cf-patch с бинарной основой production.cf, baseline XML, изменёнными XML-исходниками и явным allowlist. Итоговый patch.cf выдан только после полной контрольной XML-выгрузки и проверки точного списка отличий.",
+      "expectations": [
+        "Не используется Full XML load для построения бинарной основы",
+        "Скрипт python3 <skills-root>/database/scripts/build-cf-patch.py на Linux или powershell.exe -NoProfile -File <skills-root>/database/scripts/build-cf-patch.ps1 на Windows вызван с -BaseCf production.cf",
+        "Переданы -BaseConfigDir baseline-cfsrc, -ConfigDir cfsrc и -ListFile changed-files.txt",
+        "Сборка выполняется во временной файловой ИБ без /UpdateDBCfg",
+        "Перед выдачей patch.cf выполнена полная контрольная XML-выгрузка и её diff точно совпал с allowlist",
+        "ConfigDumpInfo.xml исключён из проверки, исходные XML-каталоги не изменены, а существующий patch.cf не заменяется при ошибке"
+      ],
+      "mode": "build-cf-patch"
     }
   ]
 }

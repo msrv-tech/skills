@@ -423,6 +423,13 @@
             "scripts/load-xml.py"
           ]
         },
+        "build-cf-patch": {
+          "reference": "references/build-cf-patch.md",
+          "scripts": [
+            "scripts/build-cf-patch.ps1",
+            "scripts/build-cf-patch.py"
+          ]
+        },
         "dump-xml": {
           "reference": "references/dump-xml.md",
           "scripts": [

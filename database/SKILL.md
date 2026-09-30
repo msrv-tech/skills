@@ -21,6 +21,7 @@ allowed-tools:
 | `run` | Запустить 1С:Предприятие | [инструкция](references/run.md) | `scripts/run.ps1`, `scripts/run.py` |
 | `update` | Применить конфигурацию к базе | [инструкция](references/update.md) | `scripts/update.ps1`, `scripts/update.py` |
 | `load-xml` | Загрузить XML-исходники | [инструкция](references/load-xml.md) | `scripts/load-xml.ps1`, `scripts/load-xml.py` |
+| `build-cf-patch` | Собрать проверенный минимальный CF поверх бинарной основы | [инструкция](references/build-cf-patch.md) | `scripts/build-cf-patch.ps1`, `scripts/build-cf-patch.py` |
 | `dump-xml` | Выгрузить XML-исходники | [инструкция](references/dump-xml.md) | `scripts/dump-xml.ps1`, `scripts/dump-xml.py` |
 | `load-cf` | Загрузить CF или CFE | [инструкция](references/load-cf.md) | `scripts/load-cf.ps1`, `scripts/load-cf.py` |
 | `dump-cf` | Выгрузить CF или CFE | [инструкция](references/dump-cf.md) | `scripts/dump-cf.ps1`, `scripts/dump-cf.py` |
