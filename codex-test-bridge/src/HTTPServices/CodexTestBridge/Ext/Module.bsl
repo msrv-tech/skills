@@ -125,10 +125,12 @@
 	Идентификатор = Строка(Получить(Данные, "jobId", ""));
 	ИмяМетаданных = Строка(Получить(Данные, "metadataName", ""));
 	UUID = Строка(Получить(Данные, "uuid", ""));
+	ИмяФормы = Строка(Получить(Данные, "formName", ""));
 	Если ПустаяСтрока(Идентификатор) Или ПустаяСтрока(ИмяМетаданных) Или ПустаяСтрока(UUID) Тогда
 		ВызватьИсключение "uiJobPrepareTaskExecutionForm requires jobId, metadataName, and uuid";
 	КонецЕсли;
-	Описание = CodexUIJobsServer.ПоместитьФормуВыполненияЗадачиВоВременноеХранилище(ИмяМетаданных, UUID);
+	Описание = CodexUIJobsServer.ПоместитьФормуВыполненияЗадачиВоВременноеХранилище(
+		ИмяМетаданных, UUID, ИмяФормы);
 	// Parameters of a task execution form contain a typed task reference.
 	// Do not serialize that structure through an information register: a
 	// TestClient can rebuild the same typed reference locally from its UUID.
@@ -166,7 +168,7 @@
 	ВозможностиUI.Вставить("suite", Истина);
 
 	Результат = КомандаHealth();
-	Результат.Вставить("bridgeVersion", "0.7.1");
+	Результат.Вставить("bridgeVersion", "0.8.0");
 	Результат.Вставить("contractVersion", 2);
 	Результат.Вставить("variant", "full"); // CTB_FULL_VARIANT
 	Результат.Вставить("commands", Команды);

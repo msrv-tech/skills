@@ -10,6 +10,7 @@ from unittest.mock import patch
 ROOT = Path(__file__).resolve().parents[1]
 CLIENT_MODULE = ROOT / "src" / "Ext" / "ManagedApplicationModule.bsl"
 SERVER_MODULE = ROOT / "src" / "CommonModules" / "CodexUIJobsServer" / "Ext" / "Module.bsl"
+NAVIGATE_MODULE = ROOT / "src" / "CommonCommands" / "CodexNavigate" / "Ext" / "CommandModule.bsl"
 RUNNER = ROOT / "scripts" / "run_web_client_compile_smoke.py"
 SPEC = importlib.util.spec_from_file_location("run_web_client_compile_smoke", RUNNER)
 WEB_SMOKE = importlib.util.module_from_spec(SPEC)
@@ -41,6 +42,16 @@ class WebClientCompatibilityTests(unittest.TestCase):
         self.assertIn("Возврат ПрочитатьJSON(Чтение, Истина);", server)
         self.assertRegex(server, r"Функция ЗаписатьJSONСервер\(Данные\) Экспорт")
         self.assertIn("ЗаписатьJSON(Запись, Данные);", server)
+
+    def test_common_command_also_delegates_json_to_server(self):
+        command = NAVIGATE_MODULE.read_text(encoding="utf-8-sig")
+
+        self.assertIn("CodexUIJobsServer.ПрочитатьJSONСервер(Текст)", command)
+        self.assertIn("CodexUIJobsServer.ЗаписатьJSONСервер(Значение)", command)
+        self.assertNotIn("Новый ЧтениеJSON", command)
+        self.assertNotIn("Новый ЗаписьJSON", command)
+        self.assertIsNone(re.search(r"(?<![\w])ПрочитатьJSON\(", command))
+        self.assertIsNone(re.search(r"(?<![\w])ЗаписатьJSON\(", command))
 
     def test_web_smoke_uses_only_registered_database_credentials(self):
         database = {

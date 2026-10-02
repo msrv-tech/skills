@@ -1,0 +1,67 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<MetaDataObject xmlns="http://v8.1c.ru/8.3/MDClasses" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" version="2.20">
+	<Configuration uuid="0047f1ce-8f82-59cb-8d93-726d148f7794">
+		<InternalInfo>
+			<xr:ContainedObject>
+				<xr:ClassId>9cd510cd-abfc-11d4-9434-004095e12fc7</xr:ClassId>
+				<xr:ObjectId>4caed2db-47a5-51b7-8204-ec76f37805cd</xr:ObjectId>
+			</xr:ContainedObject>
+			<xr:ContainedObject>
+				<xr:ClassId>9fcd25a0-4822-11d4-9414-008048da11f9</xr:ClassId>
+				<xr:ObjectId>3c69af56-8fbc-572d-9820-0f804db9bed1</xr:ObjectId>
+			</xr:ContainedObject>
+			<xr:ContainedObject>
+				<xr:ClassId>e3687481-0a87-462c-a166-9f34594f9bba</xr:ClassId>
+				<xr:ObjectId>7b01920c-d35e-5355-8b1a-10d03875ca4f</xr:ObjectId>
+			</xr:ContainedObject>
+			<xr:ContainedObject>
+				<xr:ClassId>9de14907-ec23-4a07-96f0-85521cb6b53b</xr:ClassId>
+				<xr:ObjectId>905d2025-f332-59c8-9bbb-b3fb1ad35626</xr:ObjectId>
+			</xr:ContainedObject>
+			<xr:ContainedObject>
+				<xr:ClassId>51f2d5d8-ea4d-4064-8892-82951750031e</xr:ClassId>
+				<xr:ObjectId>3d17b0e9-b69d-50ad-a74f-c21c5b4b12bd</xr:ObjectId>
+			</xr:ContainedObject>
+			<xr:ContainedObject>
+				<xr:ClassId>e68182ea-4237-4383-967f-90c1e3370bc7</xr:ClassId>
+				<xr:ObjectId>15699474-a9ac-593f-825f-6c3e40d30e58</xr:ObjectId>
+			</xr:ContainedObject>
+			<xr:ContainedObject>
+				<xr:ClassId>fb282519-d103-4dd3-bc12-cb271d631dfc</xr:ClassId>
+				<xr:ObjectId>6d2c51b3-d312-557a-8021-f84ae937d0fa</xr:ObjectId>
+			</xr:ContainedObject>
+		</InternalInfo>
+		<Properties>
+			<ObjectBelonging>Adopted</ObjectBelonging>
+			<Name>CodexUITestFixtures</Name>
+			<Synonym />
+			<Comment>Изолированное тестовое окружение для conformance-проверок CodexTestBridge.</Comment>
+			<ConfigurationExtensionPurpose>AddOn</ConfigurationExtensionPurpose>
+			<KeepMappingToExtendedConfigurationObjectsByIDs>true</KeepMappingToExtendedConfigurationObjectsByIDs>
+			<NamePrefix>CTF</NamePrefix>
+			<ConfigurationExtensionCompatibilityMode>Version8_3_13</ConfigurationExtensionCompatibilityMode>
+			<ScriptVariant>Russian</ScriptVariant>
+			<Vendor />
+			<Version>0.1.0</Version>
+			<BriefInformation />
+			<DetailedInformation />
+			<Copyright />
+			<VendorInformationAddress />
+			<ConfigurationInformationAddress />
+		</Properties>
+		<ChildObjects>
+			<Subsystem>CodexUIFixture</Subsystem>
+			<CommonCommand>CodexUIFixtureCommand</CommonCommand>
+			<CommonForm>CodexUIConformance</CommonForm>
+			<Catalog>CodexUIFixtureCatalog</Catalog>
+			<Document>CodexUIFixtureDocument</Document>
+			<Enum>CodexUIFixtureStatus</Enum>
+			<DataProcessor>CodexUIFixtureProcessor</DataProcessor>
+			<ChartOfCharacteristicTypes>CodexUIFixtureCharacteristics</ChartOfCharacteristicTypes>
+			<ChartOfAccounts>CodexUIFixtureAccounts</ChartOfAccounts>
+			<ChartOfCalculationTypes>CodexUIFixtureCalculationTypes</ChartOfCalculationTypes>
+			<BusinessProcess>CodexUIFixtureProcess</BusinessProcess>
+			<Task>CodexUIFixtureTask</Task>
+		</ChildObjects>
+	</Configuration>
+</MetaDataObject>

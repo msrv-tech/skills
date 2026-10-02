@@ -796,6 +796,7 @@ class XvfbBackend(ProcessBackend):
         accessibility_environment.update({
             "DBUS_SESSION_BUS_ADDRESS": self.session_bus.address,
             "NO_AT_BRIDGE": "0",
+            "CODEX_XVFB_ISOLATED": "1",
         })
         accessibility_environment.pop("AT_SPI_BUS_ADDRESS", None)
         super().__init__(xvfb_process_environment(accessibility_environment, display), working_directory)

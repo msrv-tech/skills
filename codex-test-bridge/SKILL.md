@@ -34,8 +34,6 @@ allowed-tools:
   прикладными тестовыми пользователями через env
 - `ui-scenario.schema.json` - схема нативного семантического UI DSL
 - `ui-actions.matrix.json` - каноническая матрица действий, элементов, backend и покрытия
-- `scripts/run_ui_conformance.py` - статическая и нативная проверка UI-матрицы
-- `examples/ui-conformance/` - эталонные сценарии общей fixture-формы
 - `UI_WORKER.md` - контракт управляющей обработки и backends
 - `BRIDGE.md` - подробная спецификация endpoints и команд
 - `scripts/build_cfe_linux.sh` - сборка CFE на Linux через `ibcmd`
@@ -311,9 +309,12 @@ python .\client.py --base-url $bridgeUrl run-suite .\examples --report .\artifac
 python .\client.py run-ui .\server.example.invalid.json .\examples\native-ui-smoke.ui.json --artifact-dir .\artifacts\smoke --report .\artifacts\smoke\worker.json
 ```
 
-После изменения UI DSL, dispatcher или модели элементов обязательно выполни
-`python scripts/run_ui_conformance.py --validate-only`, затем нативный прогон
-этого же скрипта в registry mode. Источник состава действий —
+Fixture-объекты, общая тестовая форма, сценарии и conformance-runner не входят
+в Bridge. Они находятся в отдельном проекте `codex-ui-test-fixtures` и
+устанавливаются отдельным расширением в зарегистрированные тестовые ИБ. После изменения UI
+DSL, dispatcher или модели элементов обязательно выполни из корня репозитория
+`python3 codex-ui-test-fixtures/scripts/run_conformance.py --validate-only`,
+затем нативный прогон этого же скрипта в registry mode. Источник состава действий —
 `ui-actions.matrix.json`; не поддерживай параллельный ручной список. Одиннадцать
 fixture-сценариев реально проверяют все 49 публичных действий и 62 обязательных
 вариантов: поля, кнопки,

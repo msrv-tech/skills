@@ -1,0 +1,24 @@
+{
+  "$schema": "../../../codex-test-bridge/ui-scenario.schema.json",
+  "name": "UI conformance: task execution form",
+  "conformanceCases": ["form.task-execution"],
+  "steps": [
+    {
+      "action": "openForm",
+      "metadataKind": "commonForm",
+      "metadataName": "CodexUIConformance",
+      "targetForm": {"formName": "ОбщаяФорма.CodexUIConformance", "saveAs": "fixtureSetup", "timeout": 30}
+    },
+    {"action": "closeForm", "form": "fixtureSetup"},
+    {
+      "action": "openTaskExecutionForm",
+      "metadataName": "CodexUIFixtureTask",
+      "uuid": "11111111-2222-4333-8444-555555555555",
+      "formName": "Задача.CodexUIFixtureTask.Форма.ФормаВыполнения",
+      "targetForm": {"title": "Codex UI fixture task execution", "saveAs": "task", "timeout": 30}
+    },
+    {"action": "assertField", "form": "task", "field": {"objectName": "TaskDescription"}, "expected": "Fixture task Alpha"},
+    {"action": "assertField", "form": "task", "field": {"objectName": "TaskFixtureText"}, "expected": "task:ready"},
+    {"action": "closeForm", "form": "task"}
+  ]
+}

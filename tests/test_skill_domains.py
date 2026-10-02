@@ -24,7 +24,7 @@ EXPECTED_SKILLS = {
     "web-publication",
 }
 REQUIRED_INFRASTRUCTURE_DIRS = {".git", ".github", "common", "docs", "tests"}
-OPTIONAL_INFRASTRUCTURE_DIRS = {"temp"}
+OPTIONAL_INFRASTRUCTURE_DIRS = {"temp", "codex-ui-test-fixtures"}
 
 
 class SkillDomainTests(unittest.TestCase):

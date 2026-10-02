@@ -6,6 +6,8 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+FIXTURES_ROOT = ROOT.parent / "codex-ui-test-fixtures"
+SCENARIOS = FIXTURES_ROOT / "scenarios" / "ui-conformance"
 sys.path.insert(0, str(ROOT))
 
 from ui_conformance import build_conformance_report, load_conformance_scenarios, validate_conformance_coverage
@@ -14,7 +16,7 @@ from ui_worker import UiWorkerError
 
 class UiConformanceTests(unittest.TestCase):
     def test_repository_conformance_scenarios_cover_every_fixture_action(self):
-        scenarios = load_conformance_scenarios([ROOT / "examples" / "ui-conformance"])
+        scenarios = load_conformance_scenarios([SCENARIOS])
         sources = validate_conformance_coverage(scenarios)
         self.assertIn("field.text", sources)
         self.assertIn("field.text-document-programmatic", sources)
@@ -30,7 +32,7 @@ class UiConformanceTests(unittest.TestCase):
         self.assertGreater(report["summary"]["variants"], 0)
 
     def test_text_document_fixture_checks_programmatic_reassignment(self):
-        scenarios = load_conformance_scenarios([ROOT / "examples" / "ui-conformance"])
+        scenarios = load_conformance_scenarios([SCENARIOS])
         scenario = next(
             item for item in scenarios
             if "field.text-document-programmatic" in item["cases"]
@@ -57,7 +59,7 @@ class UiConformanceTests(unittest.TestCase):
         ))
 
     def test_generic_task_form_fixture_is_created_before_open(self):
-        scenarios = load_conformance_scenarios([ROOT / "examples" / "ui-conformance"])
+        scenarios = load_conformance_scenarios([SCENARIOS])
         scenario = next(item for item in scenarios if "form.lifecycle" in item["cases"])
         steps = scenario["data"]["steps"]
         task_open_index = next(
@@ -69,17 +71,18 @@ class UiConformanceTests(unittest.TestCase):
             step.get("action") == "openTaskExecutionForm"
             and step.get("metadataName") == "CodexUIFixtureTask"
             and step.get("uuid") == task_uuid
+            and step.get("formName") == "Задача.CodexUIFixtureTask.Форма.ФормаВыполнения"
             for step in steps[:task_open_index]
         ))
 
     def test_missing_fixture_case_is_rejected(self):
-        scenarios = load_conformance_scenarios([ROOT / "examples" / "ui-conformance"])
+        scenarios = load_conformance_scenarios([SCENARIOS])
         scenarios[0] = dict(scenarios[0], cases=[])
         with self.assertRaisesRegex(UiWorkerError, "Fixture conformance cases are missing"):
             validate_conformance_coverage(scenarios)
 
     def test_declared_case_without_assigned_action_is_rejected(self):
-        scenarios = load_conformance_scenarios([ROOT / "examples" / "ui-conformance"])
+        scenarios = load_conformance_scenarios([SCENARIOS])
         changed = []
         for scenario in scenarios:
             copy = dict(scenario)
@@ -93,7 +96,7 @@ class UiConformanceTests(unittest.TestCase):
             validate_conformance_coverage(changed)
 
     def test_missing_declared_action_variant_is_rejected(self):
-        scenarios = load_conformance_scenarios([ROOT / "examples" / "ui-conformance"])
+        scenarios = load_conformance_scenarios([SCENARIOS])
         changed = []
         for scenario in scenarios:
             copy = dict(scenario)
@@ -107,7 +110,7 @@ class UiConformanceTests(unittest.TestCase):
             validate_conformance_coverage(changed)
 
     def test_runtime_results_are_projected_to_each_action(self):
-        scenarios = load_conformance_scenarios([ROOT / "examples" / "ui-conformance"])
+        scenarios = load_conformance_scenarios([SCENARIOS])
         suite_result = {
             "scenarios": [
                 {"source": str(scenario["path"]), "ok": True}
@@ -131,13 +134,46 @@ class UiConformanceTests(unittest.TestCase):
         }
         for relative, generated_type in expected.items():
             with self.subTest(relative=relative):
-                source = (ROOT / "src" / relative).read_text(encoding="utf-8-sig")
+                source = (FIXTURES_ROOT / "src" / relative).read_text(encoding="utf-8-sig")
                 self.assertIn(generated_type, source)
-        form = (ROOT / "src/CommonForms/CodexUIConformance/Ext/Form.xml").read_text(encoding="utf-8-sig")
+        form = (FIXTURES_ROOT / "src/CommonForms/CodexUIConformance/Ext/Form.xml").read_text(encoding="utf-8-sig")
         self.assertIn("cfg:CatalogRef.CodexUIFixtureCatalog", form)
         self.assertIn("cfg:ChartOfCharacteristicTypesRef.CodexUIFixtureCharacteristics", form)
         self.assertIn('name="CompositeValue"', form)
         self.assertIn('name="ReferenceRows"', form)
+
+    def test_fixture_metadata_is_not_part_of_bridge_extension(self):
+        bridge_configuration = (ROOT / "src" / "Configuration.xml").read_text(encoding="utf-8-sig")
+        fixture_configuration = (FIXTURES_ROOT / "src" / "Configuration.xml").read_text(encoding="utf-8-sig")
+        fixture_names = {
+            "CodexUIFixture", "CodexUIFixtureCommand", "CodexUIConformance",
+            "CodexUIFixtureCatalog", "CodexUIFixtureDocument", "CodexUIFixtureStatus",
+            "CodexUIFixtureProcessor", "CodexUIFixtureCharacteristics",
+            "CodexUIFixtureAccounts", "CodexUIFixtureCalculationTypes",
+            "CodexUIFixtureProcess", "CodexUIFixtureTask",
+        }
+        for name in fixture_names:
+            with self.subTest(name=name):
+                self.assertNotIn(f">{name}<", bridge_configuration)
+                self.assertIn(f">{name}<", fixture_configuration)
+        bridge_text = "\n".join(
+            path.read_text(encoding="utf-8-sig")
+            for path in (ROOT / "src").rglob("*")
+            if path.is_file()
+        )
+        self.assertNotIn("CodexUIFixture", bridge_text)
+        self.assertNotIn("CodexUIConformance", bridge_text)
+        self.assertFalse((ROOT / "src" / "Catalogs").exists())
+        self.assertFalse((ROOT / "src" / "CommonForms").exists())
+
+    def test_bridge_runtime_is_not_part_of_fixture_extension(self):
+        fixture_configuration = (FIXTURES_ROOT / "src" / "Configuration.xml").read_text(encoding="utf-8-sig")
+        for name in ("CodexUIJobsServer", "CodexTestBridge", "CodexNavigate", "CodexUIJobs"):
+            with self.subTest(name=name):
+                self.assertNotIn(f">{name}<", fixture_configuration)
+        for directory in ("CommonModules", "HTTPServices", "InformationRegisters"):
+            with self.subTest(directory=directory):
+                self.assertFalse((FIXTURES_ROOT / "src" / directory).exists())
 
 
 if __name__ == "__main__":

@@ -60,7 +60,7 @@ class UpdateAllTestDatabasesTests(unittest.TestCase):
                 assert_no_bootstrap_users({})
 
     def test_source_bridge_version_is_read_from_module(self):
-        self.assertEqual(source_bridge_version(), "0.7.1")
+        self.assertEqual(source_bridge_version(), "0.8.0")
 
     def test_only_server_bridge_entries_are_deployable(self):
         deployable = {"Srvr": "server", "Ref": "base", "Bridge": {"BaseUrl": "http://bridge"}}

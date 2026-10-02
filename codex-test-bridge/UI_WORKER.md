@@ -20,15 +20,18 @@ Full-сборка не назначает `DefaultRoles`, поскольку т�
 идентификаторы проверочных кейсов. `ui_worker.py`, JSON Schema, BSL dispatcher и
 HTTP capabilities проверяются на соответствие этому каталогу unit-тестом.
 
-Эталонная общая форма `CodexUIConformance` входит в полный CFE. Одиннадцать сценариев
-из `examples/ui-conformance/` нативно проверяют все 49 публичных действий bridge
+Эталонная общая форма `CodexUIConformance` не входит в Bridge. Она, остальные
+искусственные объекты метаданных и одиннадцать сценариев находятся в отдельном
+`codex-ui-test-fixtures.cfe`. Сценарии из проекта `codex-ui-test-fixtures`
+нативно проверяют все 49 публичных действий bridge
 и 62 обязательных варианта их параметров:
 жизненный цикл формы, поля и группы, кнопки и команды, таблицы и дерево,
 дополнение поиска, модальный диалог, командный интерфейс, клавиатуру, обработку,
 форму задачи и навигацию между окнами. Проверки выбора используют реальные
 ссылки справочника, документа, ПВХ, плана счетов, ПВР, перечисления, составного
 поля и ссылочной колонки таблицы. Fixture создаёт один и тот же идемпотентный
-набор тестовых объектов с кодами `CTB-UI-*`.
+набор тестовых объектов с кодами `CTF-UI-*`. Устанавливай fixture-CFE только в
+зарегистрированные тестовые базы, где запускается conformance-матрица; обычной работе Bridge он не нужен.
 
 Каталог запрещает объявлять публичное действие без executable fixture coverage,
 а conformance-проверка запрещает указать кейс без фактического вызова всех
@@ -37,10 +40,10 @@ HTTP capabilities проверяются на соответствие этом�
 
 ```bash
 # Статическая полнота без запуска 1С
-python3 scripts/run_ui_conformance.py --validate-only
+python3 codex-ui-test-fixtures/scripts/run_conformance.py --validate-only
 
 # Нативный прогон под пользователем выбранной записи приватного реестра
-python3 scripts/run_ui_conformance.py \
+python3 codex-ui-test-fixtures/scripts/run_conformance.py \
   --registry "$CODEX_1C_TEST_DATABASES" \
   --database <registered-test-database> \
   --platform "$CODEX_1C_EXECUTABLE" \

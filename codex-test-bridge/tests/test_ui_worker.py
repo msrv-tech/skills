@@ -166,6 +166,15 @@ class UiWorkerTests(unittest.TestCase):
             "targetForm": {"formName": "БизнесПроцесс.Тест.Форма.Задача"},
         }]})
         self.assertEqual(prepared["steps"][0]["action"], "openTaskExecutionForm")
+        explicit = prepare_native_ui_scenario({"steps": [{
+            "action": "openTaskExecutionForm", "metadataName": "ТестоваяЗадача", "uuid": "a14919f5-0dad-11e4-93f4-0050568b4127",
+            "formName": "Задача.ТестоваяЗадача.Форма.ФормаВыполнения",
+            "targetForm": {"title": "Тест"},
+        }]})
+        self.assertEqual(
+            explicit["steps"][0]["formName"],
+            "Задача.ТестоваяЗадача.Форма.ФормаВыполнения",
+        )
         with self.assertRaisesRegex(UiWorkerError, "requires uuid"):
             prepare_native_ui_scenario({"steps": [{"action": "openTaskExecutionForm", "targetForm": {"title": "Тест"}}]})
         with self.assertRaisesRegex(UiWorkerError, "requires metadataName"):
@@ -184,6 +193,8 @@ class UiWorkerTests(unittest.TestCase):
         self.assertIn("Метаданные.Задачи.Найти(ИмяМетаданных)", server_module)
         self.assertIn('"Задача = Задачи." + ИмяМетаданных', server_module)
         self.assertNotIn("Задачи[ИмяМетаданных]", server_module)
+        self.assertNotIn("CodexUIFixture", server_module)
+        self.assertIn('Если Не ПустаяСтрока(ИмяФормы) Тогда', server_module)
         self.assertIn("navigationLink", server_module)
         special_open = client_module[client_module.index("Функция CTB_ОткрытьФормуВыполненияЗадачи"):client_module.index("Функция CTB_ОтправитьКомандуОткрытияФормы")]
         self.assertIn("CTB_ОткрытьФормуЧерезКомандуTestClient", special_open)
@@ -529,6 +540,37 @@ class UiWorkerTests(unittest.TestCase):
         self.assertIn('Окно.ПолучитьКомандныйИнтерфейс()', module)
         self.assertIn('"ТестируемаяКнопкаКомандногоИнтерфейса"', module)
 
+    def test_window_navigation_skips_inaccessible_testable_forms(self):
+        module = (
+            Path(__file__).resolve().parents[1]
+            / "src" / "Ext" / "ManagedApplicationModule.bsl"
+        ).read_text(encoding="utf-8-sig")
+        start = module.index("Процедура CTB_ПерейтиКСледующемуОкну")
+        end = module.index(
+            "Процедура CTB_НажатьКнопкуФормыИлиКомандногоИнтерфейса",
+            start,
+        )
+        navigation = module[start:end]
+        self.assertIn(
+            "Для ИндексФормы = 0 По Формы.Количество() - 1 Цикл",
+            navigation,
+        )
+        self.assertIn(
+            "Кандидат = Формы[Формы.Количество() - 1 - ИндексФормы]",
+            navigation,
+        )
+        self.assertIn("Формы[ИндексФормы].Активизировать()", navigation)
+        self.assertIn("Кандидат.Активизировать()", navigation)
+        self.assertIn("Ошибки.Добавить(ОписаниеОшибки())", navigation)
+        home_start = module.index("Процедура CTB_ПерейтиКНачальнойСтранице")
+        home_end = module.index("Процедура CTB_ПерейтиКСледующемуОкну", home_start)
+        home_navigation = module[home_start:home_end]
+        self.assertIn("CTB_ГлавноеОкно(ТестКлиент, Шаг)", home_navigation)
+        self.assertIn("Окно.ПерейтиКНачальнойСтранице()", home_navigation)
+        self.assertIn("Ошибки.Добавить(ОписаниеОшибки())", home_navigation)
+        self.assertIn('ЗаголовокОкна = "начальная страница"', home_navigation)
+        self.assertIn('ЗаголовокОкна = "home page"', home_navigation)
+
     def test_close_form_prefers_form_and_never_closes_main_window(self):
         module = (
             Path(__file__).resolve().parents[1]
@@ -540,6 +582,8 @@ class UiWorkerTests(unittest.TestCase):
 
         self.assertLess(close_form.index("Форма.Закрыть()"), close_form.index("КнопкаЗакрыть.Нажать()"))
         self.assertLess(close_form.index("КнопкаЗакрыть.Нажать()"), close_form.index("Окно.Закрыть()"))
+        self.assertIn("CTB_ФормаОткрыта(ТестКлиент, Форма)", close_form)
+        self.assertIn('СтрРазделить("Закрыть,Close", ",")', close_form)
         self.assertIn("Если Окно.Основное Тогда", close_form)
         self.assertIn("Form cannot be closed without closing the main client window", close_form)
 

@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<MetaDataObject xmlns="http://v8.1c.ru/8.3/MDClasses" xmlns:v8="http://v8.1c.ru/8.1/data/core" version="2.20">
+	<CommonCommand uuid="ebef6403-b753-5587-8a14-b8221c3f1a5f">
+		<Properties>
+			<Name>CodexUIFixtureCommand</Name>
+			<Synonym><v8:item><v8:lang>ru</v8:lang><v8:content>Codex UI fixture command</v8:content></v8:item></Synonym>
+			<Comment>Безопасная команда для нативной проверки командного интерфейса.</Comment>
+			<Group>NavigationPanelOrdinary</Group>
+			<Representation>Auto</Representation>
+			<ToolTip/>
+			<Picture/>
+			<Shortcut/>
+			<IncludeHelpInContents>false</IncludeHelpInContents>
+			<CommandParameterType/>
+			<ParameterUseMode>Single</ParameterUseMode>
+			<ModifiesData>false</ModifiesData>
+			<OnMainServerUnavalableBehavior>Auto</OnMainServerUnavalableBehavior>
+		</Properties>
+	</CommonCommand>
+</MetaDataObject>

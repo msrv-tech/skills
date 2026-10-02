@@ -48,6 +48,8 @@ jobs:
         run: |
           python extension/scripts/validate.py \
             -ExtensionPath codex-test-bridge/src -Detailed
+          python extension/scripts/validate.py \
+            -ExtensionPath codex-ui-test-fixtures/src -Detailed
           python metadata/scripts/validate.py \
             -ObjectPath 'codex-test-bridge/src/CommonModules/CodexUIJobsServer.xml|codex-test-bridge/src/HTTPServices/CodexTestBridge.xml|codex-test-bridge/src/InformationRegisters/CodexUIJobs.xml' \
             -Detailed

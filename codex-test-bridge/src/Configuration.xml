@@ -42,7 +42,7 @@
 			<ConfigurationExtensionCompatibilityMode>Version8_3_13</ConfigurationExtensionCompatibilityMode>
 			<ScriptVariant>Russian</ScriptVariant>
 			<Vendor />
-			<Version>0.7.1</Version>
+			<Version>0.8.0</Version>
 			<BriefInformation />
 			<DetailedInformation />
 			<Copyright />
@@ -50,22 +50,10 @@
 			<ConfigurationInformationAddress />
 		</Properties>
 		<ChildObjects>
-			<Subsystem>CodexUIFixture</Subsystem>
 			<CommonModule>CodexUIJobsServer</CommonModule>
 			<HTTPService>CodexTestBridge</HTTPService>
 			<CommonCommand>CodexNavigate</CommonCommand>
-			<CommonCommand>CodexUIFixtureCommand</CommonCommand>
-			<CommonForm>CodexUIConformance</CommonForm>
-			<Catalog>CodexUIFixtureCatalog</Catalog>
-			<Document>CodexUIFixtureDocument</Document>
-			<Enum>CodexUIFixtureStatus</Enum>
-			<DataProcessor>CodexUIFixtureProcessor</DataProcessor>
 			<InformationRegister>CodexUIJobs</InformationRegister>
-			<ChartOfCharacteristicTypes>CodexUIFixtureCharacteristics</ChartOfCharacteristicTypes>
-			<ChartOfAccounts>CodexUIFixtureAccounts</ChartOfAccounts>
-			<ChartOfCalculationTypes>CodexUIFixtureCalculationTypes</ChartOfCalculationTypes>
-			<BusinessProcess>CodexUIFixtureProcess</BusinessProcess>
-			<Task>CodexUIFixtureTask</Task>
 		</ChildObjects>
 	</Configuration>
 </MetaDataObject>

@@ -1,0 +1,83 @@
+{
+  "$schema": "../../../codex-test-bridge/ui-scenario.schema.json",
+  "name": "UI conformance: session, form and element inventory",
+  "conformanceCases": ["session.connected", "form.lifecycle", "elements.inventory", "elements.activate", "field.readonly", "field.disabled"],
+  "steps": [
+    {"action": "assertConnected", "name": "TestClient is connected"},
+    {
+      "action": "openForm",
+      "metadataKind": "commonForm",
+      "metadataName": "CodexUIConformance",
+      "targetForm": {"formName": "ОбщаяФорма.CodexUIConformance", "saveAs": "fixture", "timeout": 30}
+    },
+    {"action": "waitForm", "formName": "ОбщаяФорма.CodexUIConformance", "saveAs": "fixtureAgain", "timeout": 10},
+    {"action": "activateForm", "form": "fixture"},
+    {"action": "inspectUi", "form": "fixture", "depth": 5},
+    {"action": "inspectUI", "form": "fixture", "depth": 2},
+    {"action": "waitElement", "form": "fixture", "elementType": "field", "element": {"objectName": "TextValue"}, "timeout": 10},
+    {"action": "waitElement", "form": "fixture", "elementType": "button", "element": {"objectName": "FormIncrement"}, "timeout": 10},
+    {"action": "waitElement", "form": "fixture", "elementType": "table", "element": {"objectName": "Rows"}, "timeout": 10},
+    {"action": "waitElement", "form": "fixture", "elementType": "group", "element": {"objectName": "CollapsibleGroup"}, "timeout": 10},
+    {"action": "waitElement", "form": "fixture", "elementType": "decoration", "element": {"objectName": "ClickableDecoration"}, "timeout": 10},
+    {"action": "waitElement", "form": "fixture", "elementType": "addition", "element": {"objectName": "RowsСтрокаПоиска"}, "timeout": 10},
+    {"action": "assertElement", "form": "fixture", "elementType": "field", "element": {"objectName": "TextValue"}, "exists": true, "visible": true, "enabled": true, "readOnly": false},
+    {"action": "assertElement", "form": "fixture", "elementType": "button", "element": {"objectName": "FormIncrement"}, "exists": true, "visible": true, "enabled": true},
+    {"action": "assertElement", "form": "fixture", "elementType": "table", "element": {"objectName": "Rows"}, "exists": true},
+    {"action": "assertElement", "form": "fixture", "elementType": "group", "element": {"objectName": "CollapsibleGroup"}, "exists": true},
+    {"action": "assertElement", "form": "fixture", "elementType": "decoration", "element": {"objectName": "ClickableDecoration"}, "exists": true},
+    {"action": "assertElement", "form": "fixture", "elementType": "addition", "element": {"objectName": "RowsСтрокаПоиска"}, "exists": true},
+    {"action": "assertElement", "form": "fixture", "elementType": "field", "element": {"objectName": "ReadOnlyValue"}, "readOnly": true},
+    {"action": "assertElement", "form": "fixture", "elementType": "field", "element": {"objectName": "DisabledValue"}, "enabled": false},
+    {"action": "activateElement", "form": "fixture", "elementType": "field", "element": {"objectName": "TextValue"}},
+    {"action": "activateElement", "form": "fixture", "elementType": "button", "element": {"objectName": "FormIncrement"}},
+    {"action": "activateElement", "form": "fixture", "elementType": "table", "element": {"objectName": "Rows"}},
+    {"action": "activateElement", "form": "fixture", "elementType": "group", "element": {"objectName": "CollapsibleGroup"}},
+    {"action": "closeForm", "form": "fixture", "waitClosed": false},
+    {"action": "waitFormClosed", "form": "fixture", "timeout": 10},
+    {
+      "action": "openForm",
+      "metadataKind": "dataProcessor",
+      "metadataName": "CodexUIFixtureProcessor",
+      "formName": "Форма",
+      "targetForm": {"formName": "Обработка.CodexUIFixtureProcessor.Форма.Форма", "saveAs": "processor", "timeout": 30}
+    },
+    {"action": "assertElement", "form": "processor", "elementType": "field", "element": {"objectName": "ProcessorStatus"}, "exists": true},
+    {"action": "closeForm", "form": "processor", "waitClosed": true},
+    {
+      "action": "openForm",
+      "metadataKind": "catalog",
+      "metadataName": "CodexUIFixtureCatalog",
+      "formName": "ФормаFixture",
+      "targetForm": {"formName": "Справочник.CodexUIFixtureCatalog.Форма.ФормаFixture", "saveAs": "catalogObject", "timeout": 30}
+    },
+    {"action": "assertElement", "form": "catalogObject", "elementType": "field", "element": {"objectName": "CatalogDescription"}, "exists": true},
+    {"action": "closeForm", "form": "catalogObject"},
+    {
+      "action": "openForm",
+      "metadataKind": "document",
+      "metadataName": "CodexUIFixtureDocument",
+      "formName": "ФормаFixture",
+      "targetForm": {"formName": "Документ.CodexUIFixtureDocument.Форма.ФормаFixture", "saveAs": "documentObject", "timeout": 30}
+    },
+    {"action": "assertElement", "form": "documentObject", "elementType": "field", "element": {"objectName": "DocumentNumber"}, "exists": true},
+    {"action": "closeForm", "form": "documentObject"},
+    {
+      "action": "openTaskExecutionForm",
+      "metadataName": "CodexUIFixtureTask",
+      "uuid": "11111111-2222-4333-8444-555555555555",
+      "formName": "Задача.CodexUIFixtureTask.Форма.ФормаВыполнения",
+      "targetForm": {"title": "Codex UI fixture task execution", "saveAs": "taskSetup", "timeout": 30}
+    },
+    {"action": "closeForm", "form": "taskSetup"},
+    {
+      "action": "openForm",
+      "metadataKind": "task",
+      "metadataName": "CodexUIFixtureTask",
+      "formName": "ФормаВыполнения",
+      "uuid": "11111111-2222-4333-8444-555555555555",
+      "targetForm": {"formName": "Задача.CodexUIFixtureTask.Форма.ФормаВыполнения", "saveAs": "taskObject", "timeout": 30}
+    },
+    {"action": "assertElement", "form": "taskObject", "elementType": "field", "element": {"objectName": "TaskFixtureText"}, "exists": true},
+    {"action": "closeForm", "form": "taskObject"}
+  ]
+}

@@ -32,6 +32,24 @@ class _XWindowAttributes(ctypes.Structure):
     ]
 
 
+def select_x11_window_candidates(
+    owned: list[tuple[int, int, bool]],
+    isolated_display: list[tuple[int, int, bool]],
+    *,
+    allow_isolated_fallback: bool,
+) -> list[tuple[int, int, bool]]:
+    if owned:
+        return owned
+    return isolated_display if allow_isolated_fallback else []
+
+
+def is_worker_owned_xvfb_environment() -> bool:
+    if os.environ.get("CODEX_XVFB_ISOLATED") == "1":
+        return True
+    match = re.fullmatch(r":(\d+)(?:\.\d+)?", os.environ.get("DISPLAY", ""))
+    return match is not None and 90 <= int(match.group(1)) <= 199
+
+
 def _x11_process_windows(x11: Any, display: Any, process_id: int) -> list[tuple[int, int, bool]]:
     root = x11.XDefaultRootWindow(display)
     root_return = ctypes.c_ulong()
@@ -47,9 +65,15 @@ def _x11_process_windows(x11: Any, display: Any, process_id: int) -> list[tuple[
     cardinal_atom = x11.XInternAtom(display, b"CARDINAL", 0)
     owned_pids = process_tree_ids(process_id)
     result: list[tuple[int, int, bool]] = []
+    isolated_display_windows: list[tuple[int, int, bool]] = []
     try:
         for index in range(count.value):
             window = int(children[index])
+            attributes = _XWindowAttributes()
+            visible = bool(x11.XGetWindowAttributes(display, window, ctypes.byref(attributes))) and attributes.map_state == 2
+            area = max(0, attributes.width) * max(0, attributes.height)
+            if visible and area:
+                isolated_display_windows.append((window, area, True))
             actual_type = ctypes.c_ulong()
             actual_format = ctypes.c_int()
             item_count = ctypes.c_ulong()
@@ -66,9 +90,6 @@ def _x11_process_windows(x11: Any, display: Any, process_id: int) -> list[tuple[
                 owner_pid = int(ctypes.cast(value, ctypes.POINTER(ctypes.c_ulong))[0])
                 if owner_pid not in owned_pids:
                     continue
-                attributes = _XWindowAttributes()
-                visible = bool(x11.XGetWindowAttributes(display, window, ctypes.byref(attributes))) and attributes.map_state == 2
-                area = max(0, attributes.width) * max(0, attributes.height)
                 result.append((window, area, visible))
             finally:
                 if value:
@@ -76,7 +97,16 @@ def _x11_process_windows(x11: Any, display: Any, process_id: int) -> list[tuple[
     finally:
         if children:
             x11.XFree(children)
-    return result
+    # The Linux 1C launcher can reparent its GUI process after a long-running
+    # TestManager session. Then _NET_WM_PID no longer belongs to the original
+    # process tree even though the window is still the only application on the
+    # worker-owned Xvfb display. Falling back to that isolated display keeps key
+    # delivery deterministic without ever targeting the user's real desktop.
+    return select_x11_window_candidates(
+        result,
+        isolated_display_windows,
+        allow_isolated_fallback=is_worker_owned_xvfb_environment(),
+    )
 
 
 def send_x11_key(process_id: int, key: str) -> dict[str, Any]:
@@ -403,8 +433,34 @@ def focus_application_window(roots: list[Any]) -> dict[str, Any]:
 def run_atspi_bridge_request(process_id: int, request: dict[str, Any]) -> dict[str, Any]:
     request_id = request.get("requestId")
     try:
-        atspi = _atspi_module()
         action = str(request.get("action", "")).casefold()
+        if action == "presskey":
+            key = str(request.get("key", "")).casefold()
+            keysyms = {
+                "enter": 0xFF0D, "space": 0x20, "right": 0xFF53, "left": 0xFF51,
+                "down": 0xFF54, "up": 0xFF52,
+                **{f"f{number}": 0xFFBD + number for number in range(1, 13)},
+            }
+            if key not in keysyms:
+                raise AtspiRunnerError(f"Unsupported AT-SPI bridge key: {key}")
+            try:
+                actual = send_x11_key(process_id, key)
+                return {"ok": True, "requestId": request_id, "status": "uia-response", "actual": actual}
+            except Exception as x11_error:
+                # Only initialize AT-SPI after the independent X11 path failed.
+                # Some minimal Linux workers have no accessibility bus, while
+                # XTest remains fully functional on the private Xvfb display.
+                atspi = _atspi_module()
+                roots = application_roots(atspi, process_id)
+                if not roots:
+                    raise AtspiRunnerError("AT-SPI desktop contains no applications")
+                focused = focus_application_window(roots)
+                if not atspi.generate_keyboard_event(keysyms[key], None, atspi.KeySynthType.PRESSRELEASE):
+                    raise AtspiRunnerError("AT-SPI key synthesis returned false")
+                actual = {"method": "atspiFocusedKey", "key": key, "focused": focused, "x11Error": str(x11_error)}
+                return {"ok": True, "requestId": request_id, "status": "uia-response", "actual": actual}
+
+        atspi = _atspi_module()
         roots = application_roots(atspi, process_id)
         if not roots:
             raise AtspiRunnerError("AT-SPI desktop contains no applications")
@@ -423,23 +479,6 @@ def run_atspi_bridge_request(process_id: int, request: dict[str, Any]) -> dict[s
                 raise AtspiRunnerError("expandElement requires element title or name")
             element = find_accessible_element(roots, [title, element_name])
             actual = expand_accessible_element(element, atspi)
-            return {"ok": True, "requestId": request_id, "status": "uia-response", "actual": actual}
-        if action == "presskey":
-            key = str(request.get("key", "")).casefold()
-            keysyms = {
-                "enter": 0xFF0D, "space": 0x20, "right": 0xFF53, "left": 0xFF51,
-                "down": 0xFF54, "up": 0xFF52,
-                **{f"f{number}": 0xFFBD + number for number in range(1, 13)},
-            }
-            if key not in keysyms:
-                raise AtspiRunnerError(f"Unsupported AT-SPI bridge key: {key}")
-            try:
-                actual = send_x11_key(process_id, key)
-            except Exception as x11_error:
-                focused = focus_application_window(roots)
-                if not atspi.generate_keyboard_event(keysyms[key], None, atspi.KeySynthType.PRESSRELEASE):
-                    raise AtspiRunnerError("AT-SPI key synthesis returned false")
-                actual = {"method": "atspiFocusedKey", "key": key, "focused": focused, "x11Error": str(x11_error)}
             return {"ok": True, "requestId": request_id, "status": "uia-response", "actual": actual}
         raise AtspiRunnerError(f"Unsupported AT-SPI bridge action: {request.get('action')}")
     except Exception as exc:

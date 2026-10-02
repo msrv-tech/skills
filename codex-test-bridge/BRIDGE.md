@@ -424,10 +424,12 @@ AT-SPI. Отправка клавиш на Linux адресуется X11-окн
 резервным механизмом.
 UIA на Linux не эмулируется, а backend при ошибке не переключается.
 
-Полная матрица действий находится в `ui-actions.matrix.json`, а исполняемый
-fixture-suite — в `examples/ui-conformance/`. Команда
-`scripts/run_ui_conformance.py --validate-only` проверяет полноту без запуска
-1С; registry mode выполняет одиннадцать сценариев, все 49 публичных действий и
+Полная матрица действий находится в `ui-actions.matrix.json`. Исполняемый
+fixture-suite, тестовые объекты метаданных и CFE вынесены в отдельный проект
+`codex-ui-test-fixtures`; они не входят в Bridge. Команда
+`python3 codex-ui-test-fixtures/scripts/run_conformance.py --validate-only`
+из корня репозитория проверяет полноту без запуска 1С; registry mode выполняет
+одиннадцать сценариев, все 49 публичных действий и
 62 обязательных варианта одним
 тёплым TestClient, затем добавляет пооперационный раздел `conformance` в
 JSON-отчёт. Каталог не принимает публичную возможность без исполняемого

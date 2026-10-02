@@ -12,9 +12,11 @@ from atspi_runner import (
     expand_accessible_element,
     find_accessible_element,
     focus_application_window,
+    is_worker_owned_xvfb_environment,
     invoke_accessible_element,
     normalize_accessible_text,
     run_atspi_bridge_request,
+    select_x11_window_candidates,
 )
 
 
@@ -95,6 +97,30 @@ class FakeAtspi:
 
 
 class AtspiRunnerTests(unittest.TestCase):
+    def test_isolated_xvfb_window_survives_launcher_reparenting(self):
+        owned = [(10, 100, True)]
+        isolated = [(20, 200, True)]
+        self.assertEqual(
+            select_x11_window_candidates(owned, isolated, allow_isolated_fallback=True),
+            owned,
+        )
+        self.assertEqual(
+            select_x11_window_candidates([], isolated, allow_isolated_fallback=True),
+            isolated,
+        )
+        self.assertEqual(
+            select_x11_window_candidates([], isolated, allow_isolated_fallback=False),
+            [],
+        )
+
+    def test_worker_owned_xvfb_environment_is_bounded(self):
+        with patch.dict("os.environ", {"DISPLAY": ":90"}, clear=True):
+            self.assertTrue(is_worker_owned_xvfb_environment())
+        with patch.dict("os.environ", {"DISPLAY": ":199.0"}, clear=True):
+            self.assertTrue(is_worker_owned_xvfb_environment())
+        with patch.dict("os.environ", {"DISPLAY": ":0"}, clear=True):
+            self.assertFalse(is_worker_owned_xvfb_environment())
+
     def test_normalization_ignores_mnemonic_markers_and_spacing(self):
         self.assertEqual(normalize_accessible_text("  &Open__ form  "), "open form")
 
@@ -181,6 +207,18 @@ class AtspiRunnerTests(unittest.TestCase):
         self.assertTrue(response["ok"])
         self.assertEqual(response["actual"]["method"], "atspiFocusedKey")
         self.assertEqual(response["actual"]["focused"]["role"], "frame")
+
+    def test_press_key_uses_x11_without_initializing_atspi(self):
+        with patch("atspi_runner.send_x11_key", return_value={"method": "x11FocusedKey"}), patch(
+            "atspi_runner._atspi_module", side_effect=AssertionError("AT-SPI must stay lazy")
+        ):
+            response = run_atspi_bridge_request(123, {
+                "requestId": "request-x11",
+                "action": "pressKey",
+                "key": "space",
+            })
+        self.assertTrue(response["ok"])
+        self.assertEqual(response["actual"]["method"], "x11FocusedKey")
 
     def test_missing_element_is_a_structured_failure(self):
         with self.assertRaises(AtspiRunnerError):

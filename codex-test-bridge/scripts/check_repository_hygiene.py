@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fail when distributable bridge files contain environment-specific access data."""
+"""Fail when distributable Bridge and UI-fixture files contain access data."""
 
 from __future__ import annotations
 
@@ -10,6 +10,11 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+FIXTURES_ROOT = ROOT.parent / "codex-ui-test-fixtures"
+DISTRIBUTION_ROOTS = tuple(
+    root for root in (ROOT, FIXTURES_ROOT)
+    if root.is_dir()
+)
 SELF = Path(__file__).resolve()
 SKIP_PARTS = {".git", "__pycache__", "artifacts"}
 SKIP_SUFFIXES = {".pyc", ".bmp", ".png"}
@@ -55,12 +60,13 @@ def check_worker_config(path: Path) -> list[str]:
 
 def main() -> int:
     errors = []
-    for path, text in text_files(ROOT):
-        relative = path.relative_to(ROOT)
-        for label, pattern in BANNED.items():
-            for match in pattern.finditer(text):
-                line = text.count("\n", 0, match.start()) + 1
-                errors.append(f"{relative}:{line}: {label}")
+    for distribution_root in DISTRIBUTION_ROOTS:
+        for path, text in text_files(distribution_root):
+            relative = Path(distribution_root.name) / path.relative_to(distribution_root)
+            for label, pattern in BANNED.items():
+                for match in pattern.finditer(text):
+                    line = text.count("\n", 0, match.start()) + 1
+                    errors.append(f"{relative}:{line}: {label}")
     for path in ROOT.glob("ui-worker*.example.json"):
         errors.extend(check_worker_config(path))
     if errors:
