@@ -960,6 +960,65 @@ class UiWorkerTests(unittest.TestCase):
                 for event in report["progress"]
             ))
 
+    def test_bridge_job_queued_startup_is_bounded_and_published(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            scenario = root / "ui.json"
+            scenario.write_text(
+                '{"name":"queued startup","steps":[{"action":"assertConnected"}]}',
+                encoding="utf-8",
+            )
+            port = free_port()
+            config = {
+                "backend": "process",
+                "bridgeBaseUrl": "http://bridge.invalid/hs/codex-test",
+                "resultTransport": "bridgeJob",
+                "testPort": port,
+                "probeTestPort": True,
+                "startupTimeoutSeconds": 5,
+                "managerStartupTimeoutSeconds": 0.5,
+                "timeoutSeconds": 30,
+                "progressPollSeconds": 0.1,
+                "clientCommand": [sys.executable, "-c", CLIENT_CODE, "{testPort}"],
+                "managerCommand": [sys.executable, "-c", "import time; time.sleep(60)", "{jobId}"],
+            }
+            calls = []
+
+            def fake_bridge(_config, payload):
+                calls.append(payload)
+                if payload["command"] == "uiJobGet":
+                    return {"status": "queued", "result": ""}
+                return {"ok": True}
+
+            started = time.monotonic()
+            with patch("ui_worker.bridge_command", side_effect=fake_bridge):
+                report = run_ui_worker(config, scenario, root / "artifacts")
+            elapsed = time.monotonic() - started
+
+            self.assertFalse(report["ok"])
+            self.assertLess(elapsed, 5)
+            self.assertEqual(report["error"]["type"], "ManagerStartupTimeout")
+            self.assertIn("remained queued", report["error"]["message"])
+            published = [call for call in calls if call["command"] == "uiJobSet"]
+            self.assertEqual(len(published), 1)
+            self.assertEqual(published[0]["status"], "failed")
+            self.assertTrue(any(
+                event.get("stage") == "failed" and event.get("jobStatus") == "queued"
+                for event in report["progress"]
+            ))
+
+    def test_test_manager_intercepts_application_start_before_configuration_code(self):
+        module = (
+            Path(__file__).resolve().parents[1]
+            / "src" / "Ext" / "ManagedApplicationModule.bsl"
+        ).read_text(encoding="utf-8-sig")
+
+        self.assertIn('&Вместо("ПриНачалеРаботыСистемы")', module)
+        self.assertNotIn('&После("ПриНачалеРаботыСистемы")', module)
+        self.assertEqual(module.count("ПродолжитьВызов();"), 2)
+        self.assertIn('"ok,status,stage"', module)
+        self.assertIn('"manager-startup"', module)
+
     def test_inline_log_transport_embeds_scenario_and_reads_marker(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)

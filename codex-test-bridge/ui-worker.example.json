@@ -6,6 +6,7 @@
   "probeTestPort": false,
   "startupDelaySeconds": 10,
   "startupTimeoutSeconds": 60,
+  "managerStartupTimeoutSeconds": 60,
   "timeoutSeconds": 900,
   "resultTransport": "bridgeJob",
   "bridgeBaseUrl": "{bridgeBaseUrl}",

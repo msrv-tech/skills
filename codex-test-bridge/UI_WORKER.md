@@ -522,6 +522,11 @@ Worker печатает стадии `starting`, `startup`, `connect`, `running`
 секунд выводит heartbeat. Интервалы задаются `progressPollSeconds` и
 `heartbeatIntervalSeconds`.
 
+Отдельный `managerStartupTimeoutSeconds` (по умолчанию 60 секунд) ограничивает
+переход bridge job из `queued` в `running`. Если обработчик TestManager не
+запустился, worker публикует `ManagerStartupTimeout`, останавливает оба
+своих процесса и не ждет общий `timeoutSeconds`.
+
 Тот же поток событий атомарно записывается в `progress.json`. Компактный итог
 находится в `summary.json`, диагностические деревья — в
 `ui-diagnostics.json`, а полный результат — в `worker.json`. Ошибка сценария

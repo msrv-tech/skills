@@ -418,7 +418,8 @@ def validate_worker_config(config: Any) -> None:
         if isinstance(test_port_value, bool) or not isinstance(test_port_value, (int, float)) or test_port_value <= 0:
             raise UiWorkerError("testPort must be greater than zero or auto")
     for name, default in (
-        ("startupTimeoutSeconds", 60), ("timeoutSeconds", 900),
+        ("startupTimeoutSeconds", 60), ("managerStartupTimeoutSeconds", 60),
+        ("timeoutSeconds", 900),
         ("heartbeatIntervalSeconds", 10), ("progressPollSeconds", 1),
     ):
         value = config.get(name, default)
@@ -1015,11 +1016,14 @@ def manager_failure_error(
         message = manager_error.get("message") or json.dumps(
             manager_error, ensure_ascii=False
         )
+        error_type = str(manager_error.get("type") or "ManagerFailure")
     elif manager_error:
         message = str(manager_error)
+        error_type = "ManagerFailure"
     else:
         message = f"Test manager exit code: {manager_exit_code}"
-    return {"type": "ManagerFailure", "message": message}
+        error_type = "ManagerFailure"
+    return {"type": error_type, "message": message}
 
 
 def should_recover_stalled_windows_step(
@@ -1473,7 +1477,12 @@ def run_ui_worker(config: dict[str, Any], scenario_path: str | Path, artifact_di
             role="manager",
         )
         progress("running", "TestManager started", managerPid=manager.pid)
-        manager_deadline = time.monotonic() + float(config.get("timeoutSeconds", 900))
+        manager_started_at = time.monotonic()
+        manager_deadline = manager_started_at + float(config.get("timeoutSeconds", 900))
+        manager_startup_deadline = manager_started_at + float(
+            config.get("managerStartupTimeoutSeconds", config.get("startupTimeoutSeconds", 60))
+        )
+        manager_startup_observed = transport != "bridgeJob"
         heartbeat_interval = float(config.get("heartbeatIntervalSeconds", 10))
         next_heartbeat = time.monotonic() + heartbeat_interval
         next_job_poll = 0.0
@@ -1496,9 +1505,14 @@ def run_ui_worker(config: dict[str, Any], scenario_path: str | Path, artifact_di
                 try:
                     progress_job = bridge_command(runtime_config, {"command": "uiJobGet", "jobId": run_id})
                     last_bridge_poll_error = None
+                    job_status = str(progress_job.get("status", "")).casefold()
+                    if job_status and job_status != "queued":
+                        manager_startup_observed = True
                     progress_text = progress_job.get("result", "")
                     if progress_text:
                         partial = json.loads(progress_text)
+                        if isinstance(partial, dict) and partial.get("status") != "queued":
+                            manager_startup_observed = True
                         if isinstance(partial, dict) and partial.get("status") == "server-hook-request":
                             hook_id = str(partial.get("hookId", ""))
                             if hook_id and hook_id not in handled_uia_requests:
@@ -1653,6 +1667,47 @@ def run_ui_worker(config: dict[str, Any], scenario_path: str | Path, artifact_di
                             f"Bridge progress poll failed: {poll_error[0]}: {poll_error[1]}",
                             error={"type": poll_error[0], "message": poll_error[1]},
                         )
+            if (
+                transport == "bridgeJob"
+                and not manager_startup_observed
+                and now >= manager_startup_deadline
+            ):
+                startup_timeout = float(
+                    config.get("managerStartupTimeoutSeconds", config.get("startupTimeoutSeconds", 60))
+                )
+                message = (
+                    "TestManager did not enter the bridge startup handler; "
+                    f"job remained queued for {startup_timeout:g} seconds"
+                )
+                manager_result = {
+                    "ok": False,
+                    "status": "failed",
+                    "stage": "manager-startup",
+                    "error": {"type": "ManagerStartupTimeout", "message": message},
+                }
+                bridge_failed_result = True
+                progress(
+                    "failed",
+                    message,
+                    managerPid=manager.pid,
+                    clientPid=client.pid if client is not None else None,
+                    jobStatus="queued",
+                )
+                try:
+                    bridge_command(runtime_config, {
+                        "command": "uiJobSet",
+                        "jobId": run_id,
+                        "status": "failed",
+                        "result": json.dumps(manager_result, ensure_ascii=True, separators=(",", ":")),
+                    })
+                except Exception as exc:
+                    progress(
+                        "warning",
+                        f"Cannot publish manager startup failure to bridge: {type(exc).__name__}: {exc}",
+                    )
+                manager.terminate()
+                manager_exit_code = manager.poll()
+                break
             if last_partial_result is not None and isinstance(backend, WindowsDesktopBackend):
                 try:
                     recovery_step_number = int(last_partial_result.get("currentStep", 0))
