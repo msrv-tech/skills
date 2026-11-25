@@ -10,6 +10,12 @@ import uuid
 
 from lxml import etree
 
+_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+if _ROOT not in sys.path:
+    sys.path.insert(0, _ROOT)
+from common.diff_guard import TreeGuard
+from common.xml_preserve import write_tree_preserving
+
 NSMAP = {
     "md": "http://v8.1c.ru/8.3/MDClasses",
     "v8": "http://v8.1c.ru/8.1/data/core",
@@ -34,13 +40,7 @@ def detect_format_version(d):
 
 def save_xml_with_bom(tree, path):
     """Save XML tree to file with UTF-8 BOM."""
-    xml_bytes = etree.tostring(tree, xml_declaration=True, encoding="UTF-8")
-    xml_bytes = xml_bytes.replace(b"<?xml version='1.0' encoding='UTF-8'?>", b'<?xml version="1.0" encoding="utf-8"?>')
-    if not xml_bytes.endswith(b"\n"):
-        xml_bytes += b"\n"
-    with open(path, "wb") as f:
-        f.write(b"\xef\xbb\xbf")
-        f.write(xml_bytes)
+    write_tree_preserving(tree, path)
 
 
 def write_text_with_bom(path, text):
@@ -58,6 +58,7 @@ def main():
     parser.add_argument("-Synonym", default=None)
     parser.add_argument("-Purpose", default="Object")
     parser.add_argument("-SetDefault", action="store_true")
+    parser.add_argument("-NoDiffGuard", action="store_true", help="Do not verify that only the form files changed")
     args = parser.parse_args()
 
     object_path = args.ObjectPath
@@ -164,6 +165,7 @@ def main():
     form_dir = os.path.join(forms_dir, form_name)
     form_ext_dir = os.path.join(form_dir, "Ext")
     form_module_dir = os.path.join(form_ext_dir, "Form")
+    guard = None if args.NoDiffGuard else TreeGuard(object_dir)
 
     os.makedirs(form_module_dir, exist_ok=True)
 
@@ -460,6 +462,19 @@ def main():
 
     # Save with BOM
     save_xml_with_bom(tree, object_xml_full)
+
+    if guard is not None:
+        unexpected = guard.changed_except(
+            [object_xml_full, form_meta_path, form_xml_path, module_path],
+            allowed_prefixes=[form_dir],
+        )
+        if unexpected:
+            print(
+                "[ERROR] Unexpected file changes outside the new form: "
+                + ", ".join(unexpected[:20]),
+                file=sys.stderr,
+            )
+            sys.exit(1)
 
     # --- Phase 5: Output ---
 

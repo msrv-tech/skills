@@ -14,6 +14,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot "..\..\common\xml_preserve.ps1")
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -2754,15 +2755,7 @@ if ($formsLeaf -eq 'Forms') {
 					}
 				}
 
-				$regEnc = New-Object System.Text.UTF8Encoding($true)
-				$regSettings = New-Object System.Xml.XmlWriterSettings
-				$regSettings.Encoding = $regEnc
-				$regSettings.Indent = $false
-				$regStream = New-Object System.IO.FileStream($objectXmlPath, [System.IO.FileMode]::Create)
-				$regWriter = [System.Xml.XmlWriter]::Create($regStream, $regSettings)
-				$objDoc.Save($regWriter)
-				$regWriter.Close()
-				$regStream.Close()
+				Save-XmlDocumentPreserving -XmlDoc $objDoc -Path $objectXmlPath
 
 				Write-Host "     Registered: <Form>$formName</Form> in $objectName.xml"
 			}

@@ -12,6 +12,11 @@ import tempfile
 import uuid
 import xml.etree.ElementTree as ET
 
+_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+if _ROOT not in sys.path:
+    sys.path.insert(0, _ROOT)
+from common.xml_preserve import write_etree_preserving
+
 sys.stdout.reconfigure(encoding="utf-8")
 sys.stderr.reconfigure(encoding="utf-8")
 
@@ -84,6 +89,8 @@ def split_camel_case(name):
 parser = argparse.ArgumentParser(allow_abbrev=False)
 parser.add_argument('-JsonPath', required=True)
 parser.add_argument('-OutputDir', required=True)
+parser.add_argument('-FormatVersion', default='', help='Explicit target XML format version, e.g. 2.20')
+parser.add_argument('-SourceConfigDir', default='', help='Target configuration dump whose Configuration.xml defines the format version')
 args = parser.parse_args()
 
 json_path = args.JsonPath
@@ -200,7 +207,7 @@ valid_enum_values = {
     'Posting': ['Allow', 'Deny'],
     'RealTimePosting': ['Allow', 'Deny'],
     'EditType': ['InDialog', 'InList', 'BothWays'],
-    'HierarchyType': ['HierarchyFoldersAndItems', 'HierarchyItemsOnly'],
+    'HierarchyType': ['HierarchyFoldersAndItems', 'HierarchyOfItems'],
     'CodeType': ['String', 'Number'],
     'CodeAllowedLength': ['Variable', 'Fixed'],
     'NumberType': ['String', 'Number'],
@@ -2248,7 +2255,11 @@ xmlns_decl = 'xmlns="http://v8.1c.ru/8.3/MDClasses" xmlns:app="http://v8.1c.ru/8
 # 14a. Detect format version from existing Configuration.xml
 # ---------------------------------------------------------------------------
 
-def detect_format_version(d):
+FORMAT_VERSION_PATTERN = re.compile(r"^\d+\.\d+$")
+
+
+def find_config_format(d):
+    """Return (version, Configuration.xml path) at d or its parents."""
     while d:
         cfg_path = os.path.join(d, "Configuration.xml")
         if os.path.isfile(cfg_path):
@@ -2256,14 +2267,71 @@ def detect_format_version(d):
                 head = f.read(2000)
             m = re.search(r'<MetaDataObject[^>]+version="(\d+\.\d+)"', head)
             if m:
-                return m.group(1)
+                return m.group(1), cfg_path
         parent = os.path.dirname(d)
         if parent == d:
             break
         d = parent
-    return "2.17"
+    return None
 
-format_version = detect_format_version(output_dir)
+
+def resolve_format_version():
+    """Resolve the XML format version and the source of that decision."""
+    explicit = (args.FormatVersion or "").strip()
+    if explicit:
+        if not FORMAT_VERSION_PATTERN.match(explicit):
+            print(f"Error: -FormatVersion must look like 2.20, got '{explicit}'", file=sys.stderr)
+            sys.exit(1)
+        return explicit, "explicit -FormatVersion"
+
+    source_dir = (args.SourceConfigDir or "").strip()
+    if source_dir:
+        if not os.path.isdir(source_dir):
+            print(f"Error: -SourceConfigDir not found: {source_dir}", file=sys.stderr)
+            sys.exit(1)
+        found = find_config_format(source_dir)
+        if not found:
+            print(
+                f"Error: Configuration.xml not found in -SourceConfigDir or its parents: {source_dir}",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+        return found[0], found[1]
+
+    found = find_config_format(output_dir)
+    if found:
+        return found[0], found[1]
+
+    print(
+        "Warning: XML format version cannot be determined: no Configuration.xml above "
+        f"'{os.path.abspath(output_dir)}'. Falling back to 2.17. "
+        "Pass -FormatVersion <version> or -SourceConfigDir <target-dump>.",
+        file=sys.stderr,
+    )
+    return "2.17", "fallback (no Configuration.xml found)"
+
+
+def format_version_rank(version):
+    """Compare 2.9 < 2.21 numerically instead of lexicographically."""
+    match = re.match(r"^(\d+)\.(\d+)$", str(version or ""))
+    if not match:
+        return 0
+    return int(match.group(1)) * 100 + int(match.group(2))
+
+
+def build_xmlns_decl(version):
+    declaration = xmlns_decl
+    if format_version_rank(version) >= 221:
+        declaration = declaration.replace(
+            'xmlns:lf="http://v8.1c.ru/8.2/managed-application/logform" xmlns:style=',
+            'xmlns:lf="http://v8.1c.ru/8.2/managed-application/logform" '
+            'xmlns:pal="http://v8.1c.ru/8.1/data/ui/colors/palette" xmlns:style=',
+        )
+    return declaration
+
+
+format_version, format_version_source = resolve_format_version()
+print(f"Format version: {format_version} (source: {format_version_source})")
 
 # ---------------------------------------------------------------------------
 # 15. Main assembler
@@ -2272,7 +2340,7 @@ format_version = detect_format_version(output_dir)
 obj_uuid = new_uuid()
 
 X('<?xml version="1.0" encoding="UTF-8"?>')
-X(f'<MetaDataObject {xmlns_decl} version="{format_version}">')
+X(f'<MetaDataObject {build_xmlns_decl(format_version)} version="{format_version}">')
 X(f'\t<{obj_type} uuid="{obj_uuid}">')
 
 # InternalInfo
@@ -2619,10 +2687,6 @@ reg_result = None
 child_tag = obj_type
 
 if os.path.isfile(config_xml_path):
-    # Parse preserving whitespace via raw string manipulation
-    with open(config_xml_path, 'r', encoding='utf-8-sig') as f:
-        config_content = f.read()
-
     ns = 'http://v8.1c.ru/8.3/MDClasses'
     ET.register_namespace('', ns)
     # Parse all namespaces used in the file
@@ -2657,6 +2721,14 @@ if os.path.isfile(config_xml_path):
         else:
             new_elem = ET.SubElement(child_objects, f'{{{ns}}}{child_tag}')
             new_elem.text = obj_name
+            # Keep the registration on its own indented line instead of merging
+            # with the following sibling.
+            sibling_tail = None
+            for sibling in child_objects:
+                if sibling is not new_elem and sibling.tail and not sibling.tail.strip():
+                    sibling_tail = sibling.tail
+                    break
+            new_elem.tail = sibling_tail if sibling_tail is not None else "\n\t\t\t"
 
             if existing:
                 # Insert after last existing element of same type
@@ -2676,16 +2748,8 @@ if os.path.isfile(config_xml_path):
                         child_objects.insert(idx, new_elem)
                         break
 
-            # Write back preserving BOM
-            tree.write(config_xml_path, encoding='utf-8', xml_declaration=True)
-            # Re-read to add BOM, fix declaration quotes, ensure trailing newline
-            with open(config_xml_path, 'r', encoding='utf-8') as f:
-                raw = f.read()
-            if raw.startswith("<?xml version='1.0' encoding='utf-8'?>"):
-                raw = raw.replace("<?xml version='1.0' encoding='utf-8'?>", '<?xml version="1.0" encoding="UTF-8"?>', 1)
-            if not raw.endswith('\n'):
-                raw += '\n'
-            write_utf8_bom(config_xml_path, raw)
+            # Write back preserving BOM, declaration, EOL and empty-element style
+            write_etree_preserving(tree, config_xml_path)
             reg_result = 'added'
     else:
         reg_result = 'no-childobj'

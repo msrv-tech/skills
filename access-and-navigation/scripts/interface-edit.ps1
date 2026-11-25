@@ -11,6 +11,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot "..\..\common\xml_preserve.ps1")
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 # --- Mode validation ---
@@ -521,25 +522,8 @@ foreach ($op in $operations) {
 	}
 }
 
-# --- Save ---
-$settings = New-Object System.Xml.XmlWriterSettings
-$settings.Encoding = New-Object System.Text.UTF8Encoding($true)
-$settings.Indent = $false
-$settings.NewLineHandling = [System.Xml.NewLineHandling]::None
-
-$memStream = New-Object System.IO.MemoryStream
-$writer = [System.Xml.XmlWriter]::Create($memStream, $settings)
-$script:xmlDoc.Save($writer)
-$writer.Flush(); $writer.Close()
-
-$bytes = $memStream.ToArray()
-$memStream.Close()
-$text = [System.Text.Encoding]::UTF8.GetString($bytes)
-if ($text.Length -gt 0 -and $text[0] -eq [char]0xFEFF) { $text = $text.Substring(1) }
-$text = $text.Replace('encoding="utf-8"', 'encoding="UTF-8"')
-
-$utf8Bom = New-Object System.Text.UTF8Encoding($true)
-[System.IO.File]::WriteAllText($resolvedPath, $text, $utf8Bom)
+# --- Save (preserve BOM, declaration, EOL, empty elements) ---
+Save-XmlDocumentPreserving -XmlDoc $script:xmlDoc -Path $resolvedPath
 Info "Saved: $resolvedPath"
 
 # --- Auto-validate ---

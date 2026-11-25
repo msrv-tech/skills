@@ -107,6 +107,12 @@ AT-SPI в отдельной D-Bus сессии. Для `pressKey` сначал�
 пустого пароля остаётся `/P""`, а не превращается в `/P\"\"`. На Linux этот
 Windows-only параметр не меняет передачу argv.
 
+Worker нормализует пару `"/P", ""` и одиночный `/P` в компактный `/P""` на всех
+платформах. Если конкретная сборка платформы всё равно блокирует учётную запись
+на пустом пароле, убери `/P` из `clientCommand`/`managerCommand` и запускай под
+пользователем без пароля: это исключает неудачную попытку входа, тогда как
+`/P""` остаётся допустимым вариантом для большинства сборок.
+
 При `resultTransport: "bridgeJob"` worker опрашивает результат параллельно с
 процессом TestManager. Если bridge уже опубликовал шаг со статусом `failed` или
 итоговый failed-результат, worker немедленно останавливает TestManager, сохраняет
@@ -295,14 +301,22 @@ session desktop backend в `scripts/build_cfe_designer_hidden.py`; имя скр
   ограниченным по времени worker-процессом; его нельзя автоматически сочетать
   с другим способом нажатия, чтобы не выполнить команду дважды.
 - `waitForm` — найти форму и сохранить её под `saveAs`. `newForm: true` ждёт
-  именно новую форму, как `openNavigationLink`, и игнорирует уже открытые;
+  именно новую форму, как `openNavigationLink`, и игнорирует уже открытые.
+  Заголовок сравнивается точно (`ТекстЗаголовка`). Формы внешних обработок
+  (EPF) ищи по `formName`, например
+  `"ВнешняяОбработка.<Имя>.Форма.Форма"`: у них заголовок может отличаться от
+  ожидаемого, а `title`-поиск завершится ошибкой `Testable form was not found`;
 - `waitFormClosed` — дождаться закрытия ранее сохранённой формы;
+- `pause` — явная пауза `seconds` (0…60) для асинхронных серверных вызовов;
 - `waitElement` / `assertElement` — ожидать или проверить наличие, видимость,
   доступность и режим «только просмотр»;
 - `activateForm`;
 - `activateElement` — активировать поле, кнопку, таблицу или группу;
-- `inspectUi` — получить дерево окна или сохранённой формы с типами,
-  `objectName`, `title` и `formName`;
+- `inspectUi` — получить дерево сохранённой формы с типами, `objectName`,
+  `title` и `formName`. Без `form` действие возвращает список открытых окон и
+  форм (`type: "window"|"form"`, `title`, `objectName`, `formName`, `active`) —
+  этого достаточно, чтобы найти модальный диалог или нужную форму. Дерево
+  главного окна без `form` больше не возвращается;
 - `inspectTable` — колонки `{name, title}` и текущие строки: `rows` с ключами
   `objectName`, `selected` — исходные ключи `ПолучитьВыделенныеСтроки()`
   (часто заголовки). Для `row` предпочитай `name` из `columns`;
@@ -332,8 +346,8 @@ session desktop backend в `scripts/build_cfe_designer_hidden.py`; имя скр
   шага передать `expandParents: [{...}, {...}]` в `selectTableRow` или
   `assertTableRow`: родители раскроются по порядку до поиска строки;
 - `pressKey` — отправить явную клавишу активному окну через изолированный
-  accessibility helper: UIA на Windows и AT-SPI на Linux (стрелки, Enter, Space и
-  F1…F12). Используй только для
+  accessibility helper: UIA на Windows и AT-SPI на Linux (стрелки, Enter,
+  Escape, Tab, Space и F1…F12). Используй только для
   документированных shortcuts команды, когда платформа не публикует её в
   TestClient; это не координатный клик и не содержит конфигурационных веток;
 - `selectTableRow` — перейти к строке таблицы по значениям колонок. По умолчанию
@@ -355,6 +369,8 @@ session desktop backend в `scripts/build_cfe_designer_hidden.py`; имя скр
   (`expanded: false`) сворачиваемую группу формы; используй вместо toggle-клика,
   когда начальное состояние группы может отличаться между сессиями;
 - `assertGroupState` — проверить нормализованное состояние сворачиваемой группы;
+  семантика `ТекущееОткрыта()` определяется по результату предыдущего
+  `setGroupExpanded`, поэтому действие одинаково работает на сборках 8.3/8.5;
 - `invokeFormCommand` — выполнить обработчик команды активной управляемой формы.
   Bridge находит связанную `ТестируемаяКнопкаФормы` и штатно вызывает
   `Нажать()`, не используя отсутствующие в платформе 8.5 универсальные методы
@@ -379,6 +395,34 @@ session desktop backend в `scripts/build_cfe_designer_hidden.py`; имя скр
   неосновного окна: основное окно TestClient никогда не закрывается как fallback
   одной формы. Если шаг сценария упал, TestManager закрывает
   сохранённые формы с `onPrompt: discard`, чтобы не оставлять их следующим сценариям.
+
+#### Ключи действий
+
+Валидация шага строгая: неизвестный ключ — ошибка `has unknown fields`. Для
+`inputText` значение передаётся в `value`; ключ `text` не поддерживается.
+
+| Действие | Обязательные ключи | Значение |
+|---|---|---|
+| `waitForm` | `formName` или `title`/`objectName` | `saveAs`, `newForm`, `timeout` |
+| `waitFormClosed` | `form` | `timeout` |
+| `inputText` | `form`, `field`, `value` | `replace`, `elementType` |
+| `clickElement` | `form`, `elementType`, `element` | `element.objectName`, `timeout` |
+| `click` | `form`, `button` | `clickMode` |
+| `assertField` | `form`, `field` и одно из `expected`/`contains`/`notEmpty` | `table`, `row` |
+| `selectReference` | `form`, `field`, `reference` | `strategy`, `expected`, `onChangeWait` |
+| `selectTableRow` | `form`, `table`, `row` | `select`, `expandParents` |
+| `pressKey` | `key` | `enter`, `escape`, `tab`, `space`, стрелки, `f1`…`f12` |
+| `handleDialog` | `dialogButton` | `dialogTitle`, `form` |
+| `inspectTable` | `form`, `table` | — |
+| `inspectUi` | — | `form`, `depth` |
+| `pause` | `seconds` (0…60) | — |
+
+`pause` — явная пауза между шагами: `{"action":"pause","seconds":5}`. Значение
+ограничено 60 секундами и не заменяет ожидание формы; используй его для
+серверных вызовов, завершающихся асинхронно после клика. Готовый шаблон
+сценария для дополнительной обработки БСП:
+`examples/bsp-additional-processing.ui.json` (кнопка запуска —
+`ВыполнитьКоманду`, форма EPF ищется по `formName`).
 
 UI-сценарий намеренно не содержит переменных, циклов, условий, fixtures и
 cleanup. Подготовка данных, запросы, проверки состояния БД, повторы сценариев и
@@ -535,7 +579,19 @@ Worker печатает стадии `starting`, `startup`, `connect`, `running`
 
 В начале нового запуска старые `summary.json`, `progress.json`, диагностика и
 снимок удаляются, а `summary.json` сразу получает новый run ID со статусом
-`starting`. Heartbeat содержит отдельно `stepElapsedSeconds` и общее время.
+`starting`.
+
+Worker перенаправляет stdout/stderr TestClient и TestManager в
+`client-<runId>.log` и `manager-<runId>.log` внутри `artifact-dir`; те же пути
+подставляются в плейсхолдеры `{clientLog}` и `{managerLog}`. Если команда 1С
+использует `/Out`, укажи `"/Out", "{clientLog}"` и `"/Out", "{managerLog}"` —
+это уже сделано в example-конфигурациях. Отчёт всегда содержит существующие
+пути в `clientLog`/`managerLog`; если файла нет, `logHint` подсказывает, какой
+плейсхолдер добавить. При `resultTransport: "file"` отчёт дополнительно
+содержит `resultTransportNote`: встроенный TestManager пишет результат только в
+bridge job, поэтому файловый режим требует собственного менеджера.
+
+Heartbeat содержит отдельно `stepElapsedSeconds` и общее время.
 Консольный JSON принудительно выводится в UTF-8.
 
 `client.py run-ui` по умолчанию печатает только компактный итог. Полный отчёт
@@ -751,7 +807,10 @@ TestManager. Используй `uiaBeforeSteps` только для безоп�
 Если JSON содержит `"ok": false`, worker помечает запуск неуспешным даже при
 нулевом коде процесса 1С. Отсутствие результата в bridge job считается ошибкой
 контракта встроенного менеджера. Файловый `resultTransport: file` оставлен только
-для пользовательских менеджеров и тестирования самого worker.
+для пользовательских менеджеров и тестирования самого worker: встроенный
+`CodexUITest` не пишет `resultFile`, поэтому на Linux и Windows этот режим не
+запустится без собственного менеджера. Worker возвращает
+`resultTransportNote` с этой причиной.
 
 ## Изоляция и безопасность
 

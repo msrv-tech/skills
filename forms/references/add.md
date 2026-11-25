@@ -31,8 +31,13 @@ powershell.exe -NoProfile -File "<skills-root>/forms/scripts/add.ps1" -ObjectPat
 | Purpose     | нет          | Object       | Назначение: Object, List, Choice, Record      |
 | Synonym     | нет          | = FormName   | Синоним формы                                 |
 | --set-default | нет        | авто         | Установить как форму по умолчанию             |
+| NoDiffGuard | нет          | —            | Python: не проверять, что изменились только файлы формы |
 
 ## Команда
+
+Python-версия после создания формы проверяет, что вне её каталога и корневого
+XML объекта ничего не изменилось; при посторонних изменениях выводит пути и
+завершается с кодом 1.
 
 ```powershell
 powershell.exe -NoProfile -File <skills-root>/forms/scripts/add.ps1 -ObjectPath "<ObjectPath>" -FormName "<FormName>" [-Purpose "<Purpose>"] [-Synonym "<Synonym>"] [-SetDefault]

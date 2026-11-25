@@ -9,7 +9,14 @@ import re
 import subprocess
 import sys
 import uuid
+from pathlib import Path
 from lxml import etree
+
+_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+if _ROOT not in sys.path:
+    sys.path.insert(0, _ROOT)
+from common.diff_guard import TreeGuard
+from common.xml_preserve import read_source_style, serialize_preserving, write_tree_preserving
 
 # ============================================================
 # Namespaces
@@ -125,7 +132,7 @@ valid_enum_values = {
     'Posting': ['Allow', 'Deny'],
     'RealTimePosting': ['Allow', 'Deny'],
     'EditType': ['InDialog', 'InList', 'BothWays'],
-    'HierarchyType': ['HierarchyFoldersAndItems', 'HierarchyItemsOnly'],
+    'HierarchyType': ['HierarchyFoldersAndItems', 'HierarchyOfItems'],
     'CodeType': ['String', 'Number'],
     'CodeAllowedLength': ['Variable', 'Fixed'],
     'NumberType': ['String', 'Number'],
@@ -2075,23 +2082,18 @@ def set_complex_property(property_name, values):
 # ============================================================
 
 
-def save_xml(tree, path):
-    """Save XML tree with BOM and proper encoding declaration."""
-    xml_bytes = etree.tostring(tree, xml_declaration=True, encoding="UTF-8")
-    # Fix XML declaration quotes
-    xml_bytes = xml_bytes.replace(b"<?xml version='1.0' encoding='UTF-8'?>", b'<?xml version="1.0" encoding="utf-8"?>')
-    # Fix d5p1 namespace declarations stripped by lxml (it treats them as unused
-    # because d5p1: appears only in text content, not in element/attribute names)
-    xml_bytes = re.sub(
+def _restore_d5p1_namespace(xml_bytes):
+    # lxml strips d5p1 declarations that appear only in text content.
+    return re.sub(
         b'(<v8:Type)(?! xmlns:d5p1)(>d5p1:)',
         b'\\1 xmlns:d5p1="http://v8.1c.ru/8.1/data/enterprise/current-config"\\2',
         xml_bytes
     )
-    if not xml_bytes.endswith(b"\n"):
-        xml_bytes += b"\n"
-    with open(path, "wb") as f:
-        f.write(b"\xef\xbb\xbf")
-        f.write(xml_bytes)
+
+
+def save_xml(tree, path):
+    """Save XML tree, preserving BOM, declaration, EOL and empty-element style."""
+    write_tree_preserving(tree, path, postprocess=_restore_d5p1_namespace)
 
 
 # ============================================================
@@ -2125,6 +2127,12 @@ def main():
     parser.add_argument("-Operation", default=None, choices=valid_operations, help="Inline operation")
     parser.add_argument("-Value", default=None, help="Inline value")
     parser.add_argument("-NoValidate", action="store_true", help="Skip auto-validation")
+    parser.add_argument("-NoDiffGuard", action="store_true", help="Do not verify that only the edited object changed")
+    parser.add_argument(
+        "-DryRun",
+        action="store_true",
+        help="Print the resulting diff without writing the object file",
+    )
     args = parser.parse_args()
 
     # --- Mode validation ---
@@ -2245,9 +2253,43 @@ def main():
         elif op_key == "modify":
             process_modify(prop_value)
 
+    config_root = None
+    current = os.path.dirname(os.path.abspath(resolved_path))
+    while current:
+        if os.path.isfile(os.path.join(current, "Configuration.xml")):
+            config_root = current
+            break
+        parent = os.path.dirname(current)
+        if parent == current:
+            break
+        current = parent
+    guard = None if args.NoDiffGuard or config_root is None else TreeGuard(config_root)
+
     # --- Save XML ---
+    if args.DryRun:
+        import difflib
+
+        original = Path(resolved_path).read_bytes()
+        updated = serialize_preserving(xml_tree, read_source_style(resolved_path))
+        before = original.decode("utf-8-sig").splitlines()
+        after = updated.decode("utf-8-sig").splitlines()
+        print("--- Dry run: unified diff ---")
+        print("\n".join(difflib.unified_diff(before, after, fromfile=resolved_path, tofile=resolved_path)))
+        print("--- End dry run: no files changed ---")
+        sys.exit(0)
+
     save_xml(xml_tree, resolved_path)
     info(f"Saved: {resolved_path}")
+
+    if guard is not None:
+        unexpected = guard.changed_except([resolved_path])
+        if unexpected:
+            print(
+                "[ERROR] Unexpected file changes outside the edited object: "
+                + ", ".join(unexpected[:20]),
+                file=sys.stderr,
+            )
+            sys.exit(1)
 
     # --- Auto-validate ---
     if not args.NoValidate:

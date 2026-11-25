@@ -1,4 +1,4 @@
-import sys
+﻿import sys
 import tempfile
 import unittest
 import xml.etree.ElementTree as ET
@@ -27,7 +27,7 @@ class PrepareLegacySourceTests(unittest.TestCase):
         self.assertNotIn("UISuiteJobCreate", module)
         self.assertIn('"worker", Ложь', module)
         self.assertIn('"variant", "legacy"', module)
-        self.assertIn('"bridgeVersion", "0.8.1"', module)
+        self.assertIn('"bridgeVersion", "0.8.3"', module)
         properties = configuration.find(f"{{{MD_NAMESPACE}}}Properties")
         children = configuration.find(f"{{{MD_NAMESPACE}}}ChildObjects")
         self.assertEqual(

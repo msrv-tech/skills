@@ -1,4 +1,4 @@
-﻿# metadata:validate v1.3 — Validate 1C metadata object structure
+# metadata:validate v1.3 — Validate 1C metadata object structure
 # Source: https://github.com/Desko77/claude-code-skills-1c
 param(
 	[Parameter(Mandatory)]
@@ -252,7 +252,7 @@ $validPropertyValues = @{
 	"DataLockControlMode"            = @("Automatic","Managed")
 	"FullTextSearch"                 = @("Use","DontUse")
 	"DefaultPresentation"            = @("AsDescription","AsCode")
-	"HierarchyType"                  = @("HierarchyFoldersAndItems","HierarchyItemsOnly")
+	"HierarchyType"                  = @("HierarchyFoldersAndItems","HierarchyOfItems")
 	"EditType"                       = @("InDialog","InList","BothWays")
 	"WriteMode"                      = @("Independent","RecorderSubordinate")
 	"InformationRegisterPeriodicity" = @("Nonperiodical","Second","Day","Month","Quarter","Year","RecorderPosition")
@@ -324,7 +324,7 @@ $version = $root.GetAttribute("version")
 if (-not $version) {
 	Report-Warn "1. Missing version attribute on MetaDataObject"
 } elseif ($version -ne "2.17" -and $version -ne "2.20") {
-	Report-Warn "1. Unusual version '$version' (expected 2.17 or 2.20)"
+	Report-Warn "1. Unusual version '$version' (expected 2.17, 2.20 or 2.21)"
 }
 
 # Detect type element — exactly one child element in md namespace
@@ -909,11 +909,13 @@ $check10Ok = $true
 $check10Issues = 0
 
 if ($propsNode) {
-	# HierarchyType set but Hierarchical = false
+	# Hierarchical=true requires an explicit HierarchyType. Configurator keeps
+	# HierarchyType in the dump even when Hierarchical=false, so that combination
+	# is valid and must not be reported.
 	$hierarchical = $propsNode.SelectSingleNode("md:Hierarchical", $ns)
 	$hierarchyType = $propsNode.SelectSingleNode("md:HierarchyType", $ns)
-	if ($hierarchical -and $hierarchyType -and $hierarchical.InnerText -eq "false" -and $hierarchyType.InnerText) {
-		Report-Warn "10. HierarchyType='$($hierarchyType.InnerText)' but Hierarchical=false"
+	if ($hierarchical -and $hierarchical.InnerText -eq "true" -and (-not $hierarchyType -or -not $hierarchyType.InnerText)) {
+		Report-Warn "10. Hierarchical=true but HierarchyType is missing"
 		$check10Issues++
 	}
 

@@ -18,6 +18,12 @@ powershell.exe -NoProfile -File "<skills-root>/metadata/scripts/validate.ps1" -O
 
 Проверяет XML объекта метаданных из выгрузки конфигурации на структурные ошибки.
 
+Поддерживаемые версии формата XML: `2.17`, `2.20`, `2.21`. Для справочников
+допустимы `HierarchyType = HierarchyFoldersAndItems` и `HierarchyOfItems`
+(`HierarchyItemsOnly` — недопустимое значение). Комбинация
+`Hierarchical=false` с заполненным `HierarchyType` валидна: Конфигуратор
+сохраняет тип иерархии в выгрузке независимо от флага.
+
 ## Параметры
 
 | Параметр   | Обяз. | Умолч. | Описание                                      |

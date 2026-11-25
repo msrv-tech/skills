@@ -74,6 +74,8 @@ def database_environment(database: dict, platform: str) -> dict[str, str]:
         "CODEX_1C_MANAGER_USERNAME": str(database["User"]),
         "CODEX_1C_CLIENT_PASSWORD": str(database.get("Password", "")),
         "CODEX_1C_MANAGER_PASSWORD": str(database.get("Password", "")),
+        "CODEX_1C_MANAGER_BRIDGE_USERNAME": str(database["User"]),
+        "CODEX_1C_MANAGER_BRIDGE_PASSWORD": str(database.get("Password", "")),
     }
 
 

@@ -220,6 +220,17 @@ class AtspiRunnerTests(unittest.TestCase):
         self.assertTrue(response["ok"])
         self.assertEqual(response["actual"]["method"], "x11FocusedKey")
 
+    def test_press_key_supports_escape_and_tab(self):
+        for key in ("escape", "tab"):
+            with patch("atspi_runner.send_x11_key", return_value={"method": "x11FocusedKey"}):
+                response = run_atspi_bridge_request(123, {
+                    "requestId": f"request-{key}",
+                    "action": "pressKey",
+                    "key": key,
+                })
+            self.assertTrue(response["ok"], key)
+            self.assertEqual(response["actual"]["method"], "x11FocusedKey")
+
     def test_missing_element_is_a_structured_failure(self):
         with self.assertRaises(AtspiRunnerError):
             find_accessible_element([FakeAccessible("Other")], ["Missing"])

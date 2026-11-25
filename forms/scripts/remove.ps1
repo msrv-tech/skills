@@ -12,6 +12,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot "..\..\common\xml_preserve.ps1")
 
 # --- Проверки ---
 
@@ -72,16 +73,7 @@ if ($defaultForm -and $defaultForm.InnerText -match "Form\.$FormName$") {
 	$defaultForm.InnerText = ""
 }
 
-# Сохранить с BOM
-$encBom = New-Object System.Text.UTF8Encoding($true)
-$settings = New-Object System.Xml.XmlWriterSettings
-$settings.Encoding = $encBom
-$settings.Indent = $false
-
-$stream = New-Object System.IO.FileStream($rootXmlFull.Path, [System.IO.FileMode]::Create)
-$writer = [System.Xml.XmlWriter]::Create($stream, $settings)
-$xmlDoc.Save($writer)
-$writer.Close()
-$stream.Close()
+# Сохранить с BOM, declaration, EOL и empty-element style
+Save-XmlDocumentPreserving -XmlDoc $xmlDoc -Path $rootXmlFull.Path
 
 Write-Host "[OK] Форма $FormName удалена из $rootXmlPath"

@@ -10,6 +10,11 @@ import sys
 import uuid
 import xml.etree.ElementTree as ET
 
+_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+if _ROOT not in sys.path:
+    sys.path.insert(0, _ROOT)
+from common.xml_preserve import write_text_preserving
+
 
 def detect_format_version(d):
     while d:
@@ -418,7 +423,7 @@ def main():
                     insert_line = f'\t\t\t<Subsystem>{esc_xml(obj_name)}</Subsystem>\n'
                     raw_text = raw_text.replace('</ChildObjects>', insert_line + '\t\t</ChildObjects>', 1)
 
-                write_utf8_bom(parent_xml_path, raw_text)
+                write_text_preserving(parent_xml_path, raw_text)
                 print(f"[OK] Registered in: {parent_xml_path}")
             else:
                 print(f"[SKIP] Already registered in: {parent_xml_path}")

@@ -5,7 +5,7 @@
 | Поле JSON | Умолчание | XML элемент |
 |-----------|----------|-------------|
 | `hierarchical` | `false` | Hierarchical |
-| `hierarchyType` | `HierarchyFoldersAndItems` | HierarchyType |
+| `hierarchyType` | `HierarchyFoldersAndItems` | HierarchyType (`HierarchyFoldersAndItems`, `HierarchyOfItems`) |
 | `limitLevelCount` | `false` | LimitLevelCount |
 | `levelCount` | `2` | LevelCount |
 | `foldersOnTop` | `true` | FoldersOnTop |

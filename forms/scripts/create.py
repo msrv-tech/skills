@@ -9,6 +9,11 @@ import re
 import sys
 import uuid
 import xml.etree.ElementTree as ET
+
+_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+if _ROOT not in sys.path:
+    sys.path.insert(0, _ROOT)
+from common.xml_preserve import write_text_preserving
 from collections import OrderedDict
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -2633,7 +2638,7 @@ def main():
                     replacement = f'<ChildObjects>\n\t\t\t<Form>{form_name}</Form>\n\t\t</ChildObjects>'
                     raw_text = raw_text.replace('<ChildObjects/>', replacement, 1)
 
-                write_utf8_bom(object_xml_path, raw_text)
+                write_text_preserving(object_xml_path, raw_text)
                 print(f"     Registered: <Form>{form_name}</Form> in {object_name}.xml")
 
     # --- 5. Summary ---

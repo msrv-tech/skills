@@ -62,6 +62,61 @@ class UiWorkerTests(unittest.TestCase):
             "Отсутствует подходящий клиент тестирования.",
         )
 
+    def test_manager_failure_explains_external_processing_form_search(self):
+        error = manager_failure_error(
+            {
+                "ok": False,
+                "steps": [{
+                    "status": "failed",
+                    "name": "wait processing",
+                    "error": "Testable form was not found. Title: Расчет; name: ; formName:",
+                }],
+            },
+            0,
+        )
+        self.assertIn("Testable form was not found", error["message"])
+        self.assertIn("ВнешняяОбработка.<Имя>.Форма.Форма", error["message"])
+
+    def test_manager_failure_explains_busy_form(self):
+        error = manager_failure_error(
+            {
+                "ok": False,
+                "steps": [{
+                    "status": "failed",
+                    "name": "assert total",
+                    "error": (
+                        "Ошибка при вызове метода контекста (Активизировать): "
+                        "Недоступный пользователю элемент управления не может выполнять "
+                        "интерактивные действия."
+                    ),
+                }],
+            },
+            0,
+        )
+        self.assertIn("form is busy with a running server call", error["message"])
+
+    def test_pause_step_validates_seconds(self):
+        prepared = prepare_native_ui_scenario({
+            "steps": [{"action": "pause", "seconds": 5}],
+        })
+        self.assertEqual(prepared["steps"][0]["seconds"], 5)
+        with self.assertRaises(UiWorkerError):
+            prepare_native_ui_scenario({"steps": [{"action": "pause", "seconds": 61}]})
+        with self.assertRaises(UiWorkerError):
+            prepare_native_ui_scenario({"steps": [{"action": "pause", "seconds": -1}]})
+
+    def test_input_text_rejects_text_key_with_actionable_message(self):
+        with self.assertRaises(UiWorkerError) as raised:
+            prepare_native_ui_scenario({
+                "steps": [{
+                    "action": "inputText",
+                    "form": "item",
+                    "field": {"objectName": "Поле"},
+                    "text": "31.01.2027",
+                }],
+            })
+        self.assertIn("uses 'value', not 'text'", str(raised.exception))
+
     def test_compact_ui_result_does_not_embed_ui_tree(self):
         compact = compact_ui_result({
             "ok": True, "runId": "run", "status": "passed", "durationMs": 42,

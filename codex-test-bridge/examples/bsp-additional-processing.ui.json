@@ -1,0 +1,67 @@
+{
+  "$schema": "../ui-scenario.schema.json",
+  "name": "bsp-additional-processing-template",
+  "steps": [
+    {
+      "action": "openNavigationLink",
+      "name": "open-additional-processing-item",
+      "link": "e1cib/data/Справочник.ДополнительныеОтчетыИОбработки?ref=<UUID элемента>",
+      "attempts": 3,
+      "targetForm": {
+        "title": "<Наименование обработки> (Дополнительная обработка)",
+        "timeout": 30,
+        "saveAs": "item"
+      }
+    },
+    {
+      "action": "inspectUi",
+      "name": "inspect-item-form",
+      "form": "item",
+      "depth": 6
+    },
+    {
+      "action": "clickElement",
+      "name": "run-additional-processing",
+      "form": "item",
+      "elementType": "button",
+      "element": {
+        "objectName": "ВыполнитьКоманду",
+        "timeout": 30
+      }
+    },
+    {
+      "action": "waitForm",
+      "name": "wait-processing-form",
+      "formName": "ВнешняяОбработка.<ИмяОбработки>.Форма.Форма",
+      "timeout": 120,
+      "saveAs": "processing"
+    },
+    {
+      "action": "inputText",
+      "name": "set-period-end",
+      "form": "processing",
+      "field": {
+        "objectName": "ПолеДатаОкончания"
+      },
+      "value": "31.01.2027"
+    },
+    {
+      "action": "clickElement",
+      "name": "select-data",
+      "form": "processing",
+      "elementType": "button",
+      "element": {
+        "objectName": "КнопкаПодобрать",
+        "timeout": 60
+      }
+    },
+    {
+      "action": "inspectTable",
+      "name": "read-result-table",
+      "form": "processing",
+      "table": {
+        "objectName": "ТаблицаРезультаты"
+      }
+    }
+  ]
+}

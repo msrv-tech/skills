@@ -10,6 +10,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot "..\..\common\xml_preserve.ps1")
 
 # --- Detect format version ---
 
@@ -116,14 +117,7 @@ if (Test-Path $formsDir) {
 					$parent.AppendChild($newElem) | Out-Null
 				}
 
-				$settings = New-Object System.Xml.XmlWriterSettings
-				$settings.Encoding = $encBom
-				$settings.Indent = $false
-				$stream = New-Object System.IO.FileStream($formMeta.FullName, [System.IO.FileMode]::Create)
-				$writer = [System.Xml.XmlWriter]::Create($stream, $settings)
-				$xmlDoc.Save($writer)
-				$writer.Close()
-				$stream.Close()
+				Save-XmlDocumentPreserving -XmlDoc $xmlDoc -Path $formMeta.FullName
 
 				Write-Host "     IncludeHelpInContents добавлен: $($formMeta.Name)"
 			}

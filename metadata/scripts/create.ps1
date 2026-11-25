@@ -1,11 +1,15 @@
-﻿# metadata:create v1.10 — Compile 1C metadata object from JSON
+# metadata:create v1.10 — Compile 1C metadata object from JSON
 # Source: https://github.com/Desko77/claude-code-skills-1c
 param(
 	[Parameter(Mandatory)]
 	[string]$JsonPath,
 
 	[Parameter(Mandatory)]
-	[string]$OutputDir
+	[string]$OutputDir,
+
+	[string]$FormatVersion = "",
+
+	[string]$SourceConfigDir = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -31,7 +35,10 @@ if ($def -is [array] -or ($null -ne $def -and $def.GetType().BaseType.Name -eq '
 		$tmpJson = Join-Path ([System.IO.Path]::GetTempPath()) "metadata-create-batch-$idx.json"
 		try {
 			$item | ConvertTo-Json -Depth 20 | Set-Content -Encoding UTF8 $tmpJson
-			$proc = Start-Process -FilePath "powershell.exe" -ArgumentList "-NoProfile -File `"$PSCommandPath`" -JsonPath `"$tmpJson`" -OutputDir `"$OutputDir`"" -NoNewWindow -Wait -PassThru
+			$extraArgs = ""
+			if ($FormatVersion) { $extraArgs += " -FormatVersion `"$FormatVersion`"" }
+			if ($SourceConfigDir) { $extraArgs += " -SourceConfigDir `"$SourceConfigDir`"" }
+			$proc = Start-Process -FilePath "powershell.exe" -ArgumentList "-NoProfile -File `"$PSCommandPath`" -JsonPath `"$tmpJson`" -OutputDir `"$OutputDir`"$extraArgs" -NoNewWindow -Wait -PassThru
 			if ($proc.ExitCode -eq 0) { $batchOk++ } else { $batchFail++ }
 		} finally {
 			Remove-Item $tmpJson -Force -ErrorAction SilentlyContinue
@@ -125,7 +132,7 @@ $script:validEnumValues = @{
 	"Posting"                        = @("Allow","Deny")
 	"RealTimePosting"                = @("Allow","Deny")
 	"EditType"                       = @("InDialog","InList","BothWays")
-	"HierarchyType"                  = @("HierarchyFoldersAndItems","HierarchyItemsOnly")
+	"HierarchyType"                  = @("HierarchyFoldersAndItems","HierarchyOfItems")
 	"CodeType"                       = @("String","Number")
 	"CodeAllowedLength"              = @("Variable","Fixed")
 	"NumberType"                     = @("String","Number")
@@ -2570,22 +2577,66 @@ $script:xmlnsDecl = 'xmlns="http://v8.1c.ru/8.3/MDClasses" xmlns:app="http://v8.
 
 # --- 14a. Detect format version from existing Configuration.xml ---
 
-function Detect-FormatVersion([string]$dir) {
+function Find-ConfigFormat([string]$dir) {
 	$d = $dir
 	while ($d) {
 		$cfgPath = Join-Path $d "Configuration.xml"
 		if (Test-Path $cfgPath) {
 			$head = [System.IO.File]::ReadAllText($cfgPath, [System.Text.Encoding]::UTF8).Substring(0, [Math]::Min(2000, (Get-Item $cfgPath).Length))
-			if ($head -match '<MetaDataObject[^>]+version="(\d+\.\d+)"') { return $Matches[1] }
+			if ($head -match '<MetaDataObject[^>]+version="(\d+\.\d+)"') { return @($Matches[1], $cfgPath) }
 		}
 		$parent = Split-Path $d -Parent
 		if ($parent -eq $d) { break }
 		$d = $parent
 	}
-	return "2.17"
+	return $null
 }
 
-$script:formatVersion = Detect-FormatVersion $OutputDir
+$formatSource = ""
+if ($FormatVersion) {
+	if ($FormatVersion -notmatch '^\d+\.\d+$') {
+		Write-Error "FormatVersion must look like 2.20, got '$FormatVersion'"
+		exit 1
+	}
+	$script:formatVersion = $FormatVersion
+	$formatSource = "explicit -FormatVersion"
+} elseif ($SourceConfigDir) {
+	if (-not (Test-Path $SourceConfigDir -PathType Container)) {
+		Write-Error "SourceConfigDir not found: $SourceConfigDir"
+		exit 1
+	}
+	$found = Find-ConfigFormat $SourceConfigDir
+	if ($null -eq $found) {
+		Write-Error "Configuration.xml not found in SourceConfigDir or its parents: $SourceConfigDir"
+		exit 1
+	}
+	$script:formatVersion = $found[0]
+	$formatSource = $found[1]
+} else {
+	$found = Find-ConfigFormat $OutputDir
+	if ($null -ne $found) {
+		$script:formatVersion = $found[0]
+		$formatSource = $found[1]
+	} else {
+		Write-Warning "XML format version cannot be determined: no Configuration.xml above '([System.IO.Path]::GetFullPath($OutputDir))'. Falling back to 2.17. Pass -FormatVersion <version> or -SourceConfigDir <target-dump>."
+		$script:formatVersion = "2.17"
+		$formatSource = "fallback (no Configuration.xml found)"
+	}
+}
+function Get-FormatVersionRank([string]$Version) {
+	if ($Version -match '^(\d+)\.(\d+)$') {
+		return [int]$Matches[1] * 100 + [int]$Matches[2]
+	}
+	return 0
+}
+
+if ((Get-FormatVersionRank $script:formatVersion) -ge 221) {
+	$script:xmlnsDecl = $script:xmlnsDecl.Replace(
+		'xmlns:lf="http://v8.1c.ru/8.2/managed-application/logform" xmlns:style=',
+		'xmlns:lf="http://v8.1c.ru/8.2/managed-application/logform" xmlns:pal="http://v8.1c.ru/8.1/data/ui/colors/palette" xmlns:style=')
+}
+
+Write-Host "Format version: $($script:formatVersion) (source: $formatSource)"
 
 # --- 15. Main assembler ---
 

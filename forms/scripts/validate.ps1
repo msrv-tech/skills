@@ -129,7 +129,7 @@ if ($root.LocalName -ne "Form") {
 	if ($version -eq "2.17" -or $version -eq "2.20") {
 		Report-OK "Root element: Form version=$version"
 	} elseif ($version) {
-		Report-Warn "Form version='$version' (expected 2.17 or 2.20)"
+		Report-Warn "Form version='$version' (expected 2.17, 2.20 or 2.21)"
 	} else {
 		Report-Warn "Form version attribute missing"
 	}

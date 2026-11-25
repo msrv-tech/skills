@@ -135,8 +135,8 @@ def send_x11_key(process_id: int, key: str) -> dict[str, Any]:
     xtst.XTestFakeKeyEvent.argtypes = [ctypes.c_void_p, ctypes.c_uint, ctypes.c_int, ctypes.c_ulong]
     xtst.XTestFakeKeyEvent.restype = ctypes.c_int
     keysyms = {
-        "enter": 0xFF0D, "space": 0x20, "right": 0xFF53, "left": 0xFF51,
-        "down": 0xFF54, "up": 0xFF52,
+        "enter": 0xFF0D, "escape": 0xFF1B, "tab": 0xFF09, "space": 0x20,
+        "right": 0xFF53, "left": 0xFF51, "down": 0xFF54, "up": 0xFF52,
         **{f"f{number}": 0xFFBD + number for number in range(1, 13)},
     }
     normalized_key = key.casefold()
@@ -437,8 +437,8 @@ def run_atspi_bridge_request(process_id: int, request: dict[str, Any]) -> dict[s
         if action == "presskey":
             key = str(request.get("key", "")).casefold()
             keysyms = {
-                "enter": 0xFF0D, "space": 0x20, "right": 0xFF53, "left": 0xFF51,
-                "down": 0xFF54, "up": 0xFF52,
+                "enter": 0xFF0D, "escape": 0xFF1B, "tab": 0xFF09, "space": 0x20,
+                "right": 0xFF53, "left": 0xFF51, "down": 0xFF54, "up": 0xFF52,
                 **{f"f{number}": 0xFFBD + number for number in range(1, 13)},
             }
             if key not in keysyms:

@@ -8,6 +8,11 @@ import re
 import sys
 import uuid
 
+_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+if _ROOT not in sys.path:
+    sys.path.insert(0, _ROOT)
+from common.xml_preserve import write_text_preserving
+
 
 def detect_format_version(d):
     while d:
@@ -631,7 +636,7 @@ def main():
                 # No existing roles — insert before </ChildObjects>
                 raw_text = raw_text.replace('</ChildObjects>', f'\t\t\t{new_role_tag}\n\t\t</ChildObjects>')
 
-            write_utf8_bom(config_xml_path, raw_text)
+            write_text_preserving(config_xml_path, raw_text)
             reg_result = 'added'
     else:
         reg_result = 'no-config'

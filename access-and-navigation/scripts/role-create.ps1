@@ -9,6 +9,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot "..\..\common\xml_preserve.ps1")
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 # --- 1. Load and validate JSON ---
@@ -714,15 +715,8 @@ if (Test-Path $configXmlPath) {
 				}
 			}
 
-			# Save
-			$cfgSettings = New-Object System.Xml.XmlWriterSettings
-			$cfgSettings.Encoding = New-Object System.Text.UTF8Encoding($true)
-			$cfgSettings.Indent = $false
-			$stream = New-Object System.IO.FileStream($configXmlPath, [System.IO.FileMode]::Create)
-			$writer = [System.Xml.XmlWriter]::Create($stream, $cfgSettings)
-			$configDoc.Save($writer)
-			$writer.Close()
-			$stream.Close()
+			# Save preserving BOM, declaration, EOL, empty elements
+			Save-XmlDocumentPreserving -XmlDoc $configDoc -Path $configXmlPath
 
 			$regResult = "added"
 		}

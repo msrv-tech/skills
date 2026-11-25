@@ -27,6 +27,7 @@
     "/N", "{username}",
     "/P", "{password}",
     "/DisableStartupDialogs", "/DisableStartupMessages", "/DisableSplash", "/TestClient", "-TPort", "{testPort}",
+    "/Out", "{clientLog}",
     "/C", "CodexUITestClient;Job={jobId}"
   ],
   "managerCommand": [
@@ -35,6 +36,7 @@
     "/N", "{username}",
     "/P", "{password}",
     "/DisableStartupDialogs", "/DisableStartupMessages", "/DisableSplash", "/TestManager",
-    "/C", "CodexUITest;Job={jobId};Host=127.0.0.1;Port={testPort}"
+    "/C", "CodexUITest;Job={jobId};Host=127.0.0.1;Port={testPort}",
+    "/Out", "{managerLog}"
   ]
 }

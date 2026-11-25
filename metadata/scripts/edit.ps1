@@ -1,4 +1,4 @@
-﻿# metadata:edit v1.6 — Edit existing 1C metadata object XML (inline mode + complex properties + TS attribute ops + modify-ts)
+# metadata:edit v1.6 — Edit existing 1C metadata object XML (inline mode + complex properties + TS attribute ops + modify-ts)
 # Source: https://github.com/Desko77/claude-code-skills-1c
 param(
 	[string]$DefinitionFile,
@@ -27,6 +27,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot "..\..\common\xml_preserve.ps1")
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 # ============================================================
@@ -77,7 +78,7 @@ $script:validEnumValues = @{
 	"Posting"                        = @("Allow","Deny")
 	"RealTimePosting"                = @("Allow","Deny")
 	"EditType"                       = @("InDialog","InList","BothWays")
-	"HierarchyType"                  = @("HierarchyFoldersAndItems","HierarchyItemsOnly")
+	"HierarchyType"                  = @("HierarchyFoldersAndItems","HierarchyOfItems")
 	"CodeType"                       = @("String","Number")
 	"CodeAllowedLength"              = @("Variable","Fixed")
 	"NumberType"                     = @("String","Number")
@@ -2348,33 +2349,8 @@ $def.PSObject.Properties | ForEach-Object {
 # Section 14: Save + validate
 # ============================================================
 
-# Save XML
-$settings = New-Object System.Xml.XmlWriterSettings
-$settings.Encoding = New-Object System.Text.UTF8Encoding($true)  # with BOM
-$settings.Indent = $false  # preserve original whitespace
-$settings.NewLineHandling = [System.Xml.NewLineHandling]::None
-
-# Write using XmlWriter to get proper encoding declaration
-$memStream = New-Object System.IO.MemoryStream
-$writer = [System.Xml.XmlWriter]::Create($memStream, $settings)
-$script:xmlDoc.Save($writer)
-$writer.Flush()
-$writer.Close()
-
-$bytes = $memStream.ToArray()
-$memStream.Close()
-
-# Fix encoding case: utf-8 → UTF-8 (cosmetic, 1C accepts both)
-$text = [System.Text.Encoding]::UTF8.GetString($bytes)
-# Remove BOM from string if present (we'll add it as bytes)
-if ($text.Length -gt 0 -and $text[0] -eq [char]0xFEFF) {
-	$text = $text.Substring(1)
-}
-$text = $text.Replace('encoding="utf-8"', 'encoding="UTF-8"')
-
-# Write with BOM
-$utf8Bom = New-Object System.Text.UTF8Encoding($true)
-[System.IO.File]::WriteAllText($resolvedPath, $text, $utf8Bom)
+# Save XML preserving BOM, declaration, EOL and empty-element style
+Save-XmlDocumentPreserving -XmlDoc $script:xmlDoc -Path $resolvedPath
 
 Info "Saved: $resolvedPath"
 

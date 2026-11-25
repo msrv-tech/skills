@@ -161,10 +161,10 @@ def main():
         report_error(f"Root element is '{localname(root)}', expected 'Form'")
     else:
         version = root.get("version", "")
-        if version in ("2.17", "2.20"):
+        if version in ("2.17", "2.20", "2.21"):
             report_ok(f"Root element: Form version={version}")
         elif version:
-            report_warn(f"Form version='{version}' (expected 2.17 or 2.20)")
+            report_warn(f"Form version='{version}' (expected 2.17, 2.20 or 2.21)")
         else:
             report_warn("Form version attribute missing")
 

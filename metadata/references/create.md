@@ -35,6 +35,29 @@ powershell.exe -NoProfile -File <skills-root>/metadata/scripts/create.ps1 -JsonP
 |----------|----------|
 | `JsonPath` | Путь к JSON-файлу (один объект `{...}` или массив `[{...}, ...]`) |
 | `OutputDir` | Корень выгрузки конфигурации (где `Configuration.xml`, `Catalogs/`, `Documents/` и т.д.) |
+| `FormatVersion` | Явная версия формата XML цели, например `2.20` или `2.21`. Имеет приоритет над автоопределением |
+| `SourceConfigDir` | Каталог целевой выгрузки, по `Configuration.xml` которого определяется версия формата; удобен при генерации в отдельный каталог |
+
+### Формат XML и отдельный каталог вывода
+
+Скрипт определяет версию формата по `Configuration.xml` в `OutputDir` или выше. Если
+`Configuration.xml` не найден, используется `2.17`, но теперь выводится предупреждение
+в stderr — тихая подстановка убрана.
+
+При безопасном workflow «сгенерировать объект в отдельный каталог → проверить diff →
+перенести в выгрузку» версия из `OutputDir` не видна. В этом случае передай один из
+параметров:
+
+```bash
+python3 metadata/scripts/create.py -JsonPath enum.json -OutputDir /tmp/new-object \
+  -SourceConfigDir /path/to/target-dump
+# или явно:
+python3 metadata/scripts/create.py -JsonPath enum.json -OutputDir /tmp/new-object \
+  -FormatVersion 2.20
+```
+
+Скрипт печатает выбранную версию и источник решения. Если `-SourceConfigDir` задан,
+но `Configuration.xml` в нём и выше не найден, генерация завершается ошибкой.
 
 ## JSON DSL
 

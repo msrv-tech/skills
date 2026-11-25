@@ -38,6 +38,10 @@
 .PARAMETER ListFile
     Путь к файлу со списком файлов (альтернатива -Files, для режима Partial)
 
+.PARAMETER PartialFullTree
+    Загружать Partial из полного ConfigDir (legacy). По умолчанию собирается
+    временное зеркало каталога, чтобы не менять исходный ConfigDumpInfo.xml.
+
 .PARAMETER Extension
     Имя расширения для загрузки
 
@@ -88,6 +92,12 @@ param(
     [string]$ListFile,
 
     [Parameter(Mandatory=$false)]
+    [switch]$PartialFullTree,
+
+    [Parameter(Mandatory=$false)]
+    [switch]$NoUpdateConfigDumpInfo,
+
+    [Parameter(Mandatory=$false)]
     [string]$Extension,
 
     [Parameter(Mandatory=$false)]
@@ -103,6 +113,48 @@ param(
     [Parameter(Mandatory=$false)]
     [switch]$StrictLog
 )
+
+function Get-OneCRelativePath([string]$Path) {
+    # 1C for Linux treats "/s..." inside an absolute path as another /S option.
+    $current = (Get-Location).Path.TrimEnd('\', '/')
+    $full = [System.IO.Path]::GetFullPath($Path)
+    if ($full.StartsWith($current, [System.StringComparison]::OrdinalIgnoreCase)) {
+        return "." + $full.Substring($current.Length)
+    }
+    return $full
+}
+
+function New-PartialWorkspace {
+    param(
+        [string]$SourceConfigDir,
+        [string]$TargetDir
+    )
+    New-Item -ItemType Directory -Path $TargetDir -Force | Out-Null
+    $sourceRoot = (Resolve-Path -LiteralPath $SourceConfigDir).Path.TrimEnd('\', '/')
+    $linked = 0
+    $copied = 0
+    Get-ChildItem -LiteralPath $sourceRoot -Recurse -File -Force | ForEach-Object {
+        $relative = $_.FullName.Substring($sourceRoot.Length).TrimStart('\', '/')
+        $destination = Join-Path $TargetDir $relative
+        $parent = Split-Path $destination -Parent
+        if (-not (Test-Path -LiteralPath $parent)) {
+            New-Item -ItemType Directory -Path $parent -Force | Out-Null
+        }
+        if ($relative -eq 'Configuration.xml' -or $relative -eq 'ConfigDumpInfo.xml') {
+            Copy-Item -LiteralPath $_.FullName -Destination $destination -Force
+            $copied++
+            return
+        }
+        try {
+            New-Item -ItemType HardLink -Path $destination -Target $_.FullName -ErrorAction Stop | Out-Null
+            $linked++
+        } catch {
+            Copy-Item -LiteralPath $_.FullName -Destination $destination -Force
+            $copied++
+        }
+    }
+    return @($TargetDir, $linked, $copied)
+}
 
 $OutputEncoding = [System.Text.Encoding]::UTF8
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
@@ -160,7 +212,7 @@ try {
     if ($UserName) { $arguments += "/N`"$UserName`"" }
     if ($Password) { $arguments += "/P`"$Password`"" }
 
-    $arguments += "/LoadConfigFromFiles", "`"$ConfigDir`""
+    $loadDir = $ConfigDir
 
     if ($Mode -eq "Full") {
         Write-Host "Executing full configuration load..."
@@ -171,27 +223,49 @@ try {
         $generatedListFile = $null
         if ($ListFile) {
             # Use provided list file
-            if (-not (Test-Path $ListFile)) {
+            if (-not (Test-Path -LiteralPath $ListFile)) {
                 Write-Host "Error: list file not found: $ListFile" -ForegroundColor Red
                 exit 1
             }
             $generatedListFile = $ListFile
+            $fileList = Get-Content -LiteralPath $ListFile -Encoding UTF8 |
+                ForEach-Object { $_.Trim() } | Where-Object { $_ }
         } else {
             # Generate from -Files parameter
             $fileList = $Files -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ }
             $generatedListFile = Join-Path $tempDir "load_list.txt"
             $utf8Bom = New-Object System.Text.UTF8Encoding($true)
             [System.IO.File]::WriteAllLines($generatedListFile, $fileList, $utf8Bom)
-
-            Write-Host "Files to load: $($fileList.Count)"
-            foreach ($f in $fileList) { Write-Host "  $f" }
         }
 
-        $arguments += "-listFile", "`"$generatedListFile`""
+        Write-Host "Files to load: $($fileList.Count)"
+        foreach ($f in $fileList) { Write-Host "  $f" }
+
+        foreach ($relative in $fileList) {
+            $candidate = Join-Path $ConfigDir ($relative -replace '/', [System.IO.Path]::DirectorySeparatorChar)
+            if (-not (Test-Path -LiteralPath $candidate -PathType Leaf)) {
+                Write-Host "Error: file not found in ConfigDir: $relative" -ForegroundColor Red
+                exit 1
+            }
+        }
+
+        if ($PartialFullTree) {
+            Write-Host "Partial mode: using the full ConfigDir (legacy)"
+        } else {
+            $workspace = New-PartialWorkspace -SourceConfigDir $ConfigDir -TargetDir (Join-Path $tempDir "config")
+            $loadDir = $workspace[0]
+            Write-Host "Partial mode: temporary workspace ($($workspace[1]) hard-linked, $($workspace[2]) copied file(s)); the source ConfigDumpInfo.xml is not modified"
+        }
+
+        $arguments += "-listFile", "`"$(Get-OneCRelativePath $generatedListFile)`""
         $arguments += "-partial"
-        $arguments += "-updateConfigDumpInfo"
+        if (-not $NoUpdateConfigDumpInfo) {
+            $arguments += "-updateConfigDumpInfo"
+        }
     }
 
+    $loadDirArgument = Get-OneCRelativePath $loadDir
+    $arguments += "/LoadConfigFromFiles", "`"$loadDirArgument`""
     $arguments += "-Format", $Format
 
     # --- Extensions ---
@@ -208,7 +282,7 @@ try {
 
     # --- Output ---
     $outFile = Join-Path $tempDir "load_log.txt"
-    $arguments += "/Out", "`"$outFile`""
+    $arguments += "/Out", "`"$(Get-OneCRelativePath $outFile)`""
     $arguments += "/DisableStartupDialogs"
 
     # --- Execute ---

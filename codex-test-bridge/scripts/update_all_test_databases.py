@@ -56,7 +56,7 @@ LEGACY_SKILL_DIRECTORIES = (
     "template-add", "template-remove", "validate",
     "web-info", "web-publish", "web-session", "web-stop", "web-test", "web-unpublish",
 )
-COMPATIBILITY_PATTERN = re.compile(r"Version8_3_(\d+)$", re.IGNORECASE)
+COMPATIBILITY_PATTERN = re.compile(r"Version(\d+)_(\d+)_(\d+)$", re.IGNORECASE)
 BRIDGE_VERSION_PATTERN = re.compile(r'Вставить\("bridgeVersion",\s*"([^"]+)"\)')
 
 
@@ -184,7 +184,7 @@ def cfe_variant(compatibility_mode: str) -> str:
     match = COMPATIBILITY_PATTERN.fullmatch(normalized)
     if not match:
         raise UpdateError("Unsupported compatibility mode value")
-    return "full" if int(match.group(1)) >= 13 else "legacy"
+    return "full" if tuple(map(int, match.groups())) >= (8, 3, 13) else "legacy"
 
 
 def source_bridge_version() -> str:

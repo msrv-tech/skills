@@ -14,6 +14,7 @@ param(
 	[switch]$Force
 )
 
+. (Join-Path $PSScriptRoot "..\..\common\xml_preserve.ps1")
 $ErrorActionPreference = "Stop"
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
@@ -358,10 +359,7 @@ if (-not $cfgNode) {
 
 	# Save Configuration.xml
 	if ($actions -gt 0 -and -not $DryRun) {
-		$enc = New-Object System.Text.UTF8Encoding $true
-		$sw = New-Object System.IO.StreamWriter($configXml, $false, $enc)
-		$xmlDoc.Save($sw)
-		$sw.Close()
+		Save-XmlDocumentPreserving -XmlDoc $xmlDoc -Path $configXml
 		Write-Host "[OK]    Configuration.xml saved"
 	}
 }
@@ -424,10 +422,7 @@ function Remove-FromSubsystems {
 		}
 
 		if ($modified -and -not $DryRun) {
-			$enc = New-Object System.Text.UTF8Encoding $true
-			$sw = New-Object System.IO.StreamWriter($xmlFile.FullName, $false, $enc)
-			$ssDoc.Save($sw)
-			$sw.Close()
+			Save-XmlDocumentPreserving -XmlDoc $ssDoc -Path $xmlFile.FullName
 		}
 
 		# Recurse into child subsystems

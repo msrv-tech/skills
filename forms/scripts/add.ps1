@@ -15,6 +15,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot "..\..\common\xml_preserve.ps1")
 
 # --- Detect XML format version ---
 
@@ -449,16 +450,8 @@ if ($SetDefault -or $isFirstFormForPurpose) {
 	}
 }
 
-# Сохранить с BOM
-$settings = New-Object System.Xml.XmlWriterSettings
-$settings.Encoding = $encBom
-$settings.Indent = $false
-
-$stream = New-Object System.IO.FileStream($objectXmlFull.Path, [System.IO.FileMode]::Create)
-$writer = [System.Xml.XmlWriter]::Create($stream, $settings)
-$xmlDoc.Save($writer)
-$writer.Close()
-$stream.Close()
+# Сохранить с BOM, declaration, EOL и empty-element style
+Save-XmlDocumentPreserving -XmlDoc $xmlDoc -Path $objectXmlFull.Path
 
 # --- Фаза 5: Вывод ---
 

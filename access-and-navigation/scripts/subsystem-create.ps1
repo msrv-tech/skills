@@ -9,6 +9,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot "..\..\common\xml_preserve.ps1")
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 # --- 1. Load JSON ---
@@ -503,23 +504,8 @@ if ($parentXmlPath -and (Test-Path $parentXmlPath)) {
 				}
 			}
 
-			# Save parent XML
-			$settings = New-Object System.Xml.XmlWriterSettings
-			$settings.Encoding = New-Object System.Text.UTF8Encoding($true)
-			$settings.Indent = $false
-			$settings.NewLineHandling = [System.Xml.NewLineHandling]::None
-
-			$memStream = New-Object System.IO.MemoryStream
-			$writer = [System.Xml.XmlWriter]::Create($memStream, $settings)
-			$doc.Save($writer)
-			$writer.Flush(); $writer.Close()
-
-			$bytes = $memStream.ToArray()
-			$memStream.Close()
-			$text = [System.Text.Encoding]::UTF8.GetString($bytes)
-			if ($text.Length -gt 0 -and $text[0] -eq [char]0xFEFF) { $text = $text.Substring(1) }
-			$text = $text.Replace('encoding="utf-8"', 'encoding="UTF-8"')
-			[System.IO.File]::WriteAllText($parentXmlPath, $text, $utf8Bom)
+			# Save parent XML preserving BOM, declaration, EOL, empty elements
+			Save-XmlDocumentPreserving -XmlDoc $doc -Path $parentXmlPath
 
 			Write-Host "[OK] Registered in: $parentXmlPath"
 		} else {

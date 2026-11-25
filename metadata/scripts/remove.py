@@ -8,6 +8,11 @@ import sys
 import shutil
 from lxml import etree
 
+_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+if _ROOT not in sys.path:
+    sys.path.insert(0, _ROOT)
+from common.xml_preserve import write_tree_preserving
+
 # --- Type -> plural directory mapping ---
 
 TYPE_PLURAL_MAP = {
@@ -98,13 +103,7 @@ def localname(el):
 
 
 def save_xml_bom(tree, path):
-    xml_bytes = etree.tostring(tree, xml_declaration=True, encoding="UTF-8")
-    xml_bytes = xml_bytes.replace(b"<?xml version='1.0' encoding='UTF-8'?>", b'<?xml version="1.0" encoding="utf-8"?>')
-    if not xml_bytes.endswith(b"\n"):
-        xml_bytes += b"\n"
-    with open(path, "wb") as f:
-        f.write(b"\xef\xbb\xbf")
-        f.write(xml_bytes)
+    write_tree_preserving(tree, path)
 
 
 def main():

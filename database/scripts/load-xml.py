@@ -13,6 +13,85 @@ import tempfile
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 from common.onec_runtime import mask_sensitive_arguments, onec_process_env, resolve_1cv8_cli as resolve_v8path
 
+def onec_path_argument(path):
+    """Return a relative path: 1C for Linux treats "/s..." inside an absolute
+    path as another /S option and fails with "server_addr=..."."""
+    try:
+        return os.path.relpath(os.path.abspath(path))
+    except ValueError:
+        return path
+
+
+SOURCE_GUARD_FILES = ("Configuration.xml", "ConfigDumpInfo.xml")
+
+
+def snapshot_source_files(config_dir):
+    """Remember the two tracked root files that Partial load must not touch."""
+    snapshot = {}
+    for name in SOURCE_GUARD_FILES:
+        path = os.path.join(config_dir, name)
+        if os.path.isfile(path):
+            with open(path, "rb") as source:
+                snapshot[name] = source.read()
+    return snapshot
+
+
+def restore_changed_source_files(config_dir, snapshot):
+    """Restore any root file changed by the platform and return their names."""
+    changed = []
+    for name, expected in snapshot.items():
+        path = os.path.join(config_dir, name)
+        try:
+            with open(path, "rb") as source:
+                actual = source.read()
+        except OSError:
+            actual = None
+        if actual != expected:
+            with open(path, "wb") as target:
+                target.write(expected)
+            changed.append(name)
+    return changed
+
+
+def build_partial_workspace(config_dir, target_dir):
+    """Mirror ConfigDir into a throwaway tree for Partial load.
+
+    The platform still reads Configuration.xml and the whole object tree during a
+    partial load, so a genuinely sparse tree is rejected with "file does not
+    exist". Instead, hard-link every immutable file (cheap on the same filesystem)
+    and copy the two files the platform may rewrite: Configuration.xml and
+    ConfigDumpInfo.xml. The tracked source tree is never modified.
+    """
+    os.makedirs(target_dir, exist_ok=True)
+    mutable = {"Configuration.xml", "ConfigDumpInfo.xml"}
+    linked = 0
+    copied = 0
+    for current, _directories, files in os.walk(config_dir):
+        relative_dir = os.path.relpath(current, config_dir)
+        destination_dir = target_dir if relative_dir == "." else os.path.join(target_dir, relative_dir)
+        os.makedirs(destination_dir, exist_ok=True)
+        for name in files:
+            source = os.path.join(current, name)
+            destination = os.path.join(destination_dir, name)
+            if name in mutable and relative_dir == ".":
+                shutil.copy2(source, destination)
+                copied += 1
+                continue
+            try:
+                os.link(source, destination)
+                linked += 1
+            except OSError:
+                shutil.copy2(source, destination)
+                copied += 1
+    for name in mutable:
+        source = os.path.join(config_dir, name)
+        destination = os.path.join(target_dir, name)
+        if os.path.isfile(source) and not os.path.exists(destination):
+            shutil.copy2(source, destination)
+            copied += 1
+    return target_dir, linked, copied
+
+
 def main():
     sys.stdout.reconfigure(encoding="utf-8")
     sys.stderr.reconfigure(encoding="utf-8")
@@ -35,6 +114,16 @@ def main():
     )
     parser.add_argument("-Files", default="", help="Comma-separated relative file paths (for Partial mode)")
     parser.add_argument("-ListFile", default="", help="Path to file list (alternative to -Files, for Partial mode)")
+    parser.add_argument(
+        "-PartialFullTree",
+        action="store_true",
+        help="Load Partial mode from the full ConfigDir (legacy; may update ConfigDumpInfo.xml in the source tree)",
+    )
+    parser.add_argument(
+        "-NoUpdateConfigDumpInfo",
+        action="store_true",
+        help="Do not pass -updateConfigDumpInfo in Partial mode",
+    )
     parser.add_argument("-Extension", default="", help="Extension name to load")
     parser.add_argument("-AllExtensions", action="store_true", help="Load all extensions")
     parser.add_argument(
@@ -87,7 +176,8 @@ def main():
         if args.Password:
             arguments.append(f"/P{args.Password}")
 
-        arguments += ["/LoadConfigFromFiles", args.ConfigDir]
+        load_dir = args.ConfigDir
+        source_snapshot = None
 
         if args.Mode == "Full":
             print("Executing full configuration load...")
@@ -102,6 +192,8 @@ def main():
                     print(f"Error: list file not found: {args.ListFile}", file=sys.stderr)
                     sys.exit(1)
                 generated_list_file = args.ListFile
+                with open(args.ListFile, "r", encoding="utf-8-sig") as f:
+                    file_list = [line.strip() for line in f if line.strip()]
             else:
                 # Generate from -Files parameter
                 file_list = [f.strip() for f in args.Files.split(",") if f.strip()]
@@ -109,14 +201,37 @@ def main():
                 with open(generated_list_file, "w", encoding="utf-8-sig") as f:
                     f.write("\n".join(file_list))
 
-                print(f"Files to load: {len(file_list)}")
-                for fl in file_list:
-                    print(f"  {fl}")
+            print(f"Files to load: {len(file_list)}")
+            for fl in file_list:
+                print(f"  {fl}")
 
-            arguments += ["-listFile", generated_list_file]
+            for relative in file_list:
+                normalized = relative.replace("\\", "/").lstrip("/")
+                if not os.path.isfile(os.path.join(args.ConfigDir, *normalized.split("/"))):
+                    print(f"Error: file not found in ConfigDir: {relative}", file=sys.stderr)
+                    sys.exit(1)
+
+            if args.PartialFullTree:
+                print("Partial mode: using the full ConfigDir (legacy)")
+            else:
+                source_snapshot = snapshot_source_files(args.ConfigDir)
+                load_dir, linked, copied = build_partial_workspace(
+                    args.ConfigDir, os.path.join(temp_dir, "config")
+                )
+                print(
+                    f"Partial mode: temporary workspace ({linked} hard-linked, {copied} copied file(s)); "
+                    "the source ConfigDumpInfo.xml is not modified"
+                )
+
+            arguments += ["-listFile", onec_path_argument(generated_list_file)]
             arguments.append("-partial")
-            arguments.append("-updateConfigDumpInfo")
+            if not args.NoUpdateConfigDumpInfo:
+                arguments.append("-updateConfigDumpInfo")
 
+        # On Linux 1C parses an absolute argument beginning with "/" as another
+        # slash-option; pass a relative path to keep it a value of
+        # /LoadConfigFromFiles.
+        arguments += ["/LoadConfigFromFiles", onec_path_argument(load_dir)]
         arguments += ["-Format", args.Format]
 
         # --- Extensions ---
@@ -131,7 +246,7 @@ def main():
 
         # --- Output ---
         out_file = os.path.join(temp_dir, "load_log.txt")
-        arguments += ["/Out", out_file]
+        arguments += ["/Out", onec_path_argument(out_file)]
         arguments.append("/DisableStartupDialogs")
 
         # --- Execute ---
@@ -143,6 +258,17 @@ def main():
             env=onec_process_env(),
         )
         exit_code = result.returncode
+
+        if source_snapshot is not None:
+            restored = restore_changed_source_files(args.ConfigDir, source_snapshot)
+            if restored:
+                print(
+                    "[warning] partial load changed tracked source file(s): "
+                    + ", ".join(restored)
+                    + "; original bytes were restored",
+                    file=sys.stderr,
+                )
+                exit_code = 1
 
         # --- Read log ---
         log_content = ""

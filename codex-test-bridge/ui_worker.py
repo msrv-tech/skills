@@ -56,6 +56,7 @@ NATIVE_UI_STEP_FIELDS = {
     "finishRow", "onChangeWait", "replace", "waitClosed", "optional", "elementType", "onPrompt",
     "dialogTitle", "promptTimeout", "row", "expandParents", "key", "choiceRow", "element", "field", "button",
     "dialogButton", "table", "choiceTable", "targetForm", "choiceForm", "reference", "choiceField", "referenceType",
+    "seconds",
     "select", "newForm", "expanded", "canExpand", "marked", "expectedCount", "expectedRows", "expectedColumns",
     "stateContains", "column",
 }
@@ -185,10 +186,14 @@ def prepare_native_ui_scenario(data: Any) -> dict[str, Any]:
     for index, step in enumerate(result["steps"], 1):
         if not isinstance(step, dict):
             raise UiWorkerError(f"UI scenario step {index} must be a JSON object")
+        action = step.get("action")
         unknown_step = sorted(set(step) - NATIVE_UI_STEP_FIELDS)
         if unknown_step:
+            if action == "inputText" and "text" in unknown_step:
+                raise UiWorkerError(
+                    f"UI scenario step {index}: inputText uses 'value', not 'text'"
+                )
             raise UiWorkerError(f"UI scenario step {index} has unknown fields: {', '.join(unknown_step)}")
-        action = step.get("action")
         if action not in NATIVE_UI_ACTIONS:
             raise UiWorkerError(f"UI scenario step {index} has unsupported action: {action}")
         if action in {"expandTreeRow", "collapseTreeRow", "assertTreeRowState"} and not isinstance(step.get("row"), dict):
@@ -227,6 +232,10 @@ def prepare_native_ui_scenario(data: Any) -> dict[str, Any]:
 
         if action == "pressKey" and (not isinstance(step.get("key"), str) or not step["key"]):
             raise UiWorkerError(f"UI scenario step {index}: pressKey requires key")
+        if action == "pause":
+            seconds = step.get("seconds", 1)
+            if isinstance(seconds, bool) or not isinstance(seconds, (int, float)) or not 0 <= seconds <= 60:
+                raise UiWorkerError(f"UI scenario step {index}: pause.seconds must be a number between 0 and 60")
         if action in {"assertField", "assertHtml"}:
             assertion_fields = [name for name in ("expected", "contains", "notEmpty") if name in step]
             if len(assertion_fields) != 1:
@@ -594,6 +603,7 @@ class ProcessBackend:
     def __init__(self, environment: dict[str, str], working_directory: str | None):
         self.environment = environment
         self.working_directory = working_directory
+        self.log_paths: dict[str, Path] = {}
 
     def start(
         self, command: list[str], *, raw_command_line: bool = False, role: str = "client",
@@ -603,14 +613,20 @@ class ProcessBackend:
         process_command: list[str] | str = command
         if os.name == "nt" and raw_command_line:
             process_command = windows_command_line(command, raw_arguments=True)
-        process = subprocess.Popen(
-            process_command,
-            cwd=self.working_directory or None,
-            env=env,
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
+        log_path = self.log_paths.get(role)
+        log_handle = open(log_path, "ab") if log_path is not None else None
+        try:
+            process = subprocess.Popen(
+                process_command,
+                cwd=self.working_directory or None,
+                env=env,
+                stdin=subprocess.DEVNULL,
+                stdout=log_handle if log_handle is not None else subprocess.DEVNULL,
+                stderr=log_handle if log_handle is not None else subprocess.DEVNULL,
+            )
+        finally:
+            if log_handle is not None:
+                log_handle.close()
         return SubprocessHandle(process)
 
     def close(self) -> None:
@@ -996,6 +1012,35 @@ def failed_ui_steps(manager_result: dict[str, Any]) -> list[dict[str, Any]]:
     return failed
 
 
+UI_ERROR_HINTS: tuple[tuple[tuple[str, ...], str], ...] = (
+    (
+        ("Testable form was not found",),
+        "Hint: title matching is exact; external processing forms are searched by "
+        'formName like "ВнешняяОбработка.<Имя>.Форма.Форма".',
+    ),
+    (
+        ("Недоступный пользователю элемент управления", "Unavailable user control"),
+        "Hint: the form is busy with a running server call; wait for it to finish "
+        "before reading or activating controls.",
+    ),
+    (
+        ("Modal dialog was not found",),
+        "Hint: a message window may be a separate window; inspectUi and handleDialog "
+        "support only forms, so close the message with the platform button first.",
+    ),
+)
+
+
+def _with_ui_hint(message: str) -> str:
+    message = str(message)
+    for markers, hint in UI_ERROR_HINTS:
+        if any(marker in message for marker in markers):
+            if hint not in message:
+                return f"{message} {hint}"
+            return message
+    return message
+
+
 def manager_failure_error(
     manager_result: dict[str, Any],
     manager_exit_code: int | None,
@@ -1007,10 +1052,8 @@ def manager_failure_error(
         detail = str(last.get("error") or last.get("name") or "UI step failed")
         if last.get("scenarioName") and last.get("name"):
             prefix = f"{last['scenarioName']}: {last['name']}"
-        return {
-            "type": "ScenarioFailure",
-            "message": f"{prefix}: {detail}" if prefix not in detail else detail,
-        }
+        message = f"{prefix}: {detail}" if prefix not in detail else detail
+        return {"type": "ScenarioFailure", "message": _with_ui_hint(message)}
     manager_error = manager_result.get("error")
     if isinstance(manager_error, dict):
         message = manager_error.get("message") or json.dumps(
@@ -1023,7 +1066,7 @@ def manager_failure_error(
     else:
         message = f"Test manager exit code: {manager_exit_code}"
         error_type = "ManagerFailure"
-    return {"type": error_type, "message": message}
+    return {"type": error_type, "message": _with_ui_hint(message)}
 
 
 def should_recover_stalled_windows_step(
@@ -1129,6 +1172,10 @@ def run_warm_ui_segments(
     if runtime.get("suppressStartupUi", True):
         client_command = suppress_1c_startup_ui(client_command)
     backend = create_backend(runtime, suite_id)
+    backend.log_paths = {
+        "client": artifacts / f"client-{suite_id}.log",
+        "manager": artifacts / f"manager-{suite_id}.log",
+    }
     client: RunningProcess | None = None
     results: list[dict[str, Any]] = []
     fail_fast = bool(runtime.get("failFast", False))
@@ -1443,6 +1490,7 @@ def run_ui_worker(config: dict[str, Any], scenario_path: str | Path, artifact_di
                     "command": "uiJobCreate", "jobId": run_id, "scenario": scenario_text,
                 })
         backend = create_backend(runtime_config, run_id)
+        backend.log_paths = {"client": client_log, "manager": manager_log}
         progress("startup", f"Starting TestClient on isolated {backend.name} backend")
         client = backend.start(
             client_command,
@@ -1888,9 +1936,17 @@ def run_ui_worker(config: dict[str, Any], scenario_path: str | Path, artifact_di
         "client": {"pid": client.pid if client else None, "command": redact_command(client_command, secret_flags)},
         "manager": {"pid": manager.pid if manager else None, "command": redact_command(manager_command, secret_flags), "exitCode": manager_exit_code},
         "resultTransport": transport,
+        "resultTransportNote": (
+            "resultTransport=file requires a custom TestManager that writes resultFile; "
+            "the built-in CodexUITest manager publishes bridge jobs only"
+            if transport == "file" else None
+        ),
         "jobId": run_id if transport == "bridgeJob" else None,
         "clientLog": str(client_log) if client_log.exists() else None,
-        "managerLog": str(manager_log) if transport == "inlineLog" else None,
+        "managerLog": str(manager_log) if manager_log.exists() else None,
+        "logHint": None if client_log.exists() and manager_log.exists() else (
+            "add /Out {clientLog} and /Out {managerLog} to clientCommand/managerCommand"
+        ),
         "resultFile": str(result_file) if result_file is not None else None,
         "managerResult": manager_result,
         "uiaBeforeResult": uia_before_results,

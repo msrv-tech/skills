@@ -253,7 +253,7 @@ valid_property_values = {
     "DataLockControlMode":          ["Automatic", "Managed"],
     "FullTextSearch":               ["Use", "DontUse"],
     "DefaultPresentation":          ["AsDescription", "AsCode"],
-    "HierarchyType":                ["HierarchyFoldersAndItems", "HierarchyItemsOnly"],
+    "HierarchyType":                ["HierarchyFoldersAndItems", "HierarchyOfItems"],
     "EditType":                     ["InDialog", "InList", "BothWays"],
     "WriteMode":                    ["Independent", "RecorderSubordinate"],
     "InformationRegisterPeriodicity": ["Nonperiodical", "Second", "Day", "Month", "Quarter", "Year", "RecorderPosition"],
@@ -349,8 +349,8 @@ if root_ns != expected_ns:
 version = root.get("version", "")
 if not version:
     report_warn("1. Missing version attribute on MetaDataObject")
-elif version not in ("2.17", "2.20"):
-    report_warn(f"1. Unusual version '{version}' (expected 2.17 or 2.20)")
+elif version not in ("2.17", "2.20", "2.21"):
+    report_warn(f"1. Unusual version '{version}' (expected 2.17, 2.20 or 2.21)")
 
 # Detect type element -- exactly one child element in md namespace
 type_node = None
@@ -867,12 +867,14 @@ check10_ok = True
 check10_issues = 0
 
 if props_node is not None:
-    # HierarchyType set but Hierarchical = false
+    # Hierarchical=true requires an explicit HierarchyType. Configurator keeps
+    # HierarchyType in the dump even when Hierarchical=false, so that combination
+    # is valid and must not be reported.
     hierarchical = find(props_node, "md:Hierarchical")
     hierarchy_type = find(props_node, "md:HierarchyType")
-    if (hierarchical is not None and hierarchy_type is not None and
-            inner_text(hierarchical) == "false" and inner_text(hierarchy_type)):
-        report_warn(f"10. HierarchyType='{inner_text(hierarchy_type)}' but Hierarchical=false")
+    if (hierarchical is not None and inner_text(hierarchical) == "true" and
+            (hierarchy_type is None or not inner_text(hierarchy_type))):
+        report_warn("10. Hierarchical=true but HierarchyType is missing")
         check10_issues += 1
 
     # CommonModule: no context enabled
