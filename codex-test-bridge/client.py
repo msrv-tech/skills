@@ -216,7 +216,15 @@ def main() -> int:
     suite.add_argument("--junit", default="", help="Write JUnit XML report to this path")
     suite.add_argument("--fail-fast", action="store_true", help="Stop after the first failed scenario")
 
-    ui = sub.add_parser("run-ui", help="Run native 1C TestClient/TestManager in an isolated desktop")
+    ui = sub.add_parser(
+        "run-ui",
+        help="Run native 1C TestClient/TestManager in an isolated desktop",
+        description=(
+            "On Windows windowsUiMode=background (default) requires a separate logged-on "
+            "RDP/test session; in the active console session the worker stops before 1C. "
+            "Set windowsUiMode=interactive to allow windows in the current session."
+        ),
+    )
     ui.add_argument("worker_config", help="Path to UI worker JSON configuration")
     ui.add_argument("scenario_file", help="Path passed to the 1C test manager as {scenario}")
     ui.add_argument("--artifact-dir", default="artifacts/ui", help="Directory for manager and worker artifacts")

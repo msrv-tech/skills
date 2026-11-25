@@ -413,6 +413,13 @@ def validate_worker_config(config: Any) -> None:
     backend = config.get("backend", "auto")
     if backend not in {"auto", "windowsDesktop", "xvfb", "process"}:
         raise UiWorkerError(f"Unsupported UI backend: {backend}")
+    windows_ui_mode = config.get("windowsUiMode", "background")
+    if windows_ui_mode not in {"background", "interactive"}:
+        raise UiWorkerError("windowsUiMode must be background or interactive")
+    windows_session_id = config.get("windowsSessionId")
+    if windows_session_id not in (None, ""):
+        if isinstance(windows_session_id, bool) or not isinstance(windows_session_id, int) or windows_session_id < 0:
+            raise UiWorkerError("windowsSessionId must be a non-negative integer")
     transport = config.get("resultTransport", "bridgeJob" if config.get("bridgeBaseUrl") else "file")
     if transport not in {"bridgeJob", "inlineLog", "file"}:
         raise UiWorkerError(f"Unsupported resultTransport: {transport}")
@@ -706,6 +713,7 @@ class WindowsDesktopBackend(ProcessBackend):
             raise UiWorkerError("windowsDesktop backend is available only on Windows")
         super().__init__(environment, working_directory)
         self.desktop_name = "Default"
+        self.windows_session: dict[str, Any] | None = None
         self.desktop = None
         self.user32 = None
         self.kernel32 = None
@@ -1109,6 +1117,102 @@ def should_recover_stalled_windows_step(
     return recovery_count < limit and step_elapsed_seconds >= threshold
 
 
+WTS_CURRENT_SERVER_HANDLE = 0
+WTS_CONNECT_STATE = 8
+WTS_ACTIVE = 0
+WTS_DISCONNECTED = 4
+
+
+def windows_session_info(pid: int | None = None) -> dict[str, Any]:
+    """Return the current Windows session id, state and console session id."""
+    if os.name != "nt":
+        raise UiWorkerError("Windows session information is available only on Windows")
+    kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    wtsapi32 = ctypes.WinDLL("wtsapi32", use_last_error=True)
+
+    kernel32.ProcessIdToSessionId.argtypes = [wintypes.DWORD, ctypes.POINTER(wintypes.DWORD)]
+    kernel32.ProcessIdToSessionId.restype = wintypes.BOOL
+    kernel32.WTSGetActiveConsoleSessionId.restype = wintypes.DWORD
+    wtsapi32.WTSQuerySessionInformationW.argtypes = [
+        wintypes.HANDLE, wintypes.DWORD, ctypes.c_int,
+        ctypes.POINTER(ctypes.c_void_p), ctypes.POINTER(wintypes.DWORD),
+    ]
+    wtsapi32.WTSQuerySessionInformationW.restype = wintypes.BOOL
+    wtsapi32.WTSFreeMemory.argtypes = [ctypes.c_void_p]
+
+    session_id = wintypes.DWORD()
+    if not kernel32.ProcessIdToSessionId(
+        pid if pid is not None else os.getpid(), ctypes.byref(session_id)
+    ):
+        raise ctypes.WinError(ctypes.get_last_error())
+
+    console_session = kernel32.WTSGetActiveConsoleSessionId()
+    state_value = WTS_ACTIVE
+    buffer = ctypes.c_void_p()
+    bytes_returned = wintypes.DWORD()
+    if wtsapi32.WTSQuerySessionInformationW(
+        WTS_CURRENT_SERVER_HANDLE,
+        session_id.value,
+        WTS_CONNECT_STATE,
+        ctypes.byref(buffer),
+        ctypes.byref(bytes_returned),
+    ):
+        try:
+            state_value = int(ctypes.cast(buffer, ctypes.POINTER(wintypes.DWORD))[0])
+        finally:
+            wtsapi32.WTSFreeMemory(buffer)
+    return {
+        "sessionId": int(session_id.value),
+        "consoleSessionId": int(console_session) if console_session != 0xFFFFFFFF else None,
+        "state": int(state_value),
+        "active": int(state_value) == WTS_ACTIVE,
+        "disconnected": int(state_value) == WTS_DISCONNECTED,
+    }
+
+
+def evaluate_windows_ui_mode(
+    config: dict[str, Any],
+    session: dict[str, Any],
+) -> dict[str, Any]:
+    """Validate windowsUiMode against the actual Windows session."""
+    mode = str(config.get("windowsUiMode", "background") or "background").casefold()
+    if mode not in {"background", "interactive"}:
+        raise UiWorkerError("windowsUiMode must be background or interactive")
+    expected = config.get("windowsSessionId")
+    if expected not in (None, ""):
+        try:
+            expected_id = int(expected)
+        except (TypeError, ValueError) as exc:
+            raise UiWorkerError("windowsSessionId must be an integer") from exc
+        if int(session["sessionId"]) != expected_id:
+            raise UiWorkerError(
+                f"windowsSessionId={expected_id}, but worker runs in session "
+                f"{session['sessionId']}. Start the worker in the dedicated test session."
+            )
+    info = dict(session)
+    info["mode"] = mode
+    if mode == "interactive":
+        return info
+    if int(session["sessionId"]) == 0:
+        raise UiWorkerError(
+            "windowsUiMode=background requires an interactive test session; "
+            "the worker is running in session 0. Start it in a logged-on RDP session "
+            "or set windowsUiMode=interactive to allow windows in the current session."
+        )
+    if session.get("consoleSessionId") is not None and int(session["sessionId"]) == int(session["consoleSessionId"]):
+        raise UiWorkerError(
+            "windowsUiMode=background cannot hide 1C windows in the active console session. "
+            "Run the worker in a separate logged-on RDP session (or disconnected test session), "
+            "or set windowsUiMode=interactive explicitly."
+        )
+    if not session.get("active") and not session.get("disconnected"):
+        raise UiWorkerError(
+            f"windowsUiMode=background requires an active or disconnected logged-on session; "
+            f"session {session['sessionId']} is not interactive (state {session.get('state')})."
+        )
+    return info
+
+
 def create_backend(config: dict[str, Any], run_id: str) -> ProcessBackend | WindowsDesktopBackend | XvfbBackend:
     backend = config.get("backend", "auto")
     if backend == "auto":
@@ -1116,7 +1220,9 @@ def create_backend(config: dict[str, Any], run_id: str) -> ProcessBackend | Wind
     environment = config.get("environment", {})
     working_directory = config.get("workingDirectory")
     if backend == "windowsDesktop":
-        return WindowsDesktopBackend(environment, working_directory)
+        backend_object = WindowsDesktopBackend(environment, working_directory)
+        backend_object.windows_session = evaluate_windows_ui_mode(config, windows_session_info())
+        return backend_object
     if backend == "xvfb":
         configured_display = config.get("display", "auto")
         display = choose_free_xvfb_display() if configured_display in (None, "", "auto") else int(configured_display)
@@ -1354,7 +1460,7 @@ def run_warm_ui_segments(
         backend.close()
     finished = utc_now()
     ok = len(results) == len(segments) and all(item.get("ok") for item in results)
-    report = {"schemaVersion": 1, "ok": ok, "status": "passed" if ok else "failed", "runId": suite_id, "backend": backend.name, "startedAt": started.isoformat(), "finishedAt": finished.isoformat(), "durationMs": round((finished - started).total_seconds() * 1000), "scenarios": results, "progress": events, "artifacts": {"progress": str(progress_file)}}
+    report = {"schemaVersion": 1, "ok": ok, "status": "passed" if ok else "failed", "runId": suite_id, "backend": backend.name, "windows": getattr(backend, "windows_session", None), "startedAt": started.isoformat(), "finishedAt": finished.isoformat(), "durationMs": round((finished - started).total_seconds() * 1000), "scenarios": results, "progress": events, "artifacts": {"progress": str(progress_file)}}
     write_atomic_json(artifacts / "summary.json", {"runId": suite_id, "status": report["status"], "durationMs": report["durationMs"], "scenarios": len(results)})
     report["artifacts"]["summary"] = str(artifacts / "summary.json")
     progress("passed" if ok else "failed", f"Warm UI segments {'passed' if ok else 'failed'}")
@@ -1929,6 +2035,7 @@ def run_ui_worker(config: dict[str, Any], scenario_path: str | Path, artifact_di
         "runId": run_id,
         "status": status,
         "backend": backend.name if backend is not None else config.get("backend", "auto"),
+        "windows": getattr(backend, "windows_session", None) if backend is not None else None,
         "scenario": str(scenario),
         "startedAt": started.isoformat(),
         "finishedAt": finished.isoformat(),

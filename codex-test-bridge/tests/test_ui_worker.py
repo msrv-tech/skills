@@ -11,7 +11,7 @@ from unittest.mock import Mock, patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from ui_worker import (
     ProcessBackend, UiWorkerError, WindowsDesktopBackend, expand, navigation_ref_from_uuid,
-    prepare_native_ui_scenario, redact_command,
+    prepare_native_ui_scenario, redact_command, evaluate_windows_ui_mode,
     isolate_test_client_startup_parameter, manager_failure_error, failed_ui_steps, normalize_1c_auth_arguments,
     choose_free_xvfb_display,
     resolve_native_ui_references, run_ui_worker,
@@ -47,6 +47,32 @@ def free_port():
 
 
 class UiWorkerTests(unittest.TestCase):
+    def test_windows_background_mode_accepts_separate_rdp_session(self):
+        info = evaluate_windows_ui_mode(
+            {},
+            {"sessionId": 2, "consoleSessionId": 1, "state": 0, "active": True, "disconnected": False},
+        )
+        self.assertEqual(info["mode"], "background")
+        self.assertEqual(info["sessionId"], 2)
+
+    def test_windows_background_mode_rejects_console_and_service_sessions(self):
+        console = {"sessionId": 1, "consoleSessionId": 1, "state": 0, "active": True, "disconnected": False}
+        service = {"sessionId": 0, "consoleSessionId": 1, "state": 4, "active": False, "disconnected": True}
+        with self.assertRaises(UiWorkerError):
+            evaluate_windows_ui_mode({}, console)
+        with self.assertRaises(UiWorkerError):
+            evaluate_windows_ui_mode({}, service)
+
+    def test_windows_interactive_mode_allows_console(self):
+        console = {"sessionId": 1, "consoleSessionId": 1, "state": 0, "active": True, "disconnected": False}
+        info = evaluate_windows_ui_mode({"windowsUiMode": "interactive"}, console)
+        self.assertEqual(info["mode"], "interactive")
+
+    def test_windows_session_id_must_match(self):
+        session = {"sessionId": 2, "consoleSessionId": 1, "state": 0, "active": True, "disconnected": False}
+        with self.assertRaises(UiWorkerError):
+            evaluate_windows_ui_mode({"windowsSessionId": 3}, session)
+        self.assertEqual(evaluate_windows_ui_mode({"windowsSessionId": 2}, session)["sessionId"], 2)
     def test_manager_failure_preserves_structured_manager_error(self):
         error = manager_failure_error(
             {

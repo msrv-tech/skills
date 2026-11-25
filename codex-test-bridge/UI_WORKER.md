@@ -75,6 +75,29 @@ TestClient; AT-SPI используется как резерв. Координ�
   графические приложения в этом режиме не изолированы.
 - `auto` — `windowsDesktop` на Windows, `xvfb` на Linux.
 
+На Windows по умолчанию действует `windowsUiMode: "background"`: до запуска 1С
+worker проверяет фактическую сессию. Если он работает в активной консольной
+сессии или в session 0, запуск завершается ошибкой с инструкцией — скрыть окна
+в сессии пользователя нельзя. Отдельная активная или отключённая RDP-сессия
+считается тестовой и допускается; конкретную сессию можно закрепить через
+`windowsSessionId`. Для намеренного запуска с окнами в текущей сессии укажи
+`windowsUiMode: "interactive"`.
+
+В отчёт и `progress.json` добавляется блок `windows`:
+`sessionId`, `consoleSessionId`, `state`, `active`, `disconnected`, `mode`;
+фактический backend и путь к снимку окна уже есть в `backend` и `artifacts`.
+
+Пример запуска из реестра без хранения credentials:
+
+```powershell
+python .\scripts\run_ui_from_test_database.py `
+  --registry "$env:CODEX_1C_TEST_DATABASES" `
+  --database <Ref> `
+  --platform "C:\Program Files\1cv8\8.3.27.1936\bin\1cv8.exe" `
+  --scenario .\examples\native-ui-smoke.ui.json `
+  --artifact-dir .\artifacts\ui
+```
+
 Linux backend автоматически выбирает свободный display. Явно заданный занятый
 display завершает запуск ошибкой; чужой X11 socket не считается успешно
 запущенным worker-owned Xvfb. Для Linux backend нужны `Xvfb`, `dbus-daemon`,
